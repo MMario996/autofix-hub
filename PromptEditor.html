@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style>
+      :root {
+        --primary-yellow: #FFED00;
+        --primary-black: #000000;
+        --text-main: #333333;
+        --text-sub: #666666;
+        --border-light: #e0e0e0;
+        --green: #2e7d32;
+        --green-bg: #e8f5e9;
+        --red: #c62828;
+        --red-bg: #ffebee;
+        --blue: #1a73e8;
+        --blue-bg: #eff6fb;
+        --ff-body: 'Inter', "Helvetica Neue", Helvetica, Arial, sans-serif;
+        --ff-mono: 'JetBrains Mono', "Courier New", monospace;
+      }
+      * { box-sizing: border-box; }
+      body {
+        font-family: var(--ff-body);
+        background: #fff; color: var(--text-main); margin: 0;
+      }
+      .container { max-width: 1900px; margin: 0 auto; padding: 20px 40px 60px; }
+      .lock-screen { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
+      .lock-screen .material-icons-outlined { font-size: 60px; color: #ccc; margin-bottom: 15px; }
+      .lock-screen h1 { font-size: 18px; text-transform: uppercase; margin-bottom: 10px; }
+      .lock-screen p { font-size: 13px; color: var(--text-sub); max-width: 460px; line-height: 1.6; }
+      .loading-screen { min-height: 50vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      .loader { border: 5px solid #f3f3f3; border-top: 5px solid var(--primary-yellow); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; flex-wrap: wrap; }
+      .whoami { font-size: 11.5px; color: #999; display: flex; align-items: center; gap: 8px; }
+      .badge-admin { background: var(--primary-black); color: var(--primary-yellow); font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+      .lang-toggle { display: flex; border: 1px solid #ccc; overflow: hidden; }
+      .lang-btn { padding: 5px 12px; font-size: 11px; font-weight: 800; background: #fff; border: none; cursor: pointer; color: #666; }
+      .lang-btn.active { background: var(--primary-black); color: var(--primary-yellow); }
+      .tab-nav { display: flex; gap: 4px; border-bottom: 2px solid #eee; margin-bottom: 22px; flex-wrap: wrap; }
+      .tab-btn { padding: 9px 16px; background: none; border: none; font-size: 12.5px; font-weight: 800; color: var(--text-sub); cursor: pointer; text-transform: uppercase; border-bottom: 3px solid transparent; letter-spacing: 0.3px; white-space: nowrap; }
+      .tab-btn.active { color: #000; border-bottom-color: var(--primary-yellow); }
+      .tab-view { display: none; }
+      .tab-view.active { display: block; }
+      .intro-box { background: #fafafa; border-left: 4px solid var(--primary-yellow); padding: 12px 16px; font-size: 12.5px; color: #555; line-height: 1.6; margin-bottom: 14px; }
+      .request-box { background: var(--blue-bg); border: 1px solid #bcd9f7; padding: 12px 16px; font-size: 12.5px; color: #333; line-height: 1.6; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+      .request-box a.btn { text-decoration: none; }
+      /* Example bar */
+      .example-bar { border: 1px solid var(--border-light); margin-bottom: 20px; }
+      .example-bar-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #fafafa; cursor: pointer; }
+      .example-bar-head-left { display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .3px; color: #555; }
+      .example-bar-body { display: none; padding: 14px; border-top: 1px solid var(--border-light); }
+      .example-bar-body.open { display: block; }
+      .example-bar-body select { padding: 7px 9px; font-size: 12.5px; border: 1px solid #ccc; margin-bottom: 10px; min-width: 220px; }
+      .example-bar-body pre { white-space: pre-wrap; font-family: var(--ff-mono); font-size: 12px; line-height: 1.7; letter-spacing: 0.1px; color: #444; margin: 0; }
+      .example-empty { font-size: 11.5px; color: #999; font-style: italic; }
+      /* Prompt list toolbar */
+      .prompts-toolbar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px; }
+      /* Prompt cards */
+      .prompt-card { border: 1px solid var(--border-light); margin-bottom: 18px; }
+      .prompt-card-header { background: #f5f5f5; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); flex-wrap: wrap; gap: 8px; cursor: pointer; }
+      .prompt-card.collapsed .prompt-card-header { border-bottom: none; }
+      .prompt-card-title { display: flex; align-items: center; gap: 8px; }
+      .prompt-type-badge { padding: 3px 12px; border-radius: 12px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; background: var(--primary-black); color: var(--primary-yellow); }
+      .master-badge { background: var(--blue-bg); color: var(--blue); border: 1px solid #bcd9f7; padding: 2px 9px; border-radius: 10px; font-size: 9.5px; font-weight: 800; text-transform: uppercase; }
+      .unsaved-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); display: none; }
+      .unsaved-dot.show { display: inline-block; }
+      .collapse-caret { color: #888; transition: transform .15s ease; }
+      .prompt-card.collapsed .collapse-caret { transform: rotate(-90deg); }
+      .prompt-card-body { padding: 16px; display: flex; gap: 24px; align-items: flex-start; }
+      .prompt-card.collapsed .prompt-card-body { display: none; }
+      .editor-col { flex: 1; min-width: 0; }
+      .gemini-col { width: 340px; flex-shrink: 0; border-left: 1px solid var(--border-light); padding-left: 24px; }
+      @media (max-width: 900px) {
+        .prompt-card-body { flex-direction: column; }
+        .gemini-col { width: 100%; border-left: none; border-top: 1px solid var(--border-light); padding-left: 0; padding-top: 16px; }
+      }
+      textarea.prompt-textarea {
+        width: 100%; min-height: 300px; padding: 14px 16px; font-size: 13px;
+        font-family: var(--ff-mono); line-height: 1.7; letter-spacing: 0.1px;
+        border: 1px solid #ccc; resize: vertical; color: var(--text-main);
+      }
+      textarea.prompt-textarea:focus { border-color: #000; outline: none; }
+      .btn { border: none; padding: 0 18px; height: 38px; font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; letter-spacing: 0.3px; }
+      .btn .material-icons-outlined { font-size: 16px; }
+      .btn-primary { background: var(--primary-yellow); color: #000; }
+      .btn-primary:hover { background: #e6d500; }
+      .btn-secondary { background: #f5f5f5; color: #333; border: 1px solid #ccc; }
+      .btn-secondary:hover { background: #e8e8e8; }
+      .btn-blue { background: var(--blue-bg); color: var(--blue); border: 1px solid #bcd9f7; }
+      .btn-blue:hover { background: #dfeafb; }
+      .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+      .btn-sm { height: 32px; padding: 0 14px; font-size: 11px; }
+      .save-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+      .save-msg { font-size: 11.5px; font-weight: 700; display: none; align-items: center; gap: 5px; }
+      .save-msg.show { display: inline-flex; }
+      .save-msg.ok { color: var(--green); }
+      .save-msg.err { color: var(--red); }
+      .char-count { font-size: 10.5px; color: #999; margin-left: auto; }
+      .hint-line { font-size: 10.5px; color: #999; margin-top: 6px; }
+      /* Help-me-write panel */
+      .hmw-toggle { margin-top: 14px; }
+      .hmw-panel { display: none; margin-top: 12px; background: var(--blue-bg); border: 1px solid #bcd9f7; padding: 14px; }
+      .hmw-panel.open { display: block; }
+      .hmw-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+      .hmw-label { font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #555; margin-bottom: 5px; display: block; letter-spacing: 0.3px; }
+      .hmw-panel textarea { width: 100%; padding: 8px 10px; font-size: 12px; border: 1px solid #ccc; font-family: inherit; background: #fff; min-height: 50px; resize: vertical; }
+      .hmw-freetext { margin-bottom: 12px; }
+      .hmw-suggestion { display: none; margin-top: 14px; border-top: 1px dashed #bcd9f7; padding-top: 14px; }
+      .hmw-suggestion.show { display: block; }
+      .hmw-suggestion textarea { min-height: 220px; font-family: var(--ff-mono); font-size: 12px; line-height: 1.5; }
+      .hmw-suggestion-actions { display: flex; gap: 10px; margin-top: 10px; }
+      /* Test / playground panel */
+      .test-toggle { margin-top: 10px; }
+      .test-panel { display: none; margin-top: 12px; background: #fafaf5; border: 1px solid #e8e2b8; padding: 14px; }
+      .test-panel.open { display: block; }
+      .test-row { display: grid; grid-template-columns: 1fr 140px 140px; gap: 10px; margin-bottom: 10px; }
+      .test-panel textarea, .test-panel select { width: 100%; padding: 8px 10px; font-size: 12px; border: 1px solid #ccc; font-family: inherit; background: #fff; }
+      .test-panel textarea { min-height: 70px; resize: vertical; }
+      .test-note { font-size: 10.5px; color: #999; margin-bottom: 10px; }
+      .test-output { display: none; margin-top: 14px; border-top: 1px dashed #e8e2b8; padding-top: 14px; }
+      .test-output.show { display: block; }
+      .test-output-text { background: #fff; border: 1px solid #e0e0e0; padding: 10px; font-size: 12.5px; line-height: 1.55; white-space: pre-wrap; }
+      .test-output-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: #666; margin-top: 8px; }
+      .test-output-meta b { color: #333; }
+      /* Sliders (shared) */
+      .slider-block { margin-bottom: 4px; }
+      .slider-block label { display: block; font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #555; margin-bottom: 6px; letter-spacing: 0.3px; }
+      .slider-row { display: flex; align-items: center; gap: 10px; }
+      .slider-row input[type=range] { flex: 1; accent-color: var(--primary-yellow); height: 4px; }
+      .slider-value { font-family: var(--ff-mono); font-size: 13px; font-weight: 700; min-width: 32px; text-align: right; }
+      .slider-desc { font-size: 11px; color: #666; margin-top: 5px; min-height: 15px; }
+      .thinking-block label:first-child { display: block; font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #555; margin-bottom: 6px; letter-spacing: 0.3px; }
+      .toggle-row { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+      .toggle-row input[type=checkbox] { width: 34px; height: 18px; accent-color: var(--primary-yellow); cursor: pointer; flex-shrink: 0; }
+      .toggle-desc { font-size: 11px; color: #666; }
+      .preview-box { margin-top: 14px; border: 1px solid var(--border-light); padding: 16px; background: #fafafa; }
+      .preview-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 500; align-items: flex-start; justify-content: center; padding: 20px; }
+      .preview-overlay.open { display: flex; }
+      .preview-overlay-inner { background: #fff; width: 100%; max-width: 1900px; max-height: calc(100vh - 40px); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 50px rgba(0,0,0,.35); }
+      .preview-overlay-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 22px; background: #111; color: #fff; flex-shrink: 0; gap: 14px; flex-wrap: wrap; }
+      .preview-overlay-header-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      .preview-overlay-email { color: var(--primary-yellow); }
+      .preview-overlay-badges { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+      .preview-overlay-body-wrap { overflow-y: auto; padding: 20px 28px; flex: 1; background: #fafafa; }
+      .preview-overlay-note { font-size: 11.5px; color: #999; margin-bottom: 14px; }
+      .import-preview-box { margin-top: 14px; border: 1px solid var(--border-light); padding: 14px; background: #fafafa; }
+      .import-type-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 12.5px; border-bottom: 1px solid #eee; }
+      .import-type-row:last-child { border-bottom: none; }
+      .import-type-row .tag { font-size: 9.5px; font-weight: 800; text-transform: uppercase; padding: 2px 7px; border-radius: 8px; }
+      .import-type-row .tag.new { background: var(--green-bg); color: var(--green); }
+      .import-type-row .tag.exists { background: #fff3cd; color: #92400e; }
+      .help-icon-btn { display: inline-flex; align-items: center; color: #999; cursor: pointer; flex-shrink: 0; }
+      .help-icon-btn .material-icons-outlined { font-size: 18px; }
+      .help-icon-btn:hover { color: #000; }
+      .gemini-help-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 600; align-items: center; justify-content: center; padding: 20px; }
+      .gemini-help-backdrop.open { display: flex; }
+      .gemini-help-modal { background: #fff; width: 100%; max-width: 640px; max-height: calc(100vh - 60px); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 50px rgba(0,0,0,.35); }
+      .gemini-help-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px; background: #111; color: #fff; flex-shrink: 0; }
+      .gemini-help-head h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .4px; font-weight: 700; }
+      .gemini-help-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+      .gemini-help-item { margin-bottom: 18px; }
+      .gemini-help-item:last-child { margin-bottom: 0; }
+      .gemini-help-item h3 { font-size: 12.5px; text-transform: uppercase; letter-spacing: .4px; font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+      .gemini-help-item p { font-size: 12.5px; color: #444; line-height: 1.6; margin-bottom: 6px; }
+      .gemini-help-item p:last-child { margin-bottom: 0; }
+      .gemini-help-item strong { color: #111; }
+      .preview-box-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+      .preview-box-head strong { font-size: 12.5px; }
+      .preview-role-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+      .preview-role-badge { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; padding: 3px 9px; border-radius: 10px; background: var(--blue-bg); color: var(--blue); border: 1px solid #bcd9f7; }
+      .preview-type-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; border: 1px solid #eee; margin-bottom: 6px; font-size: 12px; background: #fff; }
+      .preview-type-row .edit-tag { font-size: 9.5px; font-weight: 800; text-transform: uppercase; padding: 2px 7px; border-radius: 8px; }
+      .preview-type-row .edit-tag.yes { background: var(--green-bg); color: var(--green); }
+      .preview-type-row .edit-tag.no { background: #eee; color: #888; }
+      .preview-warn { font-size: 12.5px; color: var(--red); }
+      .locked-field { display: flex; align-items: center; gap: 8px; }
+      .locked-field input { flex: 1; background: #f2f2f2 !important; color: #888 !important; cursor: not-allowed; }
+      .locked-field .material-icons-outlined { font-size: 15px; color: #aaa; }
+      .locked-note { font-size: 10px; color: #999; margin-top: 5px; }
+      /* Per-type Gemini settings */
+      .type-gemini-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; cursor: pointer; gap: 8px; }
+      .type-gemini-head .material-icons-outlined { font-size: 16px; color: #777; }
+      .type-gemini-status { font-size: 10.5px; color: #888; }
+      .type-gemini-body { display: none; }
+      .type-gemini-body.open { display: block; }
+      .type-gemini-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 12px; }
+      /* Gemini settings tab */
+      .settings-card { border: 1px solid var(--border-light); padding: 20px; margin-bottom: 20px; }
+      .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px; }
+      .settings-grid label { display: block; font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #555; margin-bottom: 6px; letter-spacing: 0.3px; }
+      .settings-grid select, .settings-grid input[type=number] { width: 100%; padding: 9px 10px; font-size: 13px; border: 1px solid #ccc; height: 40px; background: #fff; }
+      /* Admin: user & type management */
+      .admin-card { border: 1px solid var(--border-light); border-top: 5px solid var(--primary-yellow); padding: 20px; margin-bottom: 20px; }
+      .admin-card h3 { margin: 0 0 4px; font-size: 13px; text-transform: uppercase; font-weight: 800; }
+      .admin-card .hint { font-size: 11.5px; color: var(--text-sub); margin-bottom: 15px; }
+      .add-row { display: flex; gap: 10px; margin-bottom: 12px; }
+      .add-row input { flex: 1; padding: 9px 12px; font-size: 12.5px; border: 1px solid #ccc; }
+      .add-row input:focus { border-color: #000; outline: none; }
+      .add-row textarea { flex: 1; padding: 9px 12px; font-size: 12.5px; border: 1px solid #ccc; font-family: inherit; min-height: 60px; resize: vertical; }
+      .type-checks { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding: 10px 12px; background: #fafafa; border: 1px solid #eee; }
+      .type-checks label { font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+      .list-container { border: 1px solid #eee; max-height: 260px; overflow-y: auto; }
+      .list-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 14px; border-bottom: 1px solid #f5f5f5; font-size: 12.5px; gap: 10px; }
+      .list-row:last-child { border-bottom: none; }
+      .list-row:hover { background: #fafafa; }
+      .list-row-info { flex: 1; min-width: 0; }
+      .list-row-email { font-weight: 700; }
+      .list-row-meta { font-size: 10.5px; color: #999; margin-top: 2px; }
+      .icon-btn { color: #999; cursor: pointer; }
+      .icon-btn:hover { color: #000; }
+      .icon-btn-danger { color: #ccc; cursor: pointer; }
+      .icon-btn-danger:hover { color: var(--red); }
+      .empty-row { padding: 15px; color: #999; font-size: 12px; text-align: center; }
+      #toast { position: fixed; bottom: 18px; right: 18px; background: #111; color: #fff; padding: 11px 16px; font-size: 12px; display: none; z-index: 999; max-width: 340px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+      #toast.show { display: block; }
+    </style>
+  </head>
+  <body>
+    <div id="loadingScreen" class="loading-screen">
+      <div class="loader"></div>
+      <p style="font-size:12.5px;color:#888;" id="loadingText">Pr?fe Berechtigung...</p>
+    </div>
+    <div id="lockScreen" class="lock-screen" style="display:none;">
+      <span class="material-icons-outlined">lock</span>
+      <h1 id="lockTitle">Kein Zugriff</h1>
+      <p id="lockText"></p>
+      <p style="font-size:11.5px;color:#aaa;margin-top:14px;" id="lockEmailInfo"></p>
+      <div id="lockRequestBox" style="margin-top:18px;"></div>
+    </div>
+    <div id="mainContainer" class="container" style="display:none;">
+      <div class="topbar">
+        <div class="whoami">
+          <span id="whoamiEmail"></span>
+          <span class="badge-admin" id="whoamiAdminBadge" style="display:none;">Admin</span>
+        </div>
+        <div class="lang-toggle">
+          <button class="lang-btn" id="langBtnDe" onclick="setLang('de')">DE</button>
+          <button class="lang-btn" id="langBtnEn" onclick="setLang('en')">EN</button>
+        </div>
+      </div>
+      <div class="tab-nav" id="tabNav">
+        <button class="tab-btn active" onclick="switchTab('prompts', this)">
+          <span class="material-icons-outlined" style="font-size:14px;vertical-align:middle;margin-right:4px;">edit_note</span>
+          <span data-i18n="tabPrompts">Prompts</span>
+        </button>
+        <button class="tab-btn" id="settingsTabBtn" style="display:none;" onclick="switchTab('settings', this)">
+          <span class="material-icons-outlined" style="font-size:14px;vertical-align:middle;margin-right:4px;">tune</span>
+          <span data-i18n="tabSettings">Gemini Einstellungen</span>
+        </button>
+        <button class="tab-btn" id="adminTabBtn" style="display:none;" onclick="switchTab('access', this)">
+          <span class="material-icons-outlined" style="font-size:14px;vertical-align:middle;margin-right:4px;">admin_panel_settings</span>
+          <span data-i18n="tabAdmin">Nutzer und Rechte</span>
+        </button>
+      </div>
+      <!-- PROMPTS TAB -->
+      <div id="view-prompts" class="tab-view active">
+        <div class="intro-box" data-i18n="introPrompts"></div>
+        <div class="request-box">
+          <span data-i18n="requestSpaceHint"></span>
+          <a class="btn btn-secondary" id="requestSpaceLink" href="#" target="_blank" rel="noopener">
+            <span class="material-icons-outlined">confirmation_number</span>
+            <span data-i18n="requestSpace">Neuen Prompt Space beantragen</span>
+          </a>
+        </div>
+        <div class="example-bar">
+          <div class="example-bar-head" onclick="toggleExampleBar()">
+            <div class="example-bar-head-left">
+              <span class="material-icons-outlined" style="font-size:16px;">visibility</span>
+              <span data-i18n="exampleBarTitle">Beispiel ansehen</span>
+            </div>
+            <span class="material-icons-outlined collapse-caret" id="exampleBarCaret">expand_more</span>
+          </div>
+          <div class="example-bar-body" id="exampleBarBody">
+            <div id="exampleBarContent"></div>
+          </div>
+        </div>
+        <div class="prompts-toolbar">
+          <button class="btn btn-secondary btn-sm" onclick="collapseAllPrompts()"><span class="material-icons-outlined">unfold_less</span><span data-i18n="collapseAll">Alle einklappen</span></button>
+          <button class="btn btn-secondary btn-sm" onclick="expandAllPrompts()"><span class="material-icons-outlined">unfold_more</span><span data-i18n="expandAll">Alle ausklappen</span></button>
+        </div>
+        <div id="promptCards"></div>
+        <div id="noPromptsMsg" class="empty-row" style="display:none;" data-i18n="noPrompts"></div>
+      </div>
+      <!-- GEMINI SETTINGS TAB -->
+      <div id="view-settings" class="tab-view">
+        <div class="intro-box" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+          <span data-i18n="globalSettingsIntro" style="flex:1;"></span>
+          <span class="help-icon-btn" onclick="openGeminiHelp()" title="" data-i18n-title="geminiHelpTitle"><span class="material-icons-outlined">help_outline</span></span>
+        </div>
+        <div class="settings-card">
+          <div class="settings-grid">
+            <div>
+              <label data-i18n="model">Gemini Modell</label>
+              <select id="setModel"></select>
+            </div>
+            <div>
+              <label data-i18n="maxTokens">Max Output Tokens</label>
+              <div class="locked-field">
+                <input type="number" id="setMaxTokens" disabled>
+                <span class="material-icons-outlined">lock</span>
+              </div>
+              <div class="locked-note" data-i18n="maxTokensLocked"></div>
+            </div>
+          </div>
+          <div class="settings-grid">
+            <div class="slider-block">
+              <label data-i18n="temperature">Temperature</label>
+              <div class="slider-row">
+                <input type="range" id="setTemp" min="0" max="1" step="0.1" oninput="onSliderInput('setTemp','temp')">
+                <span class="slider-value" id="setTempVal">0.1</span>
+              </div>
+              <div class="slider-desc" id="setTempDesc"></div>
+            </div>
+            <div class="slider-block">
+              <label data-i18n="tmThresholdLabel">TM Threshold</label>
+              <div class="slider-row">
+                <input type="range" id="setTmThreshold" min="0" max="1" step="0.1" oninput="onSliderInput('setTmThreshold','tm')">
+                <span class="slider-value" id="setTmThresholdVal">0.7</span>
+              </div>
+              <div class="slider-desc" id="setTmThresholdDesc"></div>
+            </div>
+          </div>
+          <div class="settings-grid">
+            <div class="thinking-block">
+              <label data-i18n="thinkingLabel">Thinking</label>
+              <label class="toggle-row">
+                <input type="checkbox" id="setThinking" checked onchange="onThinkingToggle('setThinking')">
+                <span class="toggle-desc" id="setThinkingDesc"></span>
+              </label>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveGeminiSettings()">
+            <span class="material-icons-outlined">save</span><span data-i18n="saveSettings">Einstellungen speichern</span>
+          </button>
+          <span class="save-msg" id="settingsSaveMsg"></span>
+        </div>
+      </div>
+      <!-- ADMIN TAB -->
+      <div id="view-access" class="tab-view">
+        <div class="admin-card">
+          <h3 data-i18n="previewTitle">Nutzeransicht ansehen</h3>
+          <div class="hint" data-i18n="previewHint"></div>
+          <div class="add-row">
+            <input type="email" id="previewEmail" data-i18n-placeholder="previewPlaceholder" placeholder="name@karcher.com">
+            <button class="btn btn-primary" onclick="loadUserPreview()"><span class="material-icons-outlined">visibility</span><span data-i18n="previewButton">Ansicht laden</span></button>
+          </div>
+          <div id="previewResult"></div>
+        </div>
+        <div class="admin-card">
+          <h3 data-i18n="newTypeTitle">Neuen Prompt Space anlegen</h3>
+          <div class="hint" data-i18n="newTypeHint"></div>
+          <div class="add-row">
+            <input type="text" id="newTypeName" data-i18n-placeholder="newTypeName" placeholder="Name">
+          </div>
+          <div class="add-row">
+            <select id="newTypeCopyFrom" onchange="applyCopyFrom()"></select>
+          </div>
+          <div class="add-row">
+            <textarea id="newTypeExample" data-i18n-placeholder="newTypeExample" placeholder="Beispiel, optional"></textarea>
+          </div>
+          <div class="add-row">
+            <textarea id="newTypeSeed" data-i18n-placeholder="newTypeSeed" placeholder="Start Prompt, optional"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="addType()">
+            <span class="material-icons-outlined">add</span><span data-i18n="addType">Prompt Space anlegen</span>
+          </button>
+          <div style="margin-top:18px;">
+            <div class="hint" data-i18n="existingSpaces" style="margin-bottom:8px;">Vorhandene Prompt Spaces</div>
+            <div class="list-container" id="typesContainer"><div class="empty-row">...</div></div>
+          </div>
+        </div>
+        <div class="admin-card">
+          <h3 data-i18n="exportImportTitle">Export und Import</h3>
+          <div class="hint" data-i18n="exportImportHint"></div>
+          <div style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#555;margin-bottom:8px;" data-i18n="exportSectionTitle">Export</div>
+          <div class="type-checks" id="exportTypeChecks"></div>
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;margin-bottom:12px;cursor:pointer;">
+            <input type="checkbox" id="exportIncludeGlobal" style="width:auto;">
+            <span data-i18n="exportIncludeGlobal"></span>
+          </label>
+          <button class="btn btn-primary btn-sm" onclick="exportSelectedTypes()"><span class="material-icons-outlined">download</span><span data-i18n="exportButton">Ausgew?hlte Typen exportieren</span></button>
+          <div style="border-top:1px solid var(--border-light);margin:20px 0 16px;"></div>
+          <div style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#555;margin-bottom:8px;" data-i18n="importSectionTitle">Import</div>
+          <div class="add-row">
+            <input type="file" id="importFile" accept="application/json" onchange="onImportFileChosen(event)">
+          </div>
+          <div class="add-row">
+            <textarea id="importJsonText" data-i18n-placeholder="importOrPaste" placeholder="oder JSON hier einf?gen" style="min-height:90px;font-family:var(--ff-mono);font-size:11.5px;"></textarea>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="analyzeImport()"><span class="material-icons-outlined">search</span><span data-i18n="importAnalyzeButton">Datei analysieren</span></button>
+          <div id="importPreview"></div>
+        </div>
+        <div class="admin-card">
+          <h3 data-i18n="addUserTitle">Nutzer freischalten</h3>
+          <div class="hint" data-i18n="addUserHint"></div>
+          <div class="add-row">
+            <input type="email" id="newUserEmail" placeholder="kollege@karcher.com">
+          </div>
+          <div class="type-checks" id="newUserTypeChecks"></div>
+          <label style="font-size:12px;display:flex;align-items:center;gap:6px;margin-bottom:14px;cursor:pointer;">
+            <input type="checkbox" id="newUserManageSettings" style="width:auto;">
+            <span data-i18n="manageSettingsCheckbox"></span>
+          </label>
+          <button class="btn btn-primary" onclick="saveUser()">
+            <span class="material-icons-outlined">add</span><span data-i18n="saveUser">Speichern oder aktualisieren</span>
+          </button>
+          <div style="margin-top:16px;">
+            <div class="list-container" id="usersContainer"><div class="empty-row">...</div></div>
+          </div>
+        </div>
+        <div class="admin-card" style="border-top-color:#d93025;">
+          <h3 style="color:#d93025;" data-i18n="adminsTitle">Administratoren</h3>
+          <div class="hint" data-i18n="adminsHint"></div>
+          <div class="add-row">
+            <input type="email" id="newAdminEmail" placeholder="admin@karcher.com">
+            <button class="btn" style="background:#000;color:#fff;" onclick="addAdminUser()"><span class="material-icons-outlined">add</span><span data-i18n="addAdmin">Hinzuf?gen</span></button>
+          </div>
+          <div class="list-container" id="adminContainer"><div class="empty-row">...</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="preview-overlay" id="previewOverlay">
+      <div class="preview-overlay-inner">
+        <div class="preview-overlay-header">
+          <div class="preview-overlay-header-left">
+            <span class="material-icons-outlined">visibility</span>
+            <strong class="preview-overlay-email"></strong>
+            <span class="preview-overlay-badges"></span>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="closeUserPreview()"><span class="material-icons-outlined">close</span><span data-i18n="previewClose">Schlie?en</span></button>
+        </div>
+        <div class="preview-overlay-body-wrap">
+          <div class="preview-overlay-note" data-i18n="previewHint"></div>
+          <div id="previewOverlayBody"></div>
+        </div>
+      </div>
+    </div>
+    <div class="gemini-help-backdrop" id="geminiHelpBackdrop" onclick="if(event.target===this) closeGeminiHelp();">
+      <div class="gemini-help-modal">
+        <div class="gemini-help-head">
+          <h2 data-i18n="geminiHelpTitle">Was bedeuten diese Einstellungen?</h2>
+          <button class="btn-ghost-modal" onclick="closeGeminiHelp()" style="background:none;border:none;color:#fff;cursor:pointer;"><span class="material-icons-outlined">close</span></button>
+        </div>
+        <div class="gemini-help-body" id="geminiHelpBody"></div>
+      </div>
+    </div>
+    <div id="toast"></div>
+    <script>
+      var currentConfig = null;
+      var knownTypesCache = [];
+      var uiLang = 'de';
+
+      // Gemini Modelle, die ?ber das Gateway nutzbar sind. Bei Bedarf hier erg?nzen.
+      // Nur Modelle, die f?r euren API-Key/Google-Projekt tats?chlich freigeschaltet sind.
+      // gemini-3.6-flash ist der bew?hrte Default aus AutoFix Hub selbst. Weitere Modelle
+      // erst hier erg?nzen, nachdem sie ?ber "Test Connection" im Dashboard best?tigt wurden.
+      // Nur Modelle, die f?r euren API-Key/Google-Projekt tats?chlich freigeschaltet sind.
+      // gemini-3.6-flash ist der bew?hrte Default, siehe auch das TermSearch-Projekt, das
+      // dasselbe Apigee-Gateway nutzt. Die komplette 2.5er Modellreihe (Flash und Pro)
+      // ist f?r diesen Key deaktiviert (404 "no longer available to new users").
+      // Muss synchron zu ALLOWED_GEMINI_MODELS_ in PromptEditorAccess.gs gehalten werden.
+      // Die 2.5er Reihe (Flash und Pro) ist f?r diesen API-Key deaktiviert
+      // (404 "no longer available to new users"), daher nur 3.x Flash-Varianten.
+      var GEMINI_MODELS = [
+        { value: 'gemini-3.6-flash',       label: 'Gemini 3.6 Flash' },
+        { value: 'gemini-3.6-flash-lite',  label: 'Gemini 3.6 Flash Lite' },
+        { value: 'gemini-3.5-flash',       label: 'Gemini 3.5 Flash' },
+        { value: 'gemini-3.5-flash-lite',  label: 'Gemini 3.5 Flash Lite' },
+        { value: 'gemini-3.1-flash-lite',  label: 'Gemini 3.1 Flash Lite' },
+        { value: 'gemini-3-flash-preview', label: 'Gemini 3 Flash (Preview)' }
+      ];
+      function modelOptionsHtml_(selected) {
+        return GEMINI_MODELS.map(function(m) {
+          var sel = (m.value === selected) ? ' selected' : '';
+          return '<option value="' + esc(m.value) + '"' + sel + '>' + esc(m.label) + '</option>';
+        }).join('');
+      }
+
+      var I18N = {
+        de: {
+          tabPrompts: 'Prompts', tabSettings: 'Gemini Einstellungen', tabAdmin: 'Nutzer und Rechte',
+          lockTitle: 'Kein Zugriff',
+          lockText: 'Du bist f?r den Prompt Editor nicht freigeschaltet. Bitte wende dich an einen Administrator, um freigeschaltet zu werden, oder stelle ein Ticket f?r einen neuen Prompt Space.',
+          loggedInAs: 'Angemeldet als:',
+          checking: 'Pr?fe Berechtigung...',
+          introPrompts: 'Hier passt du die Anweisungen an, nach denen Gemini die maschinell ?bersetzten Segmente in AutoFix Hub nachbearbeitet, pro Dokumenttyp. ?nderungen wirken sich auf alle zuk?nftigen AutoFix L?ufe aus.',
+          requestSpace: 'Neuen Prompt Space beantragen',
+          requestSpaceHint: 'Brauchst du einen Prompt Space? Stelle ein Ticket, dann legt ein Admin ihn f?r dich an.',
+          master: 'Standard', typeLabel: 'Typ:', save: 'Speichern', reset: 'Zur?cksetzen',
+          saving: 'Speichert...', saved: 'Gespeichert', unsaved: 'Ungespeicherte ?nderungen',
+          resetConfirm: ' wirklich auf den K?rcher Standard zur?cksetzen? Deine ?nderungen gehen dabei verloren.',
+          charCount: 'Zeichen', copyPrompt: 'Kopieren', copied: 'In Zwischenablage kopiert',
+          exampleBarTitle: 'Beispiel ansehen', exampleSelectHint: 'Typ w?hlen',
+          noExample: 'F?r diesen Typ ist noch kein Beispiel hinterlegt.',
+          collapseAll: 'Alle einklappen', expandAll: 'Alle ausklappen',
+          hmwButton: 'Mit Gemini verbessern', hmwLikes: 'Das will ich behalten oder verst?rken',
+          hmwDislikes: 'Das will ich ?ndern oder entfernen', hmwFree: 'Zus?tzliche Anweisung, frei formuliert',
+          hmwGenerate: 'Vorschlag generieren', hmwGenerating: 'Generiert...',
+          hmwSuggestion: 'Gemini Vorschlag, Vorschau', hmwAccept: 'In Editor ?bernehmen', hmwDiscard: 'Verwerfen',
+          noPrompts: 'F?r dich sind keine Prompt Typen freigeschaltet. Bitte einen Admin kontaktieren.',
+          geminiForType: 'Gemini Einstellungen f?r diesen Typ',
+          usingGlobal: 'Nutzt aktuell die globalen Einstellungen.',
+          usingCustom: 'Nutzt eigene Einstellungen f?r diesen Typ.',
+          model: 'Modell', temperature: 'Temperature', maxTokens: 'Max Output Tokens',
+          maxTokensLocked: 'Fest vorgegeben, kann nicht ver?ndert werden.',
+          tmThresholdLabel: 'TM Threshold',
+          thinkingLabel: 'Thinking', thinkingOn: 'Aktiviert, Modell darf l?nger nachdenken bei schwierigen F?llen.',
+          thinkingOff: 'Deaktiviert, antwortet immer direkt ohne extra Denkschritte, schneller und g?nstiger.',
+          saveTypeSettings: 'F?r diesen Typ speichern', clearTypeSettings: 'Auf global zur?cksetzen',
+          globalSettingsIntro: 'Diese Werte sind die globale Vorgabe f?r alle Prompt Typen ohne eigene Einstellungen. Sie wirken sich sofort auf den n?chsten Lauf aus.',
+          saveSettings: 'Einstellungen speichern',
+          ctrlSHint: 'Tipp: Strg+S im Textfeld speichert direkt.',
+          testToggle: 'Prompt testen', testInputLabel: 'Testtext', testInputPlaceholder: 'Text eingeben, der post editiert werden soll',
+          testSourceLang: 'Quellsprache', testTargetLang: 'Zielsprache',
+          testRun: 'Test ausf?hren', testRunning: 'Fragt Gemini...',
+          testNoInput: 'Bitte einen Testtext eingeben.',
+          testOutputLabel: 'Ergebnis', testChanged: 'Ge?ndert', testUnchanged: 'Unver?ndert ?bernommen',
+          testReasonLabel: 'Begr?ndung', testModelLabel: 'Modell', testUsesUnsaved: 'Testet mit dem aktuellen Text im Editor, auch wenn noch nicht gespeichert.',
+          addUserTitle: 'Nutzer freischalten',
+          addUserHint: 'Lege fest, welche Prompt Typen diese Person bearbeiten darf und ob sie zus?tzlich die globalen Gemini Einstellungen verwalten darf.',
+          allTypes: 'Alle Typen', manageSettingsCheckbox: 'Darf zus?tzlich globale Gemini Einstellungen verwalten',
+          saveUser: 'Speichern oder aktualisieren',
+          adminsTitle: 'Administratoren',
+          adminsHint: 'Admins haben immer vollen Zugriff auf alle Prompt Typen, alle Einstellungen, die Nutzerverwaltung und das Anlegen neuer Prompt Spaces.',
+          addAdmin: 'Hinzuf?gen',
+          previewTitle: 'Nutzeransicht ansehen', previewHint: 'Sieh dir live an, wie der Prompts Tab f?r eine bestimmte freigeschaltete Person aussieht. Reine Ansicht, hier l?sst sich nichts speichern.',
+          previewButton: 'Ansicht laden', previewPlaceholder: 'name@karcher.com',
+          previewNotWhitelisted: 'Diese Person ist nicht freigeschaltet und w?rde die Sperr-Seite sehen.',
+          previewAdminBadge: 'Admin, sieht alles', previewCanSettings: 'Darf globale Gemini Einstellungen verwalten',
+          previewCannotSettings: 'Darf globale Gemini Einstellungen nicht verwalten',
+          previewNoPrompts: 'Sieht keinen einzigen Prompt Typ.',
+          previewEditable: 'bearbeitbar', previewReadOnly: 'nur lesbar',
+          previewClose: 'Schlie?en',
+          newTypeTitle: 'Neuen Prompt Space anlegen',
+          newTypeHint: 'Lege einen neuen Container f?r einen Dokumenttyp an, zum Beispiel CAMPUS. Er erscheint danach im Prompts Tab f?r alle, die daf?r freigeschaltet sind, und startet mit dem Technical Prompt als Ausgangstext, falls kein eigener Start Prompt angegeben wird.',
+          newTypeName: 'Name', newTypeExample: 'Beispiel, optional', newTypeSeed: 'Start Prompt, optional',
+          copyFrom: 'Von bestehendem Space kopieren, optional', copyFromNone: 'Leer starten',
+          addType: 'Prompt Space anlegen', existingSpaces: 'Vorhandene Prompt Spaces',
+          builtIn: 'Fest eingebaut', deleteSpace: 'L?schen',
+          deleteSpaceConfirm: ' wirklich l?schen? Gespeicherte Prompt Texte f?r diesen Typ bleiben erhalten, der Space verschwindet aber aus der ?bersicht.',
+          noEmail: 'Bitte eine g?ltige E Mail Adresse eingeben.', noName: 'Bitte einen Namen eingeben.',
+          emptyPrompt: 'Der Prompt darf nicht leer sein.',
+          exportImportTitle: 'Export und Import', exportImportHint: 'Sichere die komplette Prompt Konfiguration als JSON oder spiele einen fr?heren Export wieder ein. Beides l?sst sich nach Typ filtern.',
+          exportSectionTitle: 'Export', exportIncludeGlobal: 'Globale Gemini Einstellungen mit exportieren',
+          exportButton: 'Ausgew?hlte Typen exportieren', exportNoTypes: 'Bitte mindestens einen Typ ausw?hlen.',
+          importSectionTitle: 'Import', importFileLabel: 'JSON Datei w?hlen', importOrPaste: 'oder JSON hier einf?gen',
+          importAnalyzeButton: 'Datei analysieren', importInvalid: 'Kein g?ltiges JSON oder keine Prompt Typen darin gefunden.',
+          importFoundTitle: 'Gefundene Typen', importExisting: 'existiert bereits, wird ?berschrieben', importNewTag: 'neu',
+          importApplyGlobal: 'Globale Gemini Einstellungen aus der Datei mit ?bernehmen',
+          importApplyButton: 'Ausgew?hlte Typen importieren', importNoTypes: 'Bitte mindestens einen Typ zum Importieren ausw?hlen.',
+          importSuccess: 'importiert.',
+          geminiHelpTitle: 'Was bedeuten diese Einstellungen?',
+          geminiHelpModelTitle: 'Modell', geminiHelpModelText: 'Welches Gemini Modell f?r Anfragen dieses Typs, oder global f?r alle Typen ohne eigene Einstellung, verwendet wird. Die Modelle unterscheiden sich in Geschwindigkeit, Kosten und Qualit?t der Ergebnisse. "Flash" Modelle sind auf Geschwindigkeit und niedrige Kosten ausgelegt und f?r die meisten Post-Editing-Aufgaben v?llig ausreichend. "Flash Lite" ist die schnellste und g?nstigste Variante, mit leicht geringerer sprachlicher Feinheit. Eine h?here Versionsnummer, zum Beispiel 3.6 statt 3.1, ist eine neuere Modellgeneration und in der Regel dem ?lteren Modell in Qualit?t und Befolgen von Anweisungen ?berlegen. In der Liste stehen nur Modelle, die f?r unseren API Key tats?chlich freigeschaltet sind, andere Modelle w?rden mit einem 404 Fehler abgelehnt.',
+          geminiHelpTempTitle: 'Temperature', geminiHelpTempText: 'Steuert, wie variabel beziehungsweise kreativ die Antworten des Modells ausfallen, Werte von 0.0 bis 1.0. Bei niedrigen Werten nahe 0 liefert das Modell bei gleichem Input fast immer dieselbe, vorhersehbare Formulierung, das ist ideal f?r technische Texte, bei denen Konsistenz zwischen Segmenten wichtiger ist als sprachliche Abwechslung. Bei hohen Werten nahe 1 formuliert das Modell freier und variantenreicher, was f?r Marketingtexte reizvoll sein kann, aber auch bedeutet, dass zwei L?ufe mit demselben Text zu unterschiedlichen Ergebnissen f?hren k?nnen. F?r die meisten F?lle ist ein niedriger Wert zwischen 0.1 und 0.3 die richtige Wahl.',
+          geminiHelpTmTitle: 'TM Threshold', geminiHelpTmText: 'Legt fest, ab welcher ?hnlichkeit ein Treffer aus dem Translation Memory als relevant genug gilt, um bei der Nachbearbeitung ber?cksichtigt zu werden, Werte von 0.0 bis 1.0, wobei der Wert grob als Prozent ?bereinstimmung zu verstehen ist. Ein niedriger Wert l?sst auch entferntere, lose passende Treffer durch, das liefert mehr Kontext, aber auch mehr Rauschen und potenziell irref?hrende Vorschl?ge. Ein hoher Wert l?sst nur sehr genaue, fast identische Treffer durch, das ergibt weniger, daf?r aber verl?sslichere ?bereinstimmungen. Ein Wert um 0.7 ist ein guter, eher strenger Standardwert.',
+          geminiHelpThinkingTitle: 'Thinking', geminiHelpThinkingText: 'Legt fest, ob sich das Modell zus?tzliche interne Denkschritte erlauben darf, bevor es antwortet, statt sofort direkt zu antworten. Aktiviert bedeutet: bei schwierigen oder mehrdeutigen Segmenten kann das Modell l?nger nachdenken, was h?ufig zu besseren, durchdachteren Korrekturen f?hrt, daf?r aber etwas langsamer und geringf?gig teurer ist. Deaktiviert bedeutet: das Modell antwortet immer sofort ohne zus?tzliche Denkschritte, das ist schneller und g?nstiger, kann bei wirklich kniffligen F?llen aber zu einer etwas ungenaueren Antwort f?hren. F?r die meisten F?lle ist Aktiviert die sinnvollere Wahl, da die Kosten- und Zeitersparnis beim Deaktivieren meist gering ist.',
+          geminiHelpMaxTokensTitle: 'Max Output Tokens', geminiHelpMaxTokensText: 'Die maximale L?nge, die eine einzelne Antwort des Modells haben darf, gemessen in Tokens, das sind grob Wortteile, nicht ganze W?rter. Dieser Wert ist fest auf der Plattform vorgegeben und kann hier nicht ver?ndert werden. Er ist so bemessen, dass auch bei gr??eren Batches mit vielen Segmenten pro Anfrage genug Platz f?r eine vollst?ndige Antwort vorhanden ist, ohne dass einzelne Anfragen unn?tig gro? und damit teuer werden.',
+          tempDesc: ['Fest, immer die gleiche Ausgabe bei gleichem Input.', 'Sehr zur?ckhaltend, kaum Variation.', 'Zur?ckhaltend, bleibt eng an der sichersten Formulierung.', 'Etwas Spielraum f?r stilistische Anpassungen.', 'Ausgewogen, meist w?rtlich mit leichter Gl?ttung.', 'Ausgewogen, guter Mix aus Genauigkeit und nat?rlicher Sprache.', 'Etwas mehr Freiheit, nat?rlichere Umformulierung.', 'Kreativ, sp?rbar freiere Formulierung, gut f?r Marketing.', 'Sehr kreativ, Ausgabe kann zwischen L?ufen stark variieren.', 'Hohe Kreativit?t, weniger vorhersehbar, mit Vorsicht nutzen.', 'Maximale Kreativit?t, am wenigsten vorhersehbar, f?r Post Editing selten sinnvoll.'],
+          tmDesc: ['Nimmt fast alles, auch sehr lose Treffer.', 'Sehr lose Treffer z?hlen mit.', 'Lose Treffer z?hlen mit, entsprechend mehr Rauschen.', 'Recht locker, mehr Kontext, aber weniger Pr?zision.', 'Etwas locker, ein guter Anteil an Kontext.', 'Ausgewogen, solider Standardwert f?r die meisten Inhalte.', 'Recht streng, nur ordentliche Treffer z?hlen.', 'Streng, nur nahe Treffer z?hlen.', 'Sehr streng, nur nahezu identische Treffer z?hlen.', 'Extrem streng, fast nur exakte Treffer.', 'Nur perfekte Treffer z?hlen.']
+        },
+        en: {
+          tabPrompts: 'Prompts', tabSettings: 'Gemini Settings', tabAdmin: 'Users and Access',
+          lockTitle: 'No Access',
+          lockText: 'You are not enabled for the Prompt Editor. Please contact an administrator to get access, or open a ticket for a new prompt space.',
+          loggedInAs: 'Signed in as:',
+          checking: 'Checking access...',
+          introPrompts: 'Here you adjust the instructions Gemini uses to post edit machine translated segments in AutoFix Hub, per document type. Changes apply to all future AutoFix runs.',
+          requestSpace: 'Request new Prompting Space',
+          requestSpaceHint: 'Need a prompt space? Open a ticket and an admin will set it up for you.',
+          master: 'Default', typeLabel: 'Type:', save: 'Save', reset: 'Reset',
+          saving: 'Saving...', saved: 'Saved', unsaved: 'Unsaved changes',
+          resetConfirm: ' back to the K?rcher default? Your changes will be lost.',
+          charCount: 'characters', copyPrompt: 'Copy', copied: 'Copied to clipboard',
+          exampleBarTitle: 'View example', exampleSelectHint: 'Choose type',
+          noExample: 'No example has been set up for this type yet.',
+          collapseAll: 'Collapse all', expandAll: 'Expand all',
+          hmwButton: 'Improve with Gemini', hmwLikes: 'Keep or strengthen this',
+          hmwDislikes: 'Change or remove this', hmwFree: 'Additional instruction, free text',
+          hmwGenerate: 'Generate suggestion', hmwGenerating: 'Generating...',
+          hmwSuggestion: 'Gemini suggestion, preview', hmwAccept: 'Use in editor', hmwDiscard: 'Discard',
+          noPrompts: 'No prompt types are enabled for you. Please contact an admin.',
+          geminiForType: 'Gemini settings for this type',
+          usingGlobal: 'Currently using the global settings.',
+          usingCustom: 'Using custom settings for this type.',
+          model: 'Model', temperature: 'Temperature', maxTokens: 'Max Output Tokens',
+          maxTokensLocked: 'Fixed by the platform, cannot be changed.',
+          tmThresholdLabel: 'TM Threshold',
+          thinkingLabel: 'Thinking', thinkingOn: 'Enabled, model can take extra reasoning steps on hard cases.',
+          thinkingOff: 'Disabled, always answers directly with no extra reasoning steps, faster and cheaper.',
+          saveTypeSettings: 'Save for this type', clearTypeSettings: 'Reset to global',
+          globalSettingsIntro: 'These values are the global default for all prompt types without their own settings. Changes apply to the next run right away.',
+          saveSettings: 'Save settings',
+          ctrlSHint: 'Tip: Ctrl+S inside the text field saves right away.',
+          testToggle: 'Test the prompt', testInputLabel: 'Test text', testInputPlaceholder: 'Enter text to be post edited',
+          testSourceLang: 'Source language', testTargetLang: 'Target language',
+          testRun: 'Run test', testRunning: 'Asking Gemini...',
+          testNoInput: 'Please enter some test text.',
+          testOutputLabel: 'Result', testChanged: 'Changed', testUnchanged: 'Kept as is',
+          testReasonLabel: 'Reason', testModelLabel: 'Model', testUsesUnsaved: 'Tests with whatever is currently in the editor, even if not saved yet.',
+          addUserTitle: 'Grant access',
+          addUserHint: 'Choose which prompt types this person can edit and whether they can also manage the global Gemini settings.',
+          allTypes: 'All types', manageSettingsCheckbox: 'Can also manage global Gemini settings',
+          saveUser: 'Save or update',
+          adminsTitle: 'Administrators',
+          adminsHint: 'Admins always have full access to every prompt type, all settings, user management, and creating new prompt spaces.',
+          addAdmin: 'Add',
+          previewTitle: 'View as user', previewHint: 'See live how the Prompts tab looks for a specific enabled person. Read only, nothing can be saved from here.',
+          previewButton: 'Load view', previewPlaceholder: 'name@karcher.com',
+          previewNotWhitelisted: 'This person is not enabled and would see the locked page.',
+          previewAdminBadge: 'Admin, sees everything', previewCanSettings: 'Can manage global Gemini settings',
+          previewCannotSettings: 'Cannot manage global Gemini settings',
+          previewNoPrompts: 'Sees no prompt types at all.',
+          previewEditable: 'editable', previewReadOnly: 'read only',
+          previewClose: 'Close',
+          newTypeTitle: 'Create new Prompt Space',
+          newTypeHint: 'Set up a new container for a document type, for example CAMPUS. It then shows up in the Prompts tab for everyone enabled for it, starting from the Technical prompt unless you give it its own starting prompt.',
+          newTypeName: 'Name', newTypeExample: 'Example, optional', newTypeSeed: 'Starting prompt, optional',
+          copyFrom: 'Copy from an existing space, optional', copyFromNone: 'Start empty',
+          addType: 'Create prompt space', existingSpaces: 'Existing prompt spaces',
+          builtIn: 'Built in', deleteSpace: 'Delete',
+          deleteSpaceConfirm: ' really delete this? Saved prompt text for this type stays, but the space disappears from the list.',
+          noEmail: 'Please enter a valid email address.', noName: 'Please enter a name.',
+          emptyPrompt: 'The prompt cannot be empty.',
+          exportImportTitle: 'Export and import', exportImportHint: 'Back up the full prompt configuration as JSON or reapply an earlier export. Both can be filtered by type.',
+          exportSectionTitle: 'Export', exportIncludeGlobal: 'Include global Gemini settings in the export',
+          exportButton: 'Export selected types', exportNoTypes: 'Please select at least one type.',
+          importSectionTitle: 'Import', importFileLabel: 'Choose JSON file', importOrPaste: 'or paste JSON here',
+          importAnalyzeButton: 'Analyze file', importInvalid: 'Not valid JSON or no prompt types found in it.',
+          importFoundTitle: 'Types found', importExisting: 'already exists, will be overwritten', importNewTag: 'new',
+          importApplyGlobal: 'Also apply the global Gemini settings from the file',
+          importApplyButton: 'Import selected types', importNoTypes: 'Please select at least one type to import.',
+          importSuccess: 'imported.',
+          geminiHelpTitle: 'What do these settings mean?',
+          geminiHelpModelTitle: 'Model', geminiHelpModelText: 'Which Gemini model is used for requests of this type, or globally for every type without its own setting. Models differ in speed, cost, and result quality. "Flash" models are built for speed and low cost and are more than enough for most post editing work. "Flash Lite" is the fastest and cheapest option, with slightly less linguistic nuance. A higher version number, for example 3.6 versus 3.1, is a newer model generation and is generally better at quality and following instructions than the older one. Only models that are actually enabled for our API key are listed here, other models would be rejected with a 404 error.',
+          geminiHelpTempTitle: 'Temperature', geminiHelpTempText: 'Controls how variable or creative the model\'s answers are, values from 0.0 to 1.0. At low values near 0 the model gives almost the same, predictable wording for the same input every time, which is ideal for technical text where consistency across segments matters more than variety. At high values near 1 the model phrases things more freely and with more variation, which can be appealing for marketing copy, but also means two runs on the same text can give different results. For most cases a low value between 0.1 and 0.3 is the right choice.',
+          geminiHelpTmTitle: 'TM Threshold', geminiHelpTmText: 'Sets how similar a translation memory match has to be before it counts as relevant enough to be used during post editing, values from 0.0 to 1.0, roughly read as a percentage match. A low value lets in looser, more distant matches, giving more context but also more noise and potentially misleading suggestions. A high value only lets in very close, near identical matches, giving fewer but more reliable matches. A value around 0.7 is a good, fairly strict default.',
+          geminiHelpThinkingTitle: 'Thinking', geminiHelpThinkingText: 'Controls whether the model is allowed to take extra internal reasoning steps before answering, instead of always answering immediately. Enabled means: on difficult or ambiguous segments the model can think for longer, which often leads to better, more considered corrections, at the cost of being a bit slower and slightly more expensive. Disabled means: the model always answers right away with no extra reasoning, which is faster and cheaper, but can be a little less accurate on genuinely tricky cases. For most cases Enabled is the better choice, since the time and cost saved by disabling it is usually small.',
+          geminiHelpMaxTokensTitle: 'Max Output Tokens', geminiHelpMaxTokensText: 'The maximum length a single model response is allowed to have, measured in tokens, which are roughly word pieces rather than whole words. This value is fixed by the platform and cannot be changed here. It is sized so that even larger batches with many segments per request have enough room for a complete response, without making individual requests unnecessarily large and therefore expensive.',
+          tempDesc: ['Fixed, same input always gives the same output.', 'Extremely restrained, barely any variation.', 'Restrained, sticks close to the safest wording.', 'A little room for stylistic freedom.', 'Balanced, mostly literal with light smoothing.', 'Balanced, a good mix of accuracy and natural phrasing.', 'A bit more freedom, more natural rewording.', 'Creative, noticeably freer phrasing, good for marketing.', 'Very creative, output can vary a lot between runs.', 'Highly creative, less predictable, use with care.', 'Maximum creativity, least predictable, rarely a good idea for post editing.'],
+          tmDesc: ['Takes almost anything, even very loose matches.', 'Very loose matches count.', 'Loose matches count, more noise as a result.', 'Fairly loose, more context but less precision.', 'Somewhat loose, a decent amount of context.', 'Balanced, a solid default for most content.', 'Fairly strict, only decent matches count.', 'Strict, only close matches count.', 'Very strict, only near identical matches count.', 'Extremely strict, almost exact matches only.', 'Only perfect matches count.']
+        }
+      };
+      function t(key) { return (I18N[uiLang] && I18N[uiLang][key]) || I18N.de[key] || key; }
+      function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+      function toast(msg, dur) {
+        var el = document.getElementById('toast');
+        el.textContent = msg; el.classList.add('show');
+        clearTimeout(el._t);
+        el._t = setTimeout(function() { el.classList.remove('show'); }, dur || 3000);
+      }
+
+      var LIKE_PRESETS_KEYS = ['Strengere Terminologie-Treue|Stricter terminology adherence',
+        'Nat?rlicherer Sprachfluss|More natural flow', 'K?rzere, pr?gnantere S?tze|Shorter, more concise sentences',
+        'F?rmlicherer Ton|More formal tone', 'Mehr Marketing-Sprache|More marketing language',
+        'Striktere Zahlen-/Einheiten-Regeln|Stricter number/unit rules',
+        'Konsistentere Terminologie ?ber Segmente hinweg|More consistent terminology across segments',
+        'Mehr aktive Verbesserungen statt nur Fehlerkorrektur|More active improvements, not just error fixes'];
+      var DISLIKE_PRESETS_KEYS = ['Zu w?rtliche ?bersetzung|Too literal a translation',
+        'Zu viele unn?tige Umformulierungen|Too many unnecessary rewordings', 'Zu f?rmlich / steif|Too formal / stiff',
+        'Zu viel Marketing-Ton|Too much marketing tone', 'Zu lange, verschachtelte S?tze|Too long, nested sentences',
+        'Inkonsistente Terminologie|Inconsistent terminology', '?ndert zu viel am Ursprungssinn|Changes too much of the original meaning',
+        'Ignoriert Termbase-Vorgaben|Ignores termbase entries'];
+      function presetLabel_(pair) { var parts = pair.split('|'); return uiLang === 'en' ? parts[1] : parts[0]; }
+
+      window.onload = function() { loadConfig(); };
+
+      function loadConfig() {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            currentConfig = res;
+            uiLang = res.uiLang === 'en' ? 'en' : 'de';
+            document.getElementById('loadingScreen').style.display = 'none';
+            if (!res.authorized) {
+              applyStaticI18n();
+              document.getElementById('lockScreen').style.display = 'flex';
+              document.getElementById('lockEmailInfo').innerText = res.email ? (t('loggedInAs') + ' ' + res.email) : '';
+              document.getElementById('lockRequestBox').innerHTML =
+                '<a class="btn btn-primary" href="' + esc(res.ticketUrl) + '" target="_blank" rel="noopener">' +
+                '<span class="material-icons-outlined">confirmation_number</span>' + esc(t('requestSpace')) + '</a>';
+              return;
+            }
+            document.getElementById('mainContainer').style.display = 'block';
+            document.getElementById('whoamiEmail').innerText = res.email;
+            document.getElementById('requestSpaceLink').href = res.ticketUrl;
+            if (res.isAdmin) {
+              document.getElementById('whoamiAdminBadge').style.display = 'inline-flex';
+              document.getElementById('adminTabBtn').style.display = 'inline-flex';
+            }
+            if (res.canManageSettings) {
+              document.getElementById('settingsTabBtn').style.display = 'inline-flex';
+              if (res.geminiSettings) fillSettingsForm(res.geminiSettings);
+            }
+            applyStaticI18n();
+            renderExampleBar();
+            renderPromptCards(res.prompts || []);
+            populateCopyFromSelect();
+          })
+          .withFailureHandler(function(err) {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('lockScreen').style.display = 'flex';
+            document.getElementById('lockTitle').innerText = 'Error';
+            document.getElementById('lockText').innerText = err.message;
+          })
+          .apiPromptEditorGetConfig();
+      }
+
+      function setLang(l) {
+        if (l === uiLang) { applyStaticI18n(); return; }
+        uiLang = l;
+        google.script.run.apiPromptEditorSetUiLang(l);
+        applyStaticI18n();
+        if (currentConfig && currentConfig.authorized) {
+          renderExampleBar();
+          renderPromptCards(currentConfig.prompts || []);
+          populateCopyFromSelect();
+        }
+      }
+      function applyStaticI18n() {
+        document.getElementById('langBtnDe').classList.toggle('active', uiLang === 'de');
+        document.getElementById('langBtnEn').classList.toggle('active', uiLang === 'en');
+        document.getElementById('loadingText').innerText = t('checking');
+        document.getElementById('lockTitle').innerText = t('lockTitle');
+        document.getElementById('lockText').innerText = t('lockText');
+        document.querySelectorAll('[data-i18n]').forEach(function(el) {
+          el.innerText = t(el.getAttribute('data-i18n'));
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+          el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder')));
+        });
+        document.querySelectorAll('[data-i18n-title]').forEach(function(el) {
+          el.setAttribute('title', t(el.getAttribute('data-i18n-title')));
+        });
+        refreshSliderDesc('setTemp', 'temp');
+        refreshSliderDesc('setTmThreshold', 'tm');
+        if (document.getElementById('setThinking')) onThinkingToggle('setThinking');
+      }
+
+      function switchTab(id, el) {
+        document.querySelectorAll('.tab-view').forEach(function(v) { v.classList.remove('active'); });
+        document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.getElementById('view-' + id).classList.add('active');
+        el.classList.add('active');
+        if (id === 'access') loadAccessTab();
+      }
+
+      // ?? SLIDERS (Temperature / TM Threshold) ???????????????????????
+      function sliderDescText_(kind, value) {
+        var idx = Math.round(parseFloat(value) * 10);
+        var arr = kind === 'tm' ? t('tmDesc') : t('tempDesc');
+        return arr[idx] || '';
+      }
+      function onSliderInput(inputId, kind) {
+        var input = document.getElementById(inputId);
+        var val = parseFloat(input.value).toFixed(1);
+        var valEl = document.getElementById(inputId + 'Val');
+        var descEl = document.getElementById(inputId + 'Desc');
+        if (valEl) valEl.innerText = val;
+        if (descEl) descEl.innerText = sliderDescText_(kind, val);
+      }
+      function refreshSliderDesc(inputId, kind) {
+        var input = document.getElementById(inputId);
+        if (!input || input.value === '') return;
+        onSliderInput(inputId, kind);
+      }
+
+      // ?? THINKING TOGGLE ?????????????????????????????????????????????
+      function onThinkingToggle(inputId) {
+        var input = document.getElementById(inputId);
+        var descEl = document.getElementById(inputId + 'Desc');
+        if (descEl) descEl.innerText = input.checked ? t('thinkingOn') : t('thinkingOff');
+      }
+
+      // ?? EXAMPLE BAR ??????????????????????????????????????????????????
+      function toggleExampleBar() {
+        var body = document.getElementById('exampleBarBody');
+        var caret = document.getElementById('exampleBarCaret');
+        var willOpen = !body.classList.contains('open');
+        body.classList.toggle('open');
+        caret.innerText = willOpen ? 'expand_less' : 'expand_more';
+        if (willOpen) renderExampleBar();
+      }
+      function renderExampleBar() {
+        var content = document.getElementById('exampleBarContent');
+        if (!currentConfig || !currentConfig.prompts || !currentConfig.prompts.length) {
+          content.innerHTML = '<div class="example-empty">' + esc(t('noExample')) + '</div>';
+          return;
+        }
+        var withExample = currentConfig.prompts.find(function(p) { return p.example && p.example.trim(); });
+        var p = currentConfig.prompts.find(function(p) { return p.type === 'technical'; }) || currentConfig.prompts[0];
+        if (!p.example || !p.example.trim()) p = withExample || p;
+        content.innerHTML = (p.example && p.example.trim())
+          ? '<pre>' + esc(p.example) + '</pre>'
+          : '<div class="example-empty">' + esc(t('noExample')) + '</div>';
+      }
+
+      // ?? PROMPTS ????????????????????????????????????????????????????
+      function renderPromptCards(prompts, containerId) {
+        var container = document.getElementById(containerId || 'promptCards');
+        var emptyMsg = document.getElementById('noPromptsMsg');
+        var isPreview = !!containerId;
+        if (!prompts.length) {
+          container.innerHTML = '';
+          if (!isPreview) emptyMsg.style.display = 'block';
+          return;
+        }
+        if (!isPreview) emptyMsg.style.display = 'none';
+        container.innerHTML = prompts.map(function(p) {
+          var isMaster = (p.type === 'technical');
+          var geminiStatus = p.geminiHasOverride ? t('usingCustom') : t('usingGlobal');
+          return '' +
+            '<div class="prompt-card" id="card_' + p.type + '">' +
+              '<div class="prompt-card-header" onclick="toggleCard(\'' + p.type + '\')">' +
+                '<div class="prompt-card-title">' +
+                  '<span class="material-icons-outlined collapse-caret" id="caret_' + p.type + '">expand_more</span>' +
+                  '<span class="prompt-type-badge">' + esc(p.label) + '</span>' +
+                  (isMaster ? '<span class="master-badge">' + esc(t('master')) + '</span>' : '') +
+                  '<span class="unsaved-dot" id="dot_' + p.type + '" title="' + esc(t('unsaved')) + '"></span>' +
+                '</div>' +
+                '<span style="font-size:10.5px;color:#999;">' + esc(t('typeLabel')) + ' ' + esc(p.type) + '</span>' +
+              '</div>' +
+              '<div class="prompt-card-body" onclick="event.stopPropagation()">' +
+                '<div class="editor-col">' +
+                  '<textarea class="prompt-textarea" id="ta_' + p.type + '" data-saved="' + esc(p.instructions) + '" oninput="onPromptInput(\'' + p.type + '\')" onkeydown="onPromptKeydown(event,\'' + p.type + '\')">' + esc(p.instructions) + '</textarea>' +
+                  '<div class="save-row">' +
+                    '<button class="btn btn-primary" onclick="savePrompt(\'' + p.type + '\')"><span class="material-icons-outlined">save</span>' + esc(t('save')) + '</button>' +
+                    '<button class="btn btn-secondary" onclick="resetPrompt(\'' + p.type + '\', \'' + esc(p.label) + '\')"><span class="material-icons-outlined">restart_alt</span>' + esc(t('reset')) + '</button>' +
+                    '<button class="btn btn-secondary" onclick="copyPrompt(\'' + p.type + '\')"><span class="material-icons-outlined">content_copy</span>' + esc(t('copyPrompt')) + '</button>' +
+                    '<span class="save-msg" id="msg_' + p.type + '"></span>' +
+                    '<span class="char-count" id="count_' + p.type + '"></span>' +
+                  '</div>' +
+                  '<div class="hint-line">' + esc(t('ctrlSHint')) + '</div>' +
+                  buildHmwPanel_(p.type) +
+                  buildTestPanel_(p.type) +
+                '</div>' +
+                '<div class="gemini-col">' +
+                  buildTypeGeminiBox_(p.type, geminiStatus) +
+                '</div>' +
+              '</div>' +
+            '</div>';
+        }).join('');
+        prompts.forEach(function(p) {
+          updateCharCount(p.type);
+          if (isPreview) { if (p.geminiOverride) fillTypeGeminiFields_(p.type, p.geminiOverride); }
+          else { loadTypeGeminiValues_(p.type); }
+        });
+      }
+      function toggleCard(type) {
+        var card = document.getElementById('card_' + type);
+        var caret = document.getElementById('caret_' + type);
+        if (!card) return;
+        card.classList.toggle('collapsed');
+        caret.innerText = card.classList.contains('collapsed') ? 'chevron_right' : 'expand_more';
+      }
+      function collapseAllPrompts() {
+        document.querySelectorAll('.prompt-card').forEach(function(c) {
+          c.classList.add('collapsed');
+          var caret = c.querySelector('.collapse-caret');
+          if (caret) caret.innerText = 'chevron_right';
+        });
+      }
+      function expandAllPrompts() {
+        document.querySelectorAll('.prompt-card').forEach(function(c) {
+          c.classList.remove('collapsed');
+          var caret = c.querySelector('.collapse-caret');
+          if (caret) caret.innerText = 'expand_more';
+        });
+      }
+      function updateCharCount(type) {
+        var ta = document.getElementById('ta_' + type);
+        var el = document.getElementById('count_' + type);
+        if (ta && el) el.innerText = ta.value.length + ' ' + t('charCount');
+      }
+      function onPromptInput(type) {
+        updateCharCount(type);
+        var ta = document.getElementById('ta_' + type);
+        var dot = document.getElementById('dot_' + type);
+        if (ta && dot) dot.classList.toggle('show', ta.value !== ta.getAttribute('data-saved'));
+      }
+      function onPromptKeydown(evt, type) {
+        if ((evt.ctrlKey || evt.metaKey) && evt.key === 's') {
+          evt.preventDefault();
+          savePrompt(type);
+        }
+      }
+      function copyPrompt(type) {
+        var ta = document.getElementById('ta_' + type);
+        if (!ta) return;
+        ta.select();
+        try { document.execCommand('copy'); toast(t('copied')); } catch (e) { toast(t('copied')); }
+        window.getSelection().removeAllRanges();
+      }
+      function savePrompt(type) {
+        var ta = document.getElementById('ta_' + type);
+        var msgEl = document.getElementById('msg_' + type);
+        if (!ta) return;
+        if (!ta.value.trim()) { toast(t('emptyPrompt')); return; }
+        msgEl.className = 'save-msg show';
+        msgEl.innerHTML = '<span class="material-icons-outlined" style="font-size:14px;">hourglass_top</span> ' + esc(t('saving'));
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res.success) {
+              msgEl.className = 'save-msg show ok';
+              msgEl.innerHTML = '<span class="material-icons-outlined" style="font-size:14px;">check_circle</span> ' + esc(t('saved'));
+              ta.setAttribute('data-saved', ta.value);
+              var dot = document.getElementById('dot_' + type);
+              if (dot) dot.classList.remove('show');
+              toast(esc(type) + ': ' + t('saved'));
+            } else {
+              msgEl.className = 'save-msg show err';
+              msgEl.innerHTML = '<span class="material-icons-outlined" style="font-size:14px;">error</span> ' + esc(res.error);
+            }
+            setTimeout(function() { msgEl.classList.remove('show'); }, 4000);
+          })
+          .withFailureHandler(function(err) {
+            msgEl.className = 'save-msg show err';
+            msgEl.innerHTML = '<span class="material-icons-outlined" style="font-size:14px;">error</span> ' + esc(err.message);
+          })
+          .apiPromptEditorSave(type, ta.value);
+      }
+      function resetPrompt(type, label) {
+        if (!confirm(label + t('resetConfirm'))) return;
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res.success) {
+              var ta = document.getElementById('ta_' + type);
+              if (ta) { ta.value = res.prompt; ta.setAttribute('data-saved', res.prompt); }
+              updateCharCount(type);
+              var dot = document.getElementById('dot_' + type);
+              if (dot) dot.classList.remove('show');
+              toast(esc(label) + ' ' + t('saved').toLowerCase());
+            } else { toast(res.error, 5000); }
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorReset(type);
+      }
+
+      // ?? "MIT GEMINI VERBESSERN" ???????????????????????????????????
+      function buildHmwPanel_(type) {
+        var likeOpts = '<option value="">+ ...</option>' +
+          LIKE_PRESETS_KEYS.map(function(pair) { return '<option value="' + esc(presetLabel_(pair)) + '">' + esc(presetLabel_(pair)) + '</option>'; }).join('');
+        var dislikeOpts = '<option value="">+ ...</option>' +
+          DISLIKE_PRESETS_KEYS.map(function(pair) { return '<option value="' + esc(presetLabel_(pair)) + '">' + esc(presetLabel_(pair)) + '</option>'; }).join('');
+        return '' +
+          '<div class="hmw-toggle">' +
+            '<button class="btn btn-blue btn-sm" onclick="toggleHmw(\'' + type + '\')">' +
+              '<span class="material-icons-outlined">auto_awesome</span>' + esc(t('hmwButton')) +
+            '</button>' +
+          '</div>' +
+          '<div class="hmw-panel" id="hmwPanel_' + type + '">' +
+            '<div class="hmw-row">' +
+              '<div>' +
+                '<span class="hmw-label">' + esc(t('hmwLikes')) + '</span>' +
+                '<select onchange="appendToField(\'hmwLikes_' + type + '\', this.value); this.value=\'\';">' + likeOpts + '</select>' +
+                '<textarea id="hmwLikes_' + type + '" style="margin-top:6px;"></textarea>' +
+              '</div>' +
+              '<div>' +
+                '<span class="hmw-label">' + esc(t('hmwDislikes')) + '</span>' +
+                '<select onchange="appendToField(\'hmwDislikes_' + type + '\', this.value); this.value=\'\';">' + dislikeOpts + '</select>' +
+                '<textarea id="hmwDislikes_' + type + '" style="margin-top:6px;"></textarea>' +
+              '</div>' +
+            '</div>' +
+            '<div class="hmw-freetext">' +
+              '<span class="hmw-label">' + esc(t('hmwFree')) + '</span>' +
+              '<textarea id="hmwFreeText_' + type + '"></textarea>' +
+            '</div>' +
+            '<button class="btn btn-blue" onclick="generateHmwSuggestion(\'' + type + '\')" id="hmwGenBtn_' + type + '">' +
+              '<span class="material-icons-outlined">bolt</span>' + esc(t('hmwGenerate')) +
+            '</button>' +
+            '<div class="hmw-suggestion" id="hmwSuggestionBox_' + type + '">' +
+              '<span class="hmw-label">' + esc(t('hmwSuggestion')) + '</span>' +
+              '<textarea id="hmwSuggestionText_' + type + '" readonly></textarea>' +
+              '<div class="hmw-suggestion-actions">' +
+                '<button class="btn btn-primary" onclick="acceptHmwSuggestion(\'' + type + '\')"><span class="material-icons-outlined">check</span>' + esc(t('hmwAccept')) + '</button>' +
+                '<button class="btn btn-secondary" onclick="discardHmwSuggestion(\'' + type + '\')"><span class="material-icons-outlined">close</span>' + esc(t('hmwDiscard')) + '</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+      }
+      function toggleHmw(type) {
+        var panel = document.getElementById('hmwPanel_' + type);
+        if (panel) panel.classList.toggle('open');
+      }
+      function appendToField(fieldId, value) {
+        if (!value) return;
+        var el = document.getElementById(fieldId);
+        if (!el) return;
+        el.value = el.value.trim() ? (el.value.trim() + ', ' + value) : value;
+      }
+      function generateHmwSuggestion(type) {
+        var currentText = document.getElementById('ta_' + type).value;
+        var likes = document.getElementById('hmwLikes_' + type).value;
+        var dislikes = document.getElementById('hmwDislikes_' + type).value;
+        var freeText = document.getElementById('hmwFreeText_' + type).value;
+        var btn = document.getElementById('hmwGenBtn_' + type);
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-icons-outlined">hourglass_top</span>' + esc(t('hmwGenerating'));
+        google.script.run
+          .withSuccessHandler(function(res) {
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-icons-outlined">bolt</span>' + esc(t('hmwGenerate'));
+            if (!res.success) { toast(res.error, 5000); return; }
+            document.getElementById('hmwSuggestionText_' + type).value = res.suggestion;
+            document.getElementById('hmwSuggestionBox_' + type).classList.add('show');
+          })
+          .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-icons-outlined">bolt</span>' + esc(t('hmwGenerate'));
+            toast(err.message, 5000);
+          })
+          .apiPromptEditorHelpMeWrite(type, currentText, likes, dislikes, freeText);
+      }
+      function acceptHmwSuggestion(type) {
+        var suggestion = document.getElementById('hmwSuggestionText_' + type).value;
+        var ta = document.getElementById('ta_' + type);
+        ta.value = suggestion;
+        onPromptInput(type);
+        discardHmwSuggestion(type);
+        toast(uiLang === 'en' ? 'Suggestion applied, remember to save.' : 'Vorschlag ?bernommen, nicht vergessen zu speichern.');
+      }
+      function discardHmwSuggestion(type) {
+        document.getElementById('hmwSuggestionBox_' + type).classList.remove('show');
+      }
+
+      // ?? TEST / PLAYGROUND ??????????????????????????????????????????
+      var COMMON_LANGS = [
+        { value: 'de_de', label: 'DE' }, { value: 'en_us', label: 'EN (US)' }, { value: 'en_gb', label: 'EN (UK)' },
+        { value: 'fr_fr', label: 'FR' }, { value: 'es_es', label: 'ES' }, { value: 'it_it', label: 'IT' },
+        { value: 'nl_nl', label: 'NL' }, { value: 'pl_pl', label: 'PL' }, { value: 'pt_pt', label: 'PT' },
+        { value: 'zh_cn', label: 'ZH' }, { value: 'ja_jp', label: 'JA' }
+      ];
+      function langOptionsHtml_(selected) {
+        return COMMON_LANGS.map(function(l) {
+          var sel = (l.value === selected) ? ' selected' : '';
+          return '<option value="' + esc(l.value) + '"' + sel + '>' + esc(l.label) + '</option>';
+        }).join('');
+      }
+      function buildTestPanel_(type) {
+        return '' +
+          '<div class="test-toggle">' +
+            '<button class="btn btn-secondary btn-sm" onclick="toggleTest(\'' + type + '\')">' +
+              '<span class="material-icons-outlined">science</span>' + esc(t('testToggle')) +
+            '</button>' +
+          '</div>' +
+          '<div class="test-panel" id="testPanel_' + type + '">' +
+            '<div class="test-note">' + esc(t('testUsesUnsaved')) + '</div>' +
+            '<div class="test-row">' +
+              '<div>' +
+                '<span class="hmw-label">' + esc(t('testInputLabel')) + '</span>' +
+                '<textarea id="testInput_' + type + '" placeholder="' + esc(t('testInputPlaceholder')) + '"></textarea>' +
+              '</div>' +
+              '<div>' +
+                '<span class="hmw-label">' + esc(t('testSourceLang')) + '</span>' +
+                '<select id="testSrcLang_' + type + '">' + langOptionsHtml_('de_de') + '</select>' +
+              '</div>' +
+              '<div>' +
+                '<span class="hmw-label">' + esc(t('testTargetLang')) + '</span>' +
+                '<select id="testTgtLang_' + type + '">' + langOptionsHtml_('en_us') + '</select>' +
+              '</div>' +
+            '</div>' +
+            '<button class="btn btn-primary" onclick="runPromptTest(\'' + type + '\')" id="testRunBtn_' + type + '">' +
+              '<span class="material-icons-outlined">play_arrow</span>' + esc(t('testRun')) +
+            '</button>' +
+            '<div class="test-output" id="testOutput_' + type + '">' +
+              '<span class="hmw-label">' + esc(t('testOutputLabel')) + '</span>' +
+              '<div class="test-output-text" id="testOutputText_' + type + '"></div>' +
+              '<div class="test-output-meta" id="testOutputMeta_' + type + '"></div>' +
+            '</div>' +
+          '</div>';
+      }
+      function toggleTest(type) {
+        var panel = document.getElementById('testPanel_' + type);
+        if (panel) panel.classList.toggle('open');
+      }
+      function runPromptTest(type) {
+        var input = document.getElementById('testInput_' + type).value;
+        if (!input.trim()) { toast(t('testNoInput')); return; }
+        var promptText = document.getElementById('ta_' + type).value;
+        if (!promptText.trim()) { toast(t('emptyPrompt')); return; }
+        var srcLang = document.getElementById('testSrcLang_' + type).value;
+        var tgtLang = document.getElementById('testTgtLang_' + type).value;
+        var btn = document.getElementById('testRunBtn_' + type);
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-icons-outlined">hourglass_top</span>' + esc(t('testRunning'));
+        google.script.run
+          .withSuccessHandler(function(res) {
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-icons-outlined">play_arrow</span>' + esc(t('testRun'));
+            if (!res.success) { toast(res.error, 6000); return; }
+            document.getElementById('testOutputText_' + type).innerText = res.output;
+            var changedLabel = res.changed ? t('testChanged') : t('testUnchanged');
+            var metaHtml = '<span>' + esc(t('testModelLabel')) + ': <b>' + esc(res.model) + '</b></span>' +
+              '<span>' + esc(changedLabel) + '</span>';
+            if (res.reason) metaHtml += '<span>' + esc(t('testReasonLabel')) + ': <b>' + esc(res.reason) + '</b></span>';
+            document.getElementById('testOutputMeta_' + type).innerHTML = metaHtml;
+            document.getElementById('testOutput_' + type).classList.add('show');
+          })
+          .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-icons-outlined">play_arrow</span>' + esc(t('testRun'));
+            toast(err.message, 6000);
+          })
+          .apiPromptEditorTestPrompt(type, promptText, srcLang, tgtLang, input);
+      }
+
+      // ?? PER TYPE GEMINI SETTINGS ???????????????????????????????????
+      function buildTypeGeminiBox_(type, statusText) {
+        return '' +
+            '<div class="type-gemini-head" onclick="toggleTypeGemini(\'' + type + '\')">' +
+              '<div style="display:flex;align-items:center;gap:8px;">' +
+                '<span class="material-icons-outlined">tune</span>' +
+                '<strong style="font-size:11px;text-transform:uppercase;letter-spacing:.3px;">' + esc(t('geminiForType')) + '</strong>' +
+                '<span class="help-icon-btn" onclick="event.stopPropagation();openGeminiHelp();" data-i18n-title="geminiHelpTitle"><span class="material-icons-outlined">help_outline</span></span>' +
+              '</div>' +
+              '<span class="material-icons-outlined collapse-caret" id="tgCaret_' + type + '" style="font-size:18px;">expand_less</span>' +
+            '</div>' +
+            '<div class="type-gemini-status" id="tgStatus_' + type + '" style="margin-bottom:10px;">' + esc(statusText) + '</div>' +
+            '<div class="type-gemini-body open" id="tgBody_' + type + '">' +
+              '<div class="type-gemini-grid">' +
+                '<div>' +
+                  '<label style="display:block;font-size:10.5px;font-weight:800;text-transform:uppercase;color:#555;margin-bottom:6px;">' + esc(t('model')) + '</label>' +
+                  '<select id="tgModel_' + type + '" style="width:100%;padding:9px 10px;font-size:13px;border:1px solid #ccc;height:40px;"></select>' +
+                '</div>' +
+                '<div class="slider-block">' +
+                  '<label>' + esc(t('temperature')) + '</label>' +
+                  '<div class="slider-row">' +
+                    '<input type="range" id="tgTemp_' + type + '" min="0" max="1" step="0.1" oninput="onSliderInput(\'tgTemp_' + type + '\',\'temp\')">' +
+                    '<span class="slider-value" id="tgTemp_' + type + 'Val">0.1</span>' +
+                  '</div>' +
+                  '<div class="slider-desc" id="tgTemp_' + type + 'Desc"></div>' +
+                '</div>' +
+                '<div class="slider-block">' +
+                  '<label>' + esc(t('tmThresholdLabel')) + '</label>' +
+                  '<div class="slider-row">' +
+                    '<input type="range" id="tgTm_' + type + '" min="0" max="1" step="0.1" oninput="onSliderInput(\'tgTm_' + type + '\',\'tm\')">' +
+                    '<span class="slider-value" id="tgTm_' + type + 'Val">0.7</span>' +
+                  '</div>' +
+                  '<div class="slider-desc" id="tgTm_' + type + 'Desc"></div>' +
+                '</div>' +
+                '<div class="thinking-block">' +
+                  '<label>' + esc(t('thinkingLabel')) + '</label>' +
+                  '<label class="toggle-row">' +
+                    '<input type="checkbox" id="tgThinking_' + type + '" checked onchange="onThinkingToggle(\'tgThinking_' + type + '\')">' +
+                    '<span class="toggle-desc" id="tgThinking_' + type + 'Desc"></span>' +
+                  '</label>' +
+                '</div>' +
+              '</div>' +
+              '<div style="margin-bottom:12px;">' +
+                '<label style="display:block;font-size:10.5px;font-weight:800;text-transform:uppercase;color:#555;margin-bottom:6px;">' + esc(t('maxTokens')) + '</label>' +
+                '<div class="locked-field">' +
+                  '<input type="number" id="tgMaxTokens_' + type + '" disabled>' +
+                  '<span class="material-icons-outlined">lock</span>' +
+                '</div>' +
+                '<div class="locked-note">' + esc(t('maxTokensLocked')) + '</div>' +
+              '</div>' +
+              '<div class="save-row">' +
+                '<button class="btn btn-primary btn-sm" onclick="saveTypeGemini(\'' + type + '\')"><span class="material-icons-outlined">save</span>' + esc(t('saveTypeSettings')) + '</button>' +
+                '<button class="btn btn-secondary btn-sm" onclick="clearTypeGemini(\'' + type + '\')"><span class="material-icons-outlined">restart_alt</span>' + esc(t('clearTypeSettings')) + '</button>' +
+              '</div>' +
+            '</div>';
+      }
+      function toggleTypeGemini(type) {
+        var body = document.getElementById('tgBody_' + type);
+        if (!body) return;
+        var willOpen = !body.classList.contains('open');
+        body.classList.toggle('open');
+        var caret = document.getElementById('tgCaret_' + type);
+        if (caret) caret.innerText = willOpen ? 'expand_less' : 'expand_more';
+      }
+      function fillTypeGeminiFields_(type, eff) {
+        var modelSel = document.getElementById('tgModel_' + type);
+        if (!modelSel || !eff) return;
+        modelSel.innerHTML = modelOptionsHtml_(eff.model);
+        document.getElementById('tgTemp_' + type).value = eff.temperature;
+        document.getElementById('tgTm_' + type).value = eff.tmThreshold;
+        document.getElementById('tgMaxTokens_' + type).value = eff.maxTokens;
+        document.getElementById('tgThinking_' + type).checked = eff.thinking !== false;
+        onSliderInput('tgTemp_' + type, 'temp');
+        onSliderInput('tgTm_' + type, 'tm');
+        onThinkingToggle('tgThinking_' + type);
+      }
+      function loadTypeGeminiValues_(type) {
+        google.script.run
+          .withSuccessHandler(function(res) { if (res.success) fillTypeGeminiFields_(type, res.effective); })
+          .apiPromptEditorGetTypeGeminiSettings(type);
+      }
+      function saveTypeGemini(type) {
+        var payload = {
+          model: document.getElementById('tgModel_' + type).value,
+          temperature: document.getElementById('tgTemp_' + type).value,
+          tmThreshold: document.getElementById('tgTm_' + type).value,
+          thinking: document.getElementById('tgThinking_' + type).checked
+        };
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res.success) {
+              document.getElementById('tgStatus_' + type).innerText = t('usingCustom');
+              toast(t('saved'));
+            } else { toast(res.error, 5000); }
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorSaveTypeGeminiSettings(type, payload);
+      }
+      function clearTypeGemini(type) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res.success) {
+              document.getElementById('tgStatus_' + type).innerText = t('usingGlobal');
+              toast(t('saved'));
+              loadTypeGeminiValues_(type);
+            } else { toast(res.error, 5000); }
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorClearTypeGeminiSettings(type);
+      }
+
+      // ?? GLOBALE GEMINI EINSTELLUNGEN ???????????????????????????????
+      function fillSettingsForm(s) {
+        document.getElementById('setModel').innerHTML = modelOptionsHtml_(s.primaryModel || 'gemini-3.6-flash');
+        document.getElementById('setMaxTokens').value = s.maxTokens;
+        document.getElementById('setTemp').value = s.peTemperature;
+        document.getElementById('setTmThreshold').value = s.tmThreshold;
+        document.getElementById('setThinking').checked = s.primaryThinking !== false;
+        onSliderInput('setTemp', 'temp');
+        onSliderInput('setTmThreshold', 'tm');
+        onThinkingToggle('setThinking');
+      }
+      function saveGeminiSettings() {
+        var payload = {
+          primaryModel: document.getElementById('setModel').value,
+          peTemperature: document.getElementById('setTemp').value,
+          tmThreshold: document.getElementById('setTmThreshold').value,
+          primaryThinking: document.getElementById('setThinking').checked
+        };
+        var msgEl = document.getElementById('settingsSaveMsg');
+        msgEl.className = 'save-msg show';
+        msgEl.innerHTML = '<span class="material-icons-outlined" style="font-size:14px;">hourglass_top</span> ' + esc(t('saving'));
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res.success) {
+              msgEl.className = 'save-msg show ok';
+              msgEl.innerHTML = '<span class="material-icons-outlined" style="font-size:14px;">check_circle</span> ' + esc(t('saved'));
+              toast(t('saved'));
+            } else {
+              msgEl.className = 'save-msg show err';
+              msgEl.innerHTML = '<span class="material-icons-outlined" style="font-size:14px;">error</span> ' + esc(res.error);
+            }
+            setTimeout(function() { msgEl.classList.remove('show'); }, 4000);
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorSaveGeminiSettings(payload);
+      }
+
+      // ?? ADMIN: PROMPT SPACES ???????????????????????????????????????
+      function addType() {
+        var name = document.getElementById('newTypeName').value.trim();
+        if (!name) { toast(t('noName')); return; }
+        var example = document.getElementById('newTypeExample').value;
+        var seed = document.getElementById('newTypeSeed').value;
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (!res.success) { toast(res.error, 5000); return; }
+            document.getElementById('newTypeName').value = '';
+            document.getElementById('newTypeExample').value = '';
+            document.getElementById('newTypeSeed').value = '';
+            document.getElementById('newTypeCopyFrom').value = '';
+            renderTypesList(res.types);
+            toast(name + ': ' + t('saved'));
+            loadConfig();
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorAddType(name, example, seed);
+      }
+      function populateCopyFromSelect() {
+        var sel = document.getElementById('newTypeCopyFrom');
+        if (!sel || !currentConfig || !currentConfig.prompts) return;
+        sel.innerHTML = '<option value="">' + esc(t('copyFromNone')) + '</option>' +
+          currentConfig.prompts.map(function(p) {
+            return '<option value="' + esc(p.type) + '">' + esc(t('copyFrom')) + ': ' + esc(p.label) + '</option>';
+          }).join('');
+      }
+      function applyCopyFrom() {
+        var type = document.getElementById('newTypeCopyFrom').value;
+        if (!type || !currentConfig || !currentConfig.prompts) return;
+        var p = currentConfig.prompts.find(function(x) { return x.type === type; });
+        if (!p) return;
+        document.getElementById('newTypeExample').value = p.example || '';
+        document.getElementById('newTypeSeed').value = p.instructions || '';
+      }
+      function renderTypesList(types) {
+        var c = document.getElementById('typesContainer');
+        if (!types || !types.length) { c.innerHTML = '<div class="empty-row">...</div>'; return; }
+        c.innerHTML = types.map(function(tp) {
+          return '' +
+            '<div class="list-row">' +
+              '<div class="list-row-info">' +
+                '<div class="list-row-email">' + esc(tp.label) + '</div>' +
+                '<div class="list-row-meta">' + esc(tp.type) + (tp.builtIn ? ' &middot; ' + esc(t('builtIn')) : '') + '</div>' +
+              '</div>' +
+              (tp.builtIn ? '' : '<span class="material-icons-outlined icon-btn-danger" onclick="removeType(\'' + esc(tp.type) + '\',\'' + esc(tp.label) + '\')">delete</span>') +
+            '</div>';
+        }).join('');
+      }
+      function removeType(type, label) {
+        if (!confirm(label + t('deleteSpaceConfirm'))) return;
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (!res.success) { toast(res.error, 5000); return; }
+            renderTypesList(res.types);
+            toast(label + ' ' + t('saved').toLowerCase());
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorRemoveType(type);
+      }
+
+      // ?? ADMIN: NUTZER & RECHTE ????????????????????????????????????
+      // ?? ADMIN: NUTZERANSICHT VORSCHAU ??????????????????????????????
+      function loadUserPreview() {
+        var email = document.getElementById('previewEmail').value.trim();
+        if (!email || email.indexOf('@') === -1) { toast(t('noEmail')); return; }
+        google.script.run
+          .withSuccessHandler(function(res) { openUserPreview(email, res); })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorPreviewAsUser(email);
+      }
+      function openUserPreview(email, res) {
+        if (!res.authorized) {
+          var box = document.getElementById('previewResult');
+          box.innerHTML = '<div class="preview-box"><div class="preview-warn">' + esc(t('previewNotWhitelisted')) + '</div></div>';
+          return;
+        }
+        document.getElementById('previewResult').innerHTML = '';
+        var badges = '';
+        if (res.isAdmin) badges += '<span class="preview-role-badge">' + esc(t('previewAdminBadge')) + '</span>';
+        badges += '<span class="preview-role-badge">' + esc(res.canManageSettings ? t('previewCanSettings') : t('previewCannotSettings')) + '</span>';
+        var overlay = document.getElementById('previewOverlay');
+        overlay.querySelector('.preview-overlay-email').innerText = email;
+        overlay.querySelector('.preview-overlay-badges').innerHTML = badges;
+        var body = document.getElementById('previewOverlayBody');
+        if (!res.prompts || !res.prompts.length) {
+          body.innerHTML = '<div class="preview-warn" style="padding:20px;">' + esc(t('previewNoPrompts')) + '</div>';
+        } else {
+          // type-Pr?fix, damit die IDs im Overlay nicht mit denen der echten
+          // Prompt-Karten kollidieren ? dieselbe renderPromptCards()-Funktion
+          // wie im echten Prompts-Tab, daher wirklich identische Optik.
+          var cloned = res.prompts.map(function(p) {
+            return Object.assign({}, p, { type: 'pv_' + p.type });
+          });
+          renderPromptCards(cloned, 'previewOverlayBody');
+          // Read-only sperren: Speichern/Bearbeiten aus der Vorschau heraus
+          // ist bewusst nicht m?glich, es ist eine reine Live-Ansicht.
+          body.querySelectorAll('textarea, input, select').forEach(function(el) { el.disabled = true; });
+          body.querySelectorAll('button').forEach(function(el) { el.disabled = true; });
+        }
+        overlay.classList.add('open');
+      }
+      function closeUserPreview() {
+        document.getElementById('previewOverlay').classList.remove('open');
+        document.getElementById('previewOverlayBody').innerHTML = '';
+      }
+
+      function loadAccessTab() {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (!res.success) { toast(res.error, 5000); return; }
+            knownTypesCache = res.knownTypes || [];
+            renderTypeChecks();
+            renderExportTypeChecks();
+            renderUsersList(res.users || []);
+            renderAdminsList(res.admins || []);
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorGetUsers();
+        google.script.run
+          .withSuccessHandler(function(res) { if (res.success) renderTypesList(res.types); })
+          .apiPromptEditorGetTypesConfig();
+      }
+      function renderTypeChecks() {
+        var c = document.getElementById('newUserTypeChecks');
+        var html = '<label><input type="checkbox" id="newUserAllTypes" onchange="toggleAllTypesCheckbox()" style="width:auto;"><strong>' + esc(t('allTypes')) + '</strong></label>';
+        knownTypesCache.forEach(function(tp) {
+          html += '<label><input type="checkbox" class="typeCheckbox" value="' + esc(tp.type) + '" style="width:auto;">' + esc(tp.label || tp.type) + '</label>';
+        });
+        c.innerHTML = html;
+      }
+      function toggleAllTypesCheckbox() {
+        var all = document.getElementById('newUserAllTypes').checked;
+        document.querySelectorAll('.typeCheckbox').forEach(function(cb) { cb.disabled = all; if (all) cb.checked = false; });
+      }
+      function renderUsersList(users) {
+        var c = document.getElementById('usersContainer');
+        if (!users.length) { c.innerHTML = '<div class="empty-row">...</div>'; return; }
+        c.innerHTML = users.map(function(u) {
+          var typesLabel = (u.types && u.types.indexOf('*') !== -1) ? t('allTypes') : ((u.types || []).join(', ') || '...');
+          var settingsLabel = u.canManageSettings ? ' &middot; ' + esc(t('manageSettingsCheckbox')) : '';
+          return '' +
+            '<div class="list-row">' +
+              '<div class="list-row-info">' +
+                '<div class="list-row-email">' + esc(u.email) + '</div>' +
+                '<div class="list-row-meta">' + esc(typesLabel) + settingsLabel + '</div>' +
+              '</div>' +
+              '<span class="material-icons-outlined icon-btn" title="edit" onclick="editUser(\'' + esc(u.email) + '\')">edit</span>' +
+              '<span class="material-icons-outlined icon-btn-danger" title="delete" onclick="removeUser(\'' + esc(u.email) + '\')">delete</span>' +
+            '</div>';
+        }).join('');
+        window._usersCache = users;
+      }
+      function editUser(email) {
+        var u = (window._usersCache || []).find(function(x) { return x.email === email; });
+        if (!u) return;
+        document.getElementById('newUserEmail').value = u.email;
+        var isAll = u.types && u.types.indexOf('*') !== -1;
+        document.getElementById('newUserAllTypes').checked = isAll;
+        toggleAllTypesCheckbox();
+        document.querySelectorAll('.typeCheckbox').forEach(function(cb) {
+          cb.checked = !isAll && u.types && u.types.indexOf(cb.value) !== -1;
+        });
+        document.getElementById('newUserManageSettings').checked = !!u.canManageSettings;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      function saveUser() {
+        var email = document.getElementById('newUserEmail').value.trim();
+        if (!email || email.indexOf('@') === -1) { toast(t('noEmail')); return; }
+        var allTypes = document.getElementById('newUserAllTypes').checked;
+        var types = [];
+        if (!allTypes) {
+          document.querySelectorAll('.typeCheckbox:checked').forEach(function(cb) { types.push(cb.value); });
+        }
+        var canManageSettings = document.getElementById('newUserManageSettings').checked;
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (!res.success) { toast(res.error, 5000); return; }
+            document.getElementById('newUserEmail').value = '';
+            document.getElementById('newUserAllTypes').checked = false;
+            document.querySelectorAll('.typeCheckbox').forEach(function(cb) { cb.checked = false; cb.disabled = false; });
+            document.getElementById('newUserManageSettings').checked = false;
+            renderUsersList(res.users);
+            toast(email + ': ' + t('saved'));
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorSaveUser({ email: email, allTypes: allTypes, types: types, canManageSettings: canManageSettings });
+      }
+      function removeUser(email) {
+        if (!confirm(email + '?')) return;
+        google.script.run
+          .withSuccessHandler(function(res) { renderUsersList(res.users); toast(t('saved')); })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorRemoveUser(email);
+      }
+      function renderAdminsList(admins) {
+        var c = document.getElementById('adminContainer');
+        if (!admins.length) { c.innerHTML = '<div class="empty-row">...</div>'; return; }
+        c.innerHTML = admins.map(function(e) {
+          return '<div class="list-row"><span>' + esc(e) + '</span>' +
+            '<span class="material-icons-outlined icon-btn-danger" onclick="removeAdminUser(\'' + esc(e) + '\')">delete</span></div>';
+        }).join('');
+      }
+      function addAdminUser() {
+        var input = document.getElementById('newAdminEmail');
+        var email = input.value.trim();
+        if (!email) return;
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (!res.success) { toast(res.error, 5000); return; }
+            input.value = '';
+            renderAdminsList(res.admins);
+            toast(email + ': ' + t('saved'));
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorAddAdmin(email);
+      }
+      function removeAdminUser(email) {
+        if (!confirm(email + '?')) return;
+        google.script.run
+          .withSuccessHandler(function(res) { renderAdminsList(res.admins); toast(t('saved')); })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorRemoveAdmin(email);
+      }
+
+      // ?? ADMIN: EXPORT ????????????????????????????????????????????
+      function renderExportTypeChecks() {
+        var c = document.getElementById('exportTypeChecks');
+        if (!c) return;
+        var html = '<label><input type="checkbox" id="exportAllTypes" onchange="toggleExportAllTypes()" style="width:auto;"><strong>' + esc(t('allTypes')) + '</strong></label>';
+        knownTypesCache.forEach(function(tp) {
+          html += '<label><input type="checkbox" class="exportTypeCheckbox" value="' + esc(tp.type) + '" checked style="width:auto;">' + esc(tp.label || tp.type) + '</label>';
+        });
+        c.innerHTML = html;
+        document.getElementById('exportAllTypes').checked = true;
+      }
+      function toggleExportAllTypes() {
+        var all = document.getElementById('exportAllTypes').checked;
+        document.querySelectorAll('.exportTypeCheckbox').forEach(function(cb) { cb.checked = all; cb.disabled = all; });
+      }
+      function exportSelectedTypes() {
+        var allChecked = document.getElementById('exportAllTypes').checked;
+        var types = [];
+        if (!allChecked) {
+          document.querySelectorAll('.exportTypeCheckbox:checked').forEach(function(cb) { types.push(cb.value); });
+          if (!types.length) { toast(t('exportNoTypes')); return; }
+        }
+        var includeGlobal = document.getElementById('exportIncludeGlobal').checked;
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (!res.success) { toast(res.error, 5000); return; }
+            downloadJson_(res.data, 'autofix-prompts-export-' + new Date().toISOString().slice(0, 10) + '.json');
+            toast(t('saved'));
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorExportConfig(types, includeGlobal);
+      }
+      function downloadJson_(obj, filename) {
+        var blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+      }
+
+      // ?? ADMIN: IMPORT ????????????????????????????????????????????
+      function onImportFileChosen(evt) {
+        var file = evt.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) { document.getElementById('importJsonText').value = e.target.result; };
+        reader.readAsText(file);
+      }
+      function analyzeImport() {
+        var text = document.getElementById('importJsonText').value.trim();
+        if (!text) { toast(t('importInvalid')); return; }
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (!res.success) { toast(res.error || t('importInvalid'), 5000); return; }
+            renderImportPreview(res);
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorPreviewImport(text);
+      }
+      function renderImportPreview(res) {
+        var box = document.getElementById('importPreview');
+        if (!res.types || !res.types.length) {
+          box.innerHTML = '<div class="import-preview-box">' + esc(t('importInvalid')) + '</div>';
+          return;
+        }
+        var rows = res.types.map(function(tp) {
+          var tag = tp.exists
+            ? '<span class="tag exists">' + esc(t('importExisting')) + '</span>'
+            : '<span class="tag new">' + esc(t('importNewTag')) + '</span>';
+          return '<div class="import-type-row">' +
+            '<input type="checkbox" class="importTypeCheckbox" value="' + esc(tp.type) + '" checked style="width:auto;">' +
+            '<span style="flex:1;">' + esc(tp.label) + ' <span style="color:#999;">(' + esc(tp.type) + ')</span></span>' +
+            tag +
+            '</div>';
+        }).join('');
+        var globalRow = res.hasGlobal
+          ? '<label style="font-size:12px;display:flex;align-items:center;gap:6px;margin-top:10px;cursor:pointer;"><input type="checkbox" id="importApplyGlobal" style="width:auto;"><span>' + esc(t('importApplyGlobal')) + '</span></label>'
+          : '';
+        box.innerHTML = '' +
+          '<div class="import-preview-box">' +
+            '<div style="font-weight:700;font-size:12px;margin-bottom:8px;">' + esc(t('importFoundTitle')) + '</div>' +
+            rows +
+            globalRow +
+            '<button class="btn btn-primary btn-sm" style="margin-top:14px;" onclick="applyImport()"><span class="material-icons-outlined">upload</span>' + esc(t('importApplyButton')) + '</button>' +
+          '</div>';
+      }
+      function applyImport() {
+        var text = document.getElementById('importJsonText').value.trim();
+        var types = [];
+        document.querySelectorAll('.importTypeCheckbox:checked').forEach(function(cb) { types.push(cb.value); });
+        if (!types.length) { toast(t('importNoTypes')); return; }
+        var applyGlobalEl = document.getElementById('importApplyGlobal');
+        var applyGlobal = !!(applyGlobalEl && applyGlobalEl.checked);
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (!res.success) { toast(res.error, 5000); return; }
+            toast(res.applied.length + ' ' + t('importSuccess'));
+            document.getElementById('importPreview').innerHTML = '';
+            document.getElementById('importJsonText').value = '';
+            document.getElementById('importFile').value = '';
+            loadConfig();
+            loadAccessTab();
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorApplyImport(text, types, applyGlobal);
+      }
+
+      // ?? GEMINI SETTINGS HILFE ??????????????????????????????????????
+      function openGeminiHelp() {
+        var items = [
+          ['smart_toy', 'geminiHelpModelTitle', 'geminiHelpModelText'],
+          ['thermostat', 'geminiHelpTempTitle', 'geminiHelpTempText'],
+          ['rule', 'geminiHelpTmTitle', 'geminiHelpTmText'],
+          ['psychology', 'geminiHelpThinkingTitle', 'geminiHelpThinkingText'],
+          ['lock', 'geminiHelpMaxTokensTitle', 'geminiHelpMaxTokensText']
+        ];
+        document.getElementById('geminiHelpBody').innerHTML = items.map(function(it) {
+          return '<div class="gemini-help-item">' +
+            '<h3><span class="material-icons-outlined" style="font-size:16px;color:#888;">' + it[0] + '</span>' + esc(t(it[1])) + '</h3>' +
+            '<p>' + esc(t(it[2])) + '</p>' +
+          '</div>';
+        }).join('');
+        document.getElementById('geminiHelpBackdrop').classList.add('open');
+      }
+      function closeGeminiHelp() {
+        document.getElementById('geminiHelpBackdrop').classList.remove('open');
+      }
+    </script>
+  </body>
+</html>
