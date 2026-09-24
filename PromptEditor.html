@@ -223,7 +223,7 @@
   <body>
     <div id="loadingScreen" class="loading-screen">
       <div class="loader"></div>
-      <p style="font-size:12.5px;color:#888;" id="loadingText">Pr?fe Berechtigung...</p>
+      <p style="font-size:12.5px;color:#888;" id="loadingText">Prüfe Berechtigung...</p>
     </div>
     <div id="lockScreen" class="lock-screen" style="display:none;">
       <span class="material-icons-outlined">lock</span>
@@ -383,14 +383,14 @@
             <input type="checkbox" id="exportIncludeGlobal" style="width:auto;">
             <span data-i18n="exportIncludeGlobal"></span>
           </label>
-          <button class="btn btn-primary btn-sm" onclick="exportSelectedTypes()"><span class="material-icons-outlined">download</span><span data-i18n="exportButton">Ausgew?hlte Typen exportieren</span></button>
+          <button class="btn btn-primary btn-sm" onclick="exportSelectedTypes()"><span class="material-icons-outlined">download</span><span data-i18n="exportButton">Ausgewählte Typen exportieren</span></button>
           <div style="border-top:1px solid var(--border-light);margin:20px 0 16px;"></div>
           <div style="font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#555;margin-bottom:8px;" data-i18n="importSectionTitle">Import</div>
           <div class="add-row">
             <input type="file" id="importFile" accept="application/json" onchange="onImportFileChosen(event)">
           </div>
           <div class="add-row">
-            <textarea id="importJsonText" data-i18n-placeholder="importOrPaste" placeholder="oder JSON hier einf?gen" style="min-height:90px;font-family:var(--ff-mono);font-size:11.5px;"></textarea>
+            <textarea id="importJsonText" data-i18n-placeholder="importOrPaste" placeholder="oder JSON hier einfügen" style="min-height:90px;font-family:var(--ff-mono);font-size:11.5px;"></textarea>
           </div>
           <button class="btn btn-secondary btn-sm" onclick="analyzeImport()"><span class="material-icons-outlined">search</span><span data-i18n="importAnalyzeButton">Datei analysieren</span></button>
           <div id="importPreview"></div>
@@ -418,7 +418,7 @@
           <div class="hint" data-i18n="adminsHint"></div>
           <div class="add-row">
             <input type="email" id="newAdminEmail" placeholder="admin@karcher.com">
-            <button class="btn" style="background:#000;color:#fff;" onclick="addAdminUser()"><span class="material-icons-outlined">add</span><span data-i18n="addAdmin">Hinzuf?gen</span></button>
+            <button class="btn" style="background:#000;color:#fff;" onclick="addAdminUser()"><span class="material-icons-outlined">add</span><span data-i18n="addAdmin">Hinzufügen</span></button>
           </div>
           <div class="list-container" id="adminContainer"><div class="empty-row">...</div></div>
         </div>
@@ -432,7 +432,7 @@
             <strong class="preview-overlay-email"></strong>
             <span class="preview-overlay-badges"></span>
           </div>
-          <button class="btn btn-secondary btn-sm" onclick="closeUserPreview()"><span class="material-icons-outlined">close</span><span data-i18n="previewClose">Schlie?en</span></button>
+          <button class="btn btn-secondary btn-sm" onclick="closeUserPreview()"><span class="material-icons-outlined">close</span><span data-i18n="previewClose">Schließen</span></button>
         </div>
         <div class="preview-overlay-body-wrap">
           <div class="preview-overlay-note" data-i18n="previewHint"></div>
@@ -455,16 +455,16 @@
       var knownTypesCache = [];
       var uiLang = 'de';
 
-      // Gemini Modelle, die ?ber das Gateway nutzbar sind. Bei Bedarf hier erg?nzen.
-      // Nur Modelle, die f?r euren API-Key/Google-Projekt tats?chlich freigeschaltet sind.
-      // gemini-3.6-flash ist der bew?hrte Default aus AutoFix Hub selbst. Weitere Modelle
-      // erst hier erg?nzen, nachdem sie ?ber "Test Connection" im Dashboard best?tigt wurden.
-      // Nur Modelle, die f?r euren API-Key/Google-Projekt tats?chlich freigeschaltet sind.
-      // gemini-3.6-flash ist der bew?hrte Default, siehe auch das TermSearch-Projekt, das
+      // Gemini Modelle, die über das Gateway nutzbar sind. Bei Bedarf hier ergänzen.
+      // Nur Modelle, die für euren API-Key/Google-Projekt tatsächlich freigeschaltet sind.
+      // gemini-3.6-flash ist der bewährte Default aus AutoFix Hub selbst. Weitere Modelle
+      // erst hier ergänzen, nachdem sie über "Test Connection" im Dashboard bestätigt wurden.
+      // Nur Modelle, die für euren API-Key/Google-Projekt tatsächlich freigeschaltet sind.
+      // gemini-3.6-flash ist der bewährte Default, siehe auch das TermSearch-Projekt, das
       // dasselbe Apigee-Gateway nutzt. Die komplette 2.5er Modellreihe (Flash und Pro)
-      // ist f?r diesen Key deaktiviert (404 "no longer available to new users").
+      // ist für diesen Key deaktiviert (404 "no longer available to new users").
       // Muss synchron zu ALLOWED_GEMINI_MODELS_ in PromptEditorAccess.gs gehalten werden.
-      // Die 2.5er Reihe (Flash und Pro) ist f?r diesen API-Key deaktiviert
+      // Die 2.5er Reihe (Flash und Pro) ist für diesen API-Key deaktiviert
       // (404 "no longer available to new users"), daher nur 3.x Flash-Varianten.
       var GEMINI_MODELS = [
         { value: 'gemini-3.6-flash',       label: 'Gemini 3.6 Flash' },
@@ -485,83 +485,83 @@
         de: {
           tabPrompts: 'Prompts', tabSettings: 'Gemini Einstellungen', tabAdmin: 'Nutzer und Rechte',
           lockTitle: 'Kein Zugriff',
-          lockText: 'Du bist f?r den Prompt Editor nicht freigeschaltet. Bitte wende dich an einen Administrator, um freigeschaltet zu werden, oder stelle ein Ticket f?r einen neuen Prompt Space.',
+          lockText: 'Du bist für den Prompt Editor nicht freigeschaltet. Bitte wende dich an einen Administrator, um freigeschaltet zu werden, oder stelle ein Ticket für einen neuen Prompt Space.',
           loggedInAs: 'Angemeldet als:',
-          checking: 'Pr?fe Berechtigung...',
-          introPrompts: 'Hier passt du die Anweisungen an, nach denen Gemini die maschinell ?bersetzten Segmente in AutoFix Hub nachbearbeitet, pro Dokumenttyp. ?nderungen wirken sich auf alle zuk?nftigen AutoFix L?ufe aus.',
+          checking: 'Prüfe Berechtigung...',
+          introPrompts: 'Hier passt du die Anweisungen an, nach denen Gemini die maschinell übersetzten Segmente in AutoFix Hub nachbearbeitet, pro Dokumenttyp. Änderungen wirken sich auf alle zukünftigen AutoFix Läufe aus.',
           requestSpace: 'Neuen Prompt Space beantragen',
-          requestSpaceHint: 'Brauchst du einen Prompt Space? Stelle ein Ticket, dann legt ein Admin ihn f?r dich an.',
-          master: 'Standard', typeLabel: 'Typ:', save: 'Speichern', reset: 'Zur?cksetzen',
-          saving: 'Speichert...', saved: 'Gespeichert', unsaved: 'Ungespeicherte ?nderungen',
-          resetConfirm: ' wirklich auf den K?rcher Standard zur?cksetzen? Deine ?nderungen gehen dabei verloren.',
+          requestSpaceHint: 'Brauchst du einen Prompt Space? Stelle ein Ticket, dann legt ein Admin ihn für dich an.',
+          master: 'Standard', typeLabel: 'Typ:', save: 'Speichern', reset: 'Zurücksetzen',
+          saving: 'Speichert...', saved: 'Gespeichert', unsaved: 'Ungespeicherte Änderungen',
+          resetConfirm: ' wirklich auf den Kärcher Standard zurücksetzen? Deine Änderungen gehen dabei verloren.',
           charCount: 'Zeichen', copyPrompt: 'Kopieren', copied: 'In Zwischenablage kopiert',
-          exampleBarTitle: 'Beispiel ansehen', exampleSelectHint: 'Typ w?hlen',
-          noExample: 'F?r diesen Typ ist noch kein Beispiel hinterlegt.',
+          exampleBarTitle: 'Beispiel ansehen', exampleSelectHint: 'Typ wählen',
+          noExample: 'Für diesen Typ ist noch kein Beispiel hinterlegt.',
           collapseAll: 'Alle einklappen', expandAll: 'Alle ausklappen',
-          hmwButton: 'Mit Gemini verbessern', hmwLikes: 'Das will ich behalten oder verst?rken',
-          hmwDislikes: 'Das will ich ?ndern oder entfernen', hmwFree: 'Zus?tzliche Anweisung, frei formuliert',
+          hmwButton: 'Mit Gemini verbessern', hmwLikes: 'Das will ich behalten oder verstärken',
+          hmwDislikes: 'Das will ich ändern oder entfernen', hmwFree: 'Zusätzliche Anweisung, frei formuliert',
           hmwGenerate: 'Vorschlag generieren', hmwGenerating: 'Generiert...',
-          hmwSuggestion: 'Gemini Vorschlag, Vorschau', hmwAccept: 'In Editor ?bernehmen', hmwDiscard: 'Verwerfen',
-          noPrompts: 'F?r dich sind keine Prompt Typen freigeschaltet. Bitte einen Admin kontaktieren.',
-          geminiForType: 'Gemini Einstellungen f?r diesen Typ',
+          hmwSuggestion: 'Gemini Vorschlag, Vorschau', hmwAccept: 'In Editor übernehmen', hmwDiscard: 'Verwerfen',
+          noPrompts: 'Für dich sind keine Prompt Typen freigeschaltet. Bitte einen Admin kontaktieren.',
+          geminiForType: 'Gemini Einstellungen für diesen Typ',
           usingGlobal: 'Nutzt aktuell die globalen Einstellungen.',
-          usingCustom: 'Nutzt eigene Einstellungen f?r diesen Typ.',
+          usingCustom: 'Nutzt eigene Einstellungen für diesen Typ.',
           model: 'Modell', temperature: 'Temperature', maxTokens: 'Max Output Tokens',
-          maxTokensLocked: 'Fest vorgegeben, kann nicht ver?ndert werden.',
+          maxTokensLocked: 'Fest vorgegeben, kann nicht verändert werden.',
           tmThresholdLabel: 'TM Threshold',
-          thinkingLabel: 'Thinking', thinkingOn: 'Aktiviert, Modell darf l?nger nachdenken bei schwierigen F?llen.',
-          thinkingOff: 'Deaktiviert, antwortet immer direkt ohne extra Denkschritte, schneller und g?nstiger.',
-          saveTypeSettings: 'F?r diesen Typ speichern', clearTypeSettings: 'Auf global zur?cksetzen',
-          globalSettingsIntro: 'Diese Werte sind die globale Vorgabe f?r alle Prompt Typen ohne eigene Einstellungen. Sie wirken sich sofort auf den n?chsten Lauf aus.',
+          thinkingLabel: 'Thinking', thinkingOn: 'Aktiviert, Modell darf länger nachdenken bei schwierigen Fällen.',
+          thinkingOff: 'Deaktiviert, antwortet immer direkt ohne extra Denkschritte, schneller und günstiger.',
+          saveTypeSettings: 'Für diesen Typ speichern', clearTypeSettings: 'Auf global zurücksetzen',
+          globalSettingsIntro: 'Diese Werte sind die globale Vorgabe für alle Prompt Typen ohne eigene Einstellungen. Sie wirken sich sofort auf den nächsten Lauf aus.',
           saveSettings: 'Einstellungen speichern',
           ctrlSHint: 'Tipp: Strg+S im Textfeld speichert direkt.',
           testToggle: 'Prompt testen', testInputLabel: 'Testtext', testInputPlaceholder: 'Text eingeben, der post editiert werden soll',
           testSourceLang: 'Quellsprache', testTargetLang: 'Zielsprache',
-          testRun: 'Test ausf?hren', testRunning: 'Fragt Gemini...',
+          testRun: 'Test ausführen', testRunning: 'Fragt Gemini...',
           testNoInput: 'Bitte einen Testtext eingeben.',
-          testOutputLabel: 'Ergebnis', testChanged: 'Ge?ndert', testUnchanged: 'Unver?ndert ?bernommen',
-          testReasonLabel: 'Begr?ndung', testModelLabel: 'Modell', testUsesUnsaved: 'Testet mit dem aktuellen Text im Editor, auch wenn noch nicht gespeichert.',
+          testOutputLabel: 'Ergebnis', testChanged: 'Geändert', testUnchanged: 'Unverändert übernommen',
+          testReasonLabel: 'Begründung', testModelLabel: 'Modell', testUsesUnsaved: 'Testet mit dem aktuellen Text im Editor, auch wenn noch nicht gespeichert.',
           addUserTitle: 'Nutzer freischalten',
-          addUserHint: 'Lege fest, welche Prompt Typen diese Person bearbeiten darf und ob sie zus?tzlich die globalen Gemini Einstellungen verwalten darf.',
-          allTypes: 'Alle Typen', manageSettingsCheckbox: 'Darf zus?tzlich globale Gemini Einstellungen verwalten',
+          addUserHint: 'Lege fest, welche Prompt Typen diese Person bearbeiten darf und ob sie zusätzlich die globalen Gemini Einstellungen verwalten darf.',
+          allTypes: 'Alle Typen', manageSettingsCheckbox: 'Darf zusätzlich globale Gemini Einstellungen verwalten',
           saveUser: 'Speichern oder aktualisieren',
           adminsTitle: 'Administratoren',
           adminsHint: 'Admins haben immer vollen Zugriff auf alle Prompt Typen, alle Einstellungen, die Nutzerverwaltung und das Anlegen neuer Prompt Spaces.',
-          addAdmin: 'Hinzuf?gen',
-          previewTitle: 'Nutzeransicht ansehen', previewHint: 'Sieh dir live an, wie der Prompts Tab f?r eine bestimmte freigeschaltete Person aussieht. Reine Ansicht, hier l?sst sich nichts speichern.',
+          addAdmin: 'Hinzufügen',
+          previewTitle: 'Nutzeransicht ansehen', previewHint: 'Sieh dir live an, wie der Prompts Tab für eine bestimmte freigeschaltete Person aussieht. Reine Ansicht, hier lässt sich nichts speichern.',
           previewButton: 'Ansicht laden', previewPlaceholder: 'name@karcher.com',
-          previewNotWhitelisted: 'Diese Person ist nicht freigeschaltet und w?rde die Sperr-Seite sehen.',
+          previewNotWhitelisted: 'Diese Person ist nicht freigeschaltet und würde die Sperr-Seite sehen.',
           previewAdminBadge: 'Admin, sieht alles', previewCanSettings: 'Darf globale Gemini Einstellungen verwalten',
           previewCannotSettings: 'Darf globale Gemini Einstellungen nicht verwalten',
           previewNoPrompts: 'Sieht keinen einzigen Prompt Typ.',
           previewEditable: 'bearbeitbar', previewReadOnly: 'nur lesbar',
-          previewClose: 'Schlie?en',
+          previewClose: 'Schließen',
           newTypeTitle: 'Neuen Prompt Space anlegen',
-          newTypeHint: 'Lege einen neuen Container f?r einen Dokumenttyp an, zum Beispiel CAMPUS. Er erscheint danach im Prompts Tab f?r alle, die daf?r freigeschaltet sind, und startet mit dem Technical Prompt als Ausgangstext, falls kein eigener Start Prompt angegeben wird.',
+          newTypeHint: 'Lege einen neuen Container für einen Dokumenttyp an, zum Beispiel CAMPUS. Er erscheint danach im Prompts Tab für alle, die dafür freigeschaltet sind, und startet mit dem Technical Prompt als Ausgangstext, falls kein eigener Start Prompt angegeben wird.',
           newTypeName: 'Name', newTypeExample: 'Beispiel, optional', newTypeSeed: 'Start Prompt, optional',
           copyFrom: 'Von bestehendem Space kopieren, optional', copyFromNone: 'Leer starten',
           addType: 'Prompt Space anlegen', existingSpaces: 'Vorhandene Prompt Spaces',
-          builtIn: 'Fest eingebaut', deleteSpace: 'L?schen',
-          deleteSpaceConfirm: ' wirklich l?schen? Gespeicherte Prompt Texte f?r diesen Typ bleiben erhalten, der Space verschwindet aber aus der ?bersicht.',
-          noEmail: 'Bitte eine g?ltige E Mail Adresse eingeben.', noName: 'Bitte einen Namen eingeben.',
+          builtIn: 'Fest eingebaut', deleteSpace: 'Löschen',
+          deleteSpaceConfirm: ' wirklich löschen? Gespeicherte Prompt Texte für diesen Typ bleiben erhalten, der Space verschwindet aber aus der Übersicht.',
+          noEmail: 'Bitte eine gültige E Mail Adresse eingeben.', noName: 'Bitte einen Namen eingeben.',
           emptyPrompt: 'Der Prompt darf nicht leer sein.',
-          exportImportTitle: 'Export und Import', exportImportHint: 'Sichere die komplette Prompt Konfiguration als JSON oder spiele einen fr?heren Export wieder ein. Beides l?sst sich nach Typ filtern.',
+          exportImportTitle: 'Export und Import', exportImportHint: 'Sichere die komplette Prompt Konfiguration als JSON oder spiele einen früheren Export wieder ein. Beides lässt sich nach Typ filtern.',
           exportSectionTitle: 'Export', exportIncludeGlobal: 'Globale Gemini Einstellungen mit exportieren',
-          exportButton: 'Ausgew?hlte Typen exportieren', exportNoTypes: 'Bitte mindestens einen Typ ausw?hlen.',
-          importSectionTitle: 'Import', importFileLabel: 'JSON Datei w?hlen', importOrPaste: 'oder JSON hier einf?gen',
-          importAnalyzeButton: 'Datei analysieren', importInvalid: 'Kein g?ltiges JSON oder keine Prompt Typen darin gefunden.',
-          importFoundTitle: 'Gefundene Typen', importExisting: 'existiert bereits, wird ?berschrieben', importNewTag: 'neu',
-          importApplyGlobal: 'Globale Gemini Einstellungen aus der Datei mit ?bernehmen',
-          importApplyButton: 'Ausgew?hlte Typen importieren', importNoTypes: 'Bitte mindestens einen Typ zum Importieren ausw?hlen.',
+          exportButton: 'Ausgewählte Typen exportieren', exportNoTypes: 'Bitte mindestens einen Typ auswählen.',
+          importSectionTitle: 'Import', importFileLabel: 'JSON Datei wählen', importOrPaste: 'oder JSON hier einfügen',
+          importAnalyzeButton: 'Datei analysieren', importInvalid: 'Kein gültiges JSON oder keine Prompt Typen darin gefunden.',
+          importFoundTitle: 'Gefundene Typen', importExisting: 'existiert bereits, wird überschrieben', importNewTag: 'neu',
+          importApplyGlobal: 'Globale Gemini Einstellungen aus der Datei mit übernehmen',
+          importApplyButton: 'Ausgewählte Typen importieren', importNoTypes: 'Bitte mindestens einen Typ zum Importieren auswählen.',
           importSuccess: 'importiert.',
           geminiHelpTitle: 'Was bedeuten diese Einstellungen?',
-          geminiHelpModelTitle: 'Modell', geminiHelpModelText: 'Welches Gemini Modell f?r Anfragen dieses Typs, oder global f?r alle Typen ohne eigene Einstellung, verwendet wird. Die Modelle unterscheiden sich in Geschwindigkeit, Kosten und Qualit?t der Ergebnisse. "Flash" Modelle sind auf Geschwindigkeit und niedrige Kosten ausgelegt und f?r die meisten Post-Editing-Aufgaben v?llig ausreichend. "Flash Lite" ist die schnellste und g?nstigste Variante, mit leicht geringerer sprachlicher Feinheit. Eine h?here Versionsnummer, zum Beispiel 3.6 statt 3.1, ist eine neuere Modellgeneration und in der Regel dem ?lteren Modell in Qualit?t und Befolgen von Anweisungen ?berlegen. In der Liste stehen nur Modelle, die f?r unseren API Key tats?chlich freigeschaltet sind, andere Modelle w?rden mit einem 404 Fehler abgelehnt.',
-          geminiHelpTempTitle: 'Temperature', geminiHelpTempText: 'Steuert, wie variabel beziehungsweise kreativ die Antworten des Modells ausfallen, Werte von 0.0 bis 1.0. Bei niedrigen Werten nahe 0 liefert das Modell bei gleichem Input fast immer dieselbe, vorhersehbare Formulierung, das ist ideal f?r technische Texte, bei denen Konsistenz zwischen Segmenten wichtiger ist als sprachliche Abwechslung. Bei hohen Werten nahe 1 formuliert das Modell freier und variantenreicher, was f?r Marketingtexte reizvoll sein kann, aber auch bedeutet, dass zwei L?ufe mit demselben Text zu unterschiedlichen Ergebnissen f?hren k?nnen. F?r die meisten F?lle ist ein niedriger Wert zwischen 0.1 und 0.3 die richtige Wahl.',
-          geminiHelpTmTitle: 'TM Threshold', geminiHelpTmText: 'Legt fest, ab welcher ?hnlichkeit ein Treffer aus dem Translation Memory als relevant genug gilt, um bei der Nachbearbeitung ber?cksichtigt zu werden, Werte von 0.0 bis 1.0, wobei der Wert grob als Prozent ?bereinstimmung zu verstehen ist. Ein niedriger Wert l?sst auch entferntere, lose passende Treffer durch, das liefert mehr Kontext, aber auch mehr Rauschen und potenziell irref?hrende Vorschl?ge. Ein hoher Wert l?sst nur sehr genaue, fast identische Treffer durch, das ergibt weniger, daf?r aber verl?sslichere ?bereinstimmungen. Ein Wert um 0.7 ist ein guter, eher strenger Standardwert.',
-          geminiHelpThinkingTitle: 'Thinking', geminiHelpThinkingText: 'Legt fest, ob sich das Modell zus?tzliche interne Denkschritte erlauben darf, bevor es antwortet, statt sofort direkt zu antworten. Aktiviert bedeutet: bei schwierigen oder mehrdeutigen Segmenten kann das Modell l?nger nachdenken, was h?ufig zu besseren, durchdachteren Korrekturen f?hrt, daf?r aber etwas langsamer und geringf?gig teurer ist. Deaktiviert bedeutet: das Modell antwortet immer sofort ohne zus?tzliche Denkschritte, das ist schneller und g?nstiger, kann bei wirklich kniffligen F?llen aber zu einer etwas ungenaueren Antwort f?hren. F?r die meisten F?lle ist Aktiviert die sinnvollere Wahl, da die Kosten- und Zeitersparnis beim Deaktivieren meist gering ist.',
-          geminiHelpMaxTokensTitle: 'Max Output Tokens', geminiHelpMaxTokensText: 'Die maximale L?nge, die eine einzelne Antwort des Modells haben darf, gemessen in Tokens, das sind grob Wortteile, nicht ganze W?rter. Dieser Wert ist fest auf der Plattform vorgegeben und kann hier nicht ver?ndert werden. Er ist so bemessen, dass auch bei gr??eren Batches mit vielen Segmenten pro Anfrage genug Platz f?r eine vollst?ndige Antwort vorhanden ist, ohne dass einzelne Anfragen unn?tig gro? und damit teuer werden.',
-          tempDesc: ['Fest, immer die gleiche Ausgabe bei gleichem Input.', 'Sehr zur?ckhaltend, kaum Variation.', 'Zur?ckhaltend, bleibt eng an der sichersten Formulierung.', 'Etwas Spielraum f?r stilistische Anpassungen.', 'Ausgewogen, meist w?rtlich mit leichter Gl?ttung.', 'Ausgewogen, guter Mix aus Genauigkeit und nat?rlicher Sprache.', 'Etwas mehr Freiheit, nat?rlichere Umformulierung.', 'Kreativ, sp?rbar freiere Formulierung, gut f?r Marketing.', 'Sehr kreativ, Ausgabe kann zwischen L?ufen stark variieren.', 'Hohe Kreativit?t, weniger vorhersehbar, mit Vorsicht nutzen.', 'Maximale Kreativit?t, am wenigsten vorhersehbar, f?r Post Editing selten sinnvoll.'],
-          tmDesc: ['Nimmt fast alles, auch sehr lose Treffer.', 'Sehr lose Treffer z?hlen mit.', 'Lose Treffer z?hlen mit, entsprechend mehr Rauschen.', 'Recht locker, mehr Kontext, aber weniger Pr?zision.', 'Etwas locker, ein guter Anteil an Kontext.', 'Ausgewogen, solider Standardwert f?r die meisten Inhalte.', 'Recht streng, nur ordentliche Treffer z?hlen.', 'Streng, nur nahe Treffer z?hlen.', 'Sehr streng, nur nahezu identische Treffer z?hlen.', 'Extrem streng, fast nur exakte Treffer.', 'Nur perfekte Treffer z?hlen.']
+          geminiHelpModelTitle: 'Modell', geminiHelpModelText: 'Welches Gemini Modell für Anfragen dieses Typs, oder global für alle Typen ohne eigene Einstellung, verwendet wird. Die Modelle unterscheiden sich in Geschwindigkeit, Kosten und Qualität der Ergebnisse. "Flash" Modelle sind auf Geschwindigkeit und niedrige Kosten ausgelegt und für die meisten Post-Editing-Aufgaben völlig ausreichend. "Flash Lite" ist die schnellste und günstigste Variante, mit leicht geringerer sprachlicher Feinheit. Eine höhere Versionsnummer, zum Beispiel 3.6 statt 3.1, ist eine neuere Modellgeneration und in der Regel dem älteren Modell in Qualität und Befolgen von Anweisungen überlegen. In der Liste stehen nur Modelle, die für unseren API Key tatsächlich freigeschaltet sind, andere Modelle würden mit einem 404 Fehler abgelehnt.',
+          geminiHelpTempTitle: 'Temperature', geminiHelpTempText: 'Steuert, wie variabel beziehungsweise kreativ die Antworten des Modells ausfallen, Werte von 0.0 bis 1.0. Bei niedrigen Werten nahe 0 liefert das Modell bei gleichem Input fast immer dieselbe, vorhersehbare Formulierung, das ist ideal für technische Texte, bei denen Konsistenz zwischen Segmenten wichtiger ist als sprachliche Abwechslung. Bei hohen Werten nahe 1 formuliert das Modell freier und variantenreicher, was für Marketingtexte reizvoll sein kann, aber auch bedeutet, dass zwei Läufe mit demselben Text zu unterschiedlichen Ergebnissen führen können. Für die meisten Fälle ist ein niedriger Wert zwischen 0.1 und 0.3 die richtige Wahl.',
+          geminiHelpTmTitle: 'TM Threshold', geminiHelpTmText: 'Legt fest, ab welcher Ähnlichkeit ein Treffer aus dem Translation Memory als relevant genug gilt, um bei der Nachbearbeitung berücksichtigt zu werden, Werte von 0.0 bis 1.0, wobei der Wert grob als Prozent Übereinstimmung zu verstehen ist. Ein niedriger Wert lässt auch entferntere, lose passende Treffer durch, das liefert mehr Kontext, aber auch mehr Rauschen und potenziell irreführende Vorschläge. Ein hoher Wert lässt nur sehr genaue, fast identische Treffer durch, das ergibt weniger, dafür aber verlässlichere Übereinstimmungen. Ein Wert um 0.7 ist ein guter, eher strenger Standardwert.',
+          geminiHelpThinkingTitle: 'Thinking', geminiHelpThinkingText: 'Legt fest, ob sich das Modell zusätzliche interne Denkschritte erlauben darf, bevor es antwortet, statt sofort direkt zu antworten. Aktiviert bedeutet: bei schwierigen oder mehrdeutigen Segmenten kann das Modell länger nachdenken, was häufig zu besseren, durchdachteren Korrekturen führt, dafür aber etwas langsamer und geringfügig teurer ist. Deaktiviert bedeutet: das Modell antwortet immer sofort ohne zusätzliche Denkschritte, das ist schneller und günstiger, kann bei wirklich kniffligen Fällen aber zu einer etwas ungenaueren Antwort führen. Für die meisten Fälle ist Aktiviert die sinnvollere Wahl, da die Kosten- und Zeitersparnis beim Deaktivieren meist gering ist.',
+          geminiHelpMaxTokensTitle: 'Max Output Tokens', geminiHelpMaxTokensText: 'Die maximale Länge, die eine einzelne Antwort des Modells haben darf, gemessen in Tokens, das sind grob Wortteile, nicht ganze Wörter. Dieser Wert ist fest auf der Plattform vorgegeben und kann hier nicht verändert werden. Er ist so bemessen, dass auch bei gr??eren Batches mit vielen Segmenten pro Anfrage genug Platz für eine vollständige Antwort vorhanden ist, ohne dass einzelne Anfragen unnötig groß und damit teuer werden.',
+          tempDesc: ['Fest, immer die gleiche Ausgabe bei gleichem Input.', 'Sehr zurückhaltend, kaum Variation.', 'Zurückhaltend, bleibt eng an der sichersten Formulierung.', 'Etwas Spielraum für stilistische Anpassungen.', 'Ausgewogen, meist wörtlich mit leichter Glättung.', 'Ausgewogen, guter Mix aus Genauigkeit und natürlicher Sprache.', 'Etwas mehr Freiheit, natürlichere Umformulierung.', 'Kreativ, spürbar freiere Formulierung, gut für Marketing.', 'Sehr kreativ, Ausgabe kann zwischen Läufen stark variieren.', 'Hohe Kreativität, weniger vorhersehbar, mit Vorsicht nutzen.', 'Maximale Kreativität, am wenigsten vorhersehbar, für Post Editing selten sinnvoll.'],
+          tmDesc: ['Nimmt fast alles, auch sehr lose Treffer.', 'Sehr lose Treffer zählen mit.', 'Lose Treffer zählen mit, entsprechend mehr Rauschen.', 'Recht locker, mehr Kontext, aber weniger Präzision.', 'Etwas locker, ein guter Anteil an Kontext.', 'Ausgewogen, solider Standardwert für die meisten Inhalte.', 'Recht streng, nur ordentliche Treffer zählen.', 'Streng, nur nahe Treffer zählen.', 'Sehr streng, nur nahezu identische Treffer zählen.', 'Extrem streng, fast nur exakte Treffer.', 'Nur perfekte Treffer zählen.']
         },
         en: {
           tabPrompts: 'Prompts', tabSettings: 'Gemini Settings', tabAdmin: 'Users and Access',
@@ -574,7 +574,7 @@
           requestSpaceHint: 'Need a prompt space? Open a ticket and an admin will set it up for you.',
           master: 'Default', typeLabel: 'Type:', save: 'Save', reset: 'Reset',
           saving: 'Saving...', saved: 'Saved', unsaved: 'Unsaved changes',
-          resetConfirm: ' back to the K?rcher default? Your changes will be lost.',
+          resetConfirm: ' back to the Kärcher default? Your changes will be lost.',
           charCount: 'characters', copyPrompt: 'Copy', copied: 'Copied to clipboard',
           exampleBarTitle: 'View example', exampleSelectHint: 'Choose type',
           noExample: 'No example has been set up for this type yet.',
@@ -646,7 +646,12 @@
         }
       };
       function t(key) { return (I18N[uiLang] && I18N[uiLang][key]) || I18N.de[key] || key; }
-      function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+      function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+      // Wert als JS-String-Literal für inline onclick="fn(...)"-Attribute.
+      // esc() allein reicht dort nicht: der Browser dekodiert &#39; im Attribut
+      // zurück zu ' bevor das JS läuft – ein Label wie  x');alert(1);//  wäre
+      // sonst ausführbarer Code.
+      function jsq(s) { return esc(JSON.stringify(String(s == null ? '' : s))); }
       function toast(msg, dur) {
         var el = document.getElementById('toast');
         el.textContent = msg; el.classList.add('show');
@@ -655,15 +660,15 @@
       }
 
       var LIKE_PRESETS_KEYS = ['Strengere Terminologie-Treue|Stricter terminology adherence',
-        'Nat?rlicherer Sprachfluss|More natural flow', 'K?rzere, pr?gnantere S?tze|Shorter, more concise sentences',
-        'F?rmlicherer Ton|More formal tone', 'Mehr Marketing-Sprache|More marketing language',
+        'Natürlicherer Sprachfluss|More natural flow', 'Kürzere, prägnantere Sätze|Shorter, more concise sentences',
+        'Förmlicherer Ton|More formal tone', 'Mehr Marketing-Sprache|More marketing language',
         'Striktere Zahlen-/Einheiten-Regeln|Stricter number/unit rules',
-        'Konsistentere Terminologie ?ber Segmente hinweg|More consistent terminology across segments',
+        'Konsistentere Terminologie über Segmente hinweg|More consistent terminology across segments',
         'Mehr aktive Verbesserungen statt nur Fehlerkorrektur|More active improvements, not just error fixes'];
-      var DISLIKE_PRESETS_KEYS = ['Zu w?rtliche ?bersetzung|Too literal a translation',
-        'Zu viele unn?tige Umformulierungen|Too many unnecessary rewordings', 'Zu f?rmlich / steif|Too formal / stiff',
-        'Zu viel Marketing-Ton|Too much marketing tone', 'Zu lange, verschachtelte S?tze|Too long, nested sentences',
-        'Inkonsistente Terminologie|Inconsistent terminology', '?ndert zu viel am Ursprungssinn|Changes too much of the original meaning',
+      var DISLIKE_PRESETS_KEYS = ['Zu wörtliche Übersetzung|Too literal a translation',
+        'Zu viele unnötige Umformulierungen|Too many unnecessary rewordings', 'Zu förmlich / steif|Too formal / stiff',
+        'Zu viel Marketing-Ton|Too much marketing tone', 'Zu lange, verschachtelte Sätze|Too long, nested sentences',
+        'Inkonsistente Terminologie|Inconsistent terminology', 'ändert zu viel am Ursprungssinn|Changes too much of the original meaning',
         'Ignoriert Termbase-Vorgaben|Ignores termbase entries'];
       function presetLabel_(pair) { var parts = pair.split('|'); return uiLang === 'en' ? parts[1] : parts[0]; }
 
@@ -814,7 +819,7 @@
           var geminiStatus = p.geminiHasOverride ? t('usingCustom') : t('usingGlobal');
           return '' +
             '<div class="prompt-card" id="card_' + p.type + '">' +
-              '<div class="prompt-card-header" onclick="toggleCard(\'' + p.type + '\')">' +
+              '<div class="prompt-card-header" onclick="toggleCard(' + jsq(p.type) + ')">' +
                 '<div class="prompt-card-title">' +
                   '<span class="material-icons-outlined collapse-caret" id="caret_' + p.type + '">expand_more</span>' +
                   '<span class="prompt-type-badge">' + esc(p.label) + '</span>' +
@@ -825,11 +830,11 @@
               '</div>' +
               '<div class="prompt-card-body" onclick="event.stopPropagation()">' +
                 '<div class="editor-col">' +
-                  '<textarea class="prompt-textarea" id="ta_' + p.type + '" data-saved="' + esc(p.instructions) + '" oninput="onPromptInput(\'' + p.type + '\')" onkeydown="onPromptKeydown(event,\'' + p.type + '\')">' + esc(p.instructions) + '</textarea>' +
+                  '<textarea class="prompt-textarea" id="ta_' + p.type + '" data-saved="' + esc(p.instructions) + '" oninput="onPromptInput(' + jsq(p.type) + ')" onkeydown="onPromptKeydown(event,' + jsq(p.type) + ')">' + esc(p.instructions) + '</textarea>' +
                   '<div class="save-row">' +
-                    '<button class="btn btn-primary" onclick="savePrompt(\'' + p.type + '\')"><span class="material-icons-outlined">save</span>' + esc(t('save')) + '</button>' +
-                    '<button class="btn btn-secondary" onclick="resetPrompt(\'' + p.type + '\', \'' + esc(p.label) + '\')"><span class="material-icons-outlined">restart_alt</span>' + esc(t('reset')) + '</button>' +
-                    '<button class="btn btn-secondary" onclick="copyPrompt(\'' + p.type + '\')"><span class="material-icons-outlined">content_copy</span>' + esc(t('copyPrompt')) + '</button>' +
+                    '<button class="btn btn-primary" onclick="savePrompt(' + jsq(p.type) + ')"><span class="material-icons-outlined">save</span>' + esc(t('save')) + '</button>' +
+                    '<button class="btn btn-secondary" onclick="resetPrompt(' + jsq(p.type) + ', ' + jsq(p.label) + ')"><span class="material-icons-outlined">restart_alt</span>' + esc(t('reset')) + '</button>' +
+                    '<button class="btn btn-secondary" onclick="copyPrompt(' + jsq(p.type) + ')"><span class="material-icons-outlined">content_copy</span>' + esc(t('copyPrompt')) + '</button>' +
                     '<span class="save-msg" id="msg_' + p.type + '"></span>' +
                     '<span class="char-count" id="count_' + p.type + '"></span>' +
                   '</div>' +
@@ -947,7 +952,7 @@
           DISLIKE_PRESETS_KEYS.map(function(pair) { return '<option value="' + esc(presetLabel_(pair)) + '">' + esc(presetLabel_(pair)) + '</option>'; }).join('');
         return '' +
           '<div class="hmw-toggle">' +
-            '<button class="btn btn-blue btn-sm" onclick="toggleHmw(\'' + type + '\')">' +
+            '<button class="btn btn-blue btn-sm" onclick="toggleHmw(' + jsq(type) + ')">' +
               '<span class="material-icons-outlined">auto_awesome</span>' + esc(t('hmwButton')) +
             '</button>' +
           '</div>' +
@@ -968,15 +973,15 @@
               '<span class="hmw-label">' + esc(t('hmwFree')) + '</span>' +
               '<textarea id="hmwFreeText_' + type + '"></textarea>' +
             '</div>' +
-            '<button class="btn btn-blue" onclick="generateHmwSuggestion(\'' + type + '\')" id="hmwGenBtn_' + type + '">' +
+            '<button class="btn btn-blue" onclick="generateHmwSuggestion(' + jsq(type) + ')" id="hmwGenBtn_' + type + '">' +
               '<span class="material-icons-outlined">bolt</span>' + esc(t('hmwGenerate')) +
             '</button>' +
             '<div class="hmw-suggestion" id="hmwSuggestionBox_' + type + '">' +
               '<span class="hmw-label">' + esc(t('hmwSuggestion')) + '</span>' +
               '<textarea id="hmwSuggestionText_' + type + '" readonly></textarea>' +
               '<div class="hmw-suggestion-actions">' +
-                '<button class="btn btn-primary" onclick="acceptHmwSuggestion(\'' + type + '\')"><span class="material-icons-outlined">check</span>' + esc(t('hmwAccept')) + '</button>' +
-                '<button class="btn btn-secondary" onclick="discardHmwSuggestion(\'' + type + '\')"><span class="material-icons-outlined">close</span>' + esc(t('hmwDiscard')) + '</button>' +
+                '<button class="btn btn-primary" onclick="acceptHmwSuggestion(' + jsq(type) + ')"><span class="material-icons-outlined">check</span>' + esc(t('hmwAccept')) + '</button>' +
+                '<button class="btn btn-secondary" onclick="discardHmwSuggestion(' + jsq(type) + ')"><span class="material-icons-outlined">close</span>' + esc(t('hmwDiscard')) + '</button>' +
               '</div>' +
             '</div>' +
           '</div>';
@@ -1020,7 +1025,7 @@
         ta.value = suggestion;
         onPromptInput(type);
         discardHmwSuggestion(type);
-        toast(uiLang === 'en' ? 'Suggestion applied, remember to save.' : 'Vorschlag ?bernommen, nicht vergessen zu speichern.');
+        toast(uiLang === 'en' ? 'Suggestion applied, remember to save.' : 'Vorschlag übernommen, nicht vergessen zu speichern.');
       }
       function discardHmwSuggestion(type) {
         document.getElementById('hmwSuggestionBox_' + type).classList.remove('show');
@@ -1042,7 +1047,7 @@
       function buildTestPanel_(type) {
         return '' +
           '<div class="test-toggle">' +
-            '<button class="btn btn-secondary btn-sm" onclick="toggleTest(\'' + type + '\')">' +
+            '<button class="btn btn-secondary btn-sm" onclick="toggleTest(' + jsq(type) + ')">' +
               '<span class="material-icons-outlined">science</span>' + esc(t('testToggle')) +
             '</button>' +
           '</div>' +
@@ -1062,7 +1067,7 @@
                 '<select id="testTgtLang_' + type + '">' + langOptionsHtml_('en_us') + '</select>' +
               '</div>' +
             '</div>' +
-            '<button class="btn btn-primary" onclick="runPromptTest(\'' + type + '\')" id="testRunBtn_' + type + '">' +
+            '<button class="btn btn-primary" onclick="runPromptTest(' + jsq(type) + ')" id="testRunBtn_' + type + '">' +
               '<span class="material-icons-outlined">play_arrow</span>' + esc(t('testRun')) +
             '</button>' +
             '<div class="test-output" id="testOutput_' + type + '">' +
@@ -1110,7 +1115,7 @@
       // ?? PER TYPE GEMINI SETTINGS ???????????????????????????????????
       function buildTypeGeminiBox_(type, statusText) {
         return '' +
-            '<div class="type-gemini-head" onclick="toggleTypeGemini(\'' + type + '\')">' +
+            '<div class="type-gemini-head" onclick="toggleTypeGemini(' + jsq(type) + ')">' +
               '<div style="display:flex;align-items:center;gap:8px;">' +
                 '<span class="material-icons-outlined">tune</span>' +
                 '<strong style="font-size:11px;text-transform:uppercase;letter-spacing:.3px;">' + esc(t('geminiForType')) + '</strong>' +
@@ -1158,8 +1163,8 @@
                 '<div class="locked-note">' + esc(t('maxTokensLocked')) + '</div>' +
               '</div>' +
               '<div class="save-row">' +
-                '<button class="btn btn-primary btn-sm" onclick="saveTypeGemini(\'' + type + '\')"><span class="material-icons-outlined">save</span>' + esc(t('saveTypeSettings')) + '</button>' +
-                '<button class="btn btn-secondary btn-sm" onclick="clearTypeGemini(\'' + type + '\')"><span class="material-icons-outlined">restart_alt</span>' + esc(t('clearTypeSettings')) + '</button>' +
+                '<button class="btn btn-primary btn-sm" onclick="saveTypeGemini(' + jsq(type) + ')"><span class="material-icons-outlined">save</span>' + esc(t('saveTypeSettings')) + '</button>' +
+                '<button class="btn btn-secondary btn-sm" onclick="clearTypeGemini(' + jsq(type) + ')"><span class="material-icons-outlined">restart_alt</span>' + esc(t('clearTypeSettings')) + '</button>' +
               '</div>' +
             '</div>';
       }
@@ -1301,7 +1306,7 @@
                 '<div class="list-row-email">' + esc(tp.label) + '</div>' +
                 '<div class="list-row-meta">' + esc(tp.type) + (tp.builtIn ? ' &middot; ' + esc(t('builtIn')) : '') + '</div>' +
               '</div>' +
-              (tp.builtIn ? '' : '<span class="material-icons-outlined icon-btn-danger" onclick="removeType(\'' + esc(tp.type) + '\',\'' + esc(tp.label) + '\')">delete</span>') +
+              (tp.builtIn ? '' : '<span class="material-icons-outlined icon-btn-danger" onclick="removeType(' + jsq(tp.type) + ',' + jsq(tp.label) + ')">delete</span>') +
             '</div>';
         }).join('');
       }
@@ -1344,7 +1349,7 @@
         if (!res.prompts || !res.prompts.length) {
           body.innerHTML = '<div class="preview-warn" style="padding:20px;">' + esc(t('previewNoPrompts')) + '</div>';
         } else {
-          // type-Pr?fix, damit die IDs im Overlay nicht mit denen der echten
+          // type-Präfix, damit die IDs im Overlay nicht mit denen der echten
           // Prompt-Karten kollidieren ? dieselbe renderPromptCards()-Funktion
           // wie im echten Prompts-Tab, daher wirklich identische Optik.
           var cloned = res.prompts.map(function(p) {
@@ -1352,7 +1357,7 @@
           });
           renderPromptCards(cloned, 'previewOverlayBody');
           // Read-only sperren: Speichern/Bearbeiten aus der Vorschau heraus
-          // ist bewusst nicht m?glich, es ist eine reine Live-Ansicht.
+          // ist bewusst nicht möglich, es ist eine reine Live-Ansicht.
           body.querySelectorAll('textarea, input, select').forEach(function(el) { el.disabled = true; });
           body.querySelectorAll('button').forEach(function(el) { el.disabled = true; });
         }
@@ -1403,8 +1408,8 @@
                 '<div class="list-row-email">' + esc(u.email) + '</div>' +
                 '<div class="list-row-meta">' + esc(typesLabel) + settingsLabel + '</div>' +
               '</div>' +
-              '<span class="material-icons-outlined icon-btn" title="edit" onclick="editUser(\'' + esc(u.email) + '\')">edit</span>' +
-              '<span class="material-icons-outlined icon-btn-danger" title="delete" onclick="removeUser(\'' + esc(u.email) + '\')">delete</span>' +
+              '<span class="material-icons-outlined icon-btn" title="edit" onclick="editUser(' + jsq(u.email) + ')">edit</span>' +
+              '<span class="material-icons-outlined icon-btn-danger" title="delete" onclick="removeUser(' + jsq(u.email) + ')">delete</span>' +
             '</div>';
         }).join('');
         window._usersCache = users;
@@ -1456,7 +1461,7 @@
         if (!admins.length) { c.innerHTML = '<div class="empty-row">...</div>'; return; }
         c.innerHTML = admins.map(function(e) {
           return '<div class="list-row"><span>' + esc(e) + '</span>' +
-            '<span class="material-icons-outlined icon-btn-danger" onclick="removeAdminUser(\'' + esc(e) + '\')">delete</span></div>';
+            '<span class="material-icons-outlined icon-btn-danger" onclick="removeAdminUser(' + jsq(e) + ')">delete</span></div>';
         }).join('');
       }
       function addAdminUser() {
