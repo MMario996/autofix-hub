@@ -7,16 +7,23 @@
 //           exportMqmReportToSheet_() schreibt MQM-Report ins G-Sheet
 // =====================================================================
 
+// Pro Ausführung nur einmal öffnen – jedes openById ist ein weiterer
+// Drive-Zugriff, der sporadisch mit "You do not have permission to access
+// the requested document" scheitern kann.
+var dbSheetCache_ = null;
+
 function getDbSheet_() {
+  if (dbSheetCache_) return dbSheetCache_;
   var props   = PropertiesService.getScriptProperties();
   var sheetId = props.getProperty('AUTOFIX_DB_SHEET_ID');
   var ss;
 
   if (sheetId) {
-    try { ss = SpreadsheetApp.openById(sheetId); } catch(e) { sheetId = null; }
-  }
-
-  if (!sheetId) {
+    // Ein Fehler hier ist fast immer transient (Drive-Berechtigungsprüfung).
+    // Früher wurde dann stillschweigend eine NEUE Datenbank angelegt und die
+    // ID überschrieben – Settings und Logs wären verloren gewesen.
+    ss = openByIdWithRetry_(sheetId);
+  } else {
     ss = SpreadsheetApp.create('AutoFix Hub - Database');
     props.setProperty('AUTOFIX_DB_SHEET_ID', ss.getId());
 
@@ -47,7 +54,22 @@ function getDbSheet_() {
     saveAutoFixSettings_(getDefaultAutoFixSettings_(), ss);
     logAudit_('System', 'AutoFix Database Sheet erstellt.', ss);
   }
+  dbSheetCache_ = ss;
   return ss;
+}
+
+function openByIdWithRetry_(sheetId) {
+  var lastErr;
+  for (var attempt = 0; attempt < 3; attempt++) {
+    try {
+      return SpreadsheetApp.openById(sheetId);
+    } catch(e) {
+      lastErr = e;
+      Logger.log('[DB] openById Versuch ' + (attempt + 1) + ' fehlgeschlagen: ' + e.message);
+      if (attempt < 2) Utilities.sleep(1000 * Math.pow(2, attempt));
+    }
+  }
+  throw new Error('AutoFix-Datenbank nicht erreichbar (' + sheetId + '): ' + lastErr.message);
 }
 
 function logAudit_(action, details, ssObj) {

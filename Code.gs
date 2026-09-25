@@ -1031,6 +1031,20 @@ function autoFixPoller(e) {
     Logger.log('[Poller] Ende: ' + new Date().toISOString());
   } finally {
     clearRunning_();
+    flushSpreadsheetsQuietly_();
+  }
+}
+
+// Apps Script schreibt/schließt geöffnete Spreadsheets implizit erst nach dem
+// Return des Handlers. Scheitert das sporadisch ("You do not have permission
+// to access the requested document"), wird der eigentlich erfolgreiche Tick
+// als Failed gewertet und eine Fehlermail verschickt. Expliziter Flush hier,
+// damit ein transienter Fehler abgefangen und nur geloggt wird.
+function flushSpreadsheetsQuietly_() {
+  try {
+    SpreadsheetApp.flush();
+  } catch(e) {
+    Logger.log('[Poller] Flush-Fehler (ignoriert): ' + e.message);
   }
 }
 
