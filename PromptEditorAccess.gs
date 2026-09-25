@@ -1,19 +1,19 @@
 // =====================================================================
-// PROMPT EDITOR – ACCESS CONTROL & API  (v3)
+// PROMPT EDITOR ? ACCESS CONTROL & API  (v3)
 // =====================================================================
-// Baut auf v2 auf und ergänzt:
-//   - UI Sprache (DE/EN), pro Nutzer über UserProperties gespeichert
-//   - Prompt Spaces: Admin kann neue Container für Dokumenttypen anlegen
+// Baut auf v2 auf und erg?nzt:
+//   - UI Sprache (DE/EN), pro Nutzer ?ber UserProperties gespeichert
+//   - Prompt Spaces: Admin kann neue Container f?r Dokumenttypen anlegen
 //     (z.B. CAMPUS), nicht nur die fest eingebauten (technical, marketing)
-//   - Jeder freigeschaltete Nutzer kann für seine Typen eigene Gemini
-//     Einstellungen setzen (Modell, Temperature, Max Tokens), unabhängig
-//     von den globalen Einstellungen und unabhängig von canManageSettings
+//   - Jeder freigeschaltete Nutzer kann f?r seine Typen eigene Gemini
+//     Einstellungen setzen (Modell, Temperature, Max Tokens), unabh?ngig
+//     von den globalen Einstellungen und unabh?ngig von canManageSettings
 //   - Ticket Link zum Beantragen eines neuen Prompt Space
 //   - Beispiel Text pro Prompt Space, rechts im Editor einklappbar
 //
 // Admins haben weiterhin immer vollen Zugriff auf alle Prompt Typen,
 // alle Einstellungen und die Nutzerverwaltung. Die Typ Rechte unten
-// gelten nur für normale, nicht-admin Nutzer.
+// gelten nur f?r normale, nicht-admin Nutzer.
 // =====================================================================
 var PROMPT_EDITOR_ADMIN_PROP_ = 'PROMPT_EDITOR_ADMINS';   // Array von E-Mails (voller Zugriff)
 var PROMPT_EDITOR_USERS_PROP_ = 'PROMPT_EDITOR_USERS';    // Array von { email, types, canManageSettings }
@@ -25,15 +25,15 @@ var BUILT_IN_TYPE_EXAMPLES_ = {
   technical: 'Quelle: "Vor Inbetriebnahme Bedienungsanleitung lesen."\n' +
     'MT Rohtext: "Read the operating instructions before commissioning."\n' +
     'Nach Post-Editing: "Read the operating instructions before starting up the machine."\n' +
-    'Hier wurde "commissioning" durch die im technischen Kontext gebräuchlichere Formulierung "starting up the machine" ersetzt.',
-  marketing: 'Quelle: "Kraftvoll. Zuverlässig. Kärcher."\n' +
-    'MT Rohtext: "Powerful. Reliable. Kärcher."\n' +
-    'Nach Post-Editing: "Powerful. Dependable. Only Kärcher."\n' +
-    'Hier wurde der Claim an die Markensprache angepasst und wirkt dadurch überzeugender.'
+    'Hier wurde "commissioning" durch die im technischen Kontext gebr?uchlichere Formulierung "starting up the machine" ersetzt.',
+  marketing: 'Quelle: "Kraftvoll. Zuverl?ssig. K?rcher."\n' +
+    'MT Rohtext: "Powerful. Reliable. K?rcher."\n' +
+    'Nach Post-Editing: "Powerful. Dependable. Only K?rcher."\n' +
+    'Hier wurde der Claim an die Markensprache angepasst und wirkt dadurch ?berzeugender.'
 };
 
 // ?????????????????????????????????????????????????????????????????????
-// EINMALIGES SETUP – nur nötig, falls noch nie ausgeführt.
+// EINMALIGES SETUP ? nur n?tig, falls noch nie ausgef?hrt.
 // ?????????????????????????????????????????????????????????????????????
 function bootstrapPromptEditorAdmin() {
   var myEmail = 'mario.magliano@karcher.com'; // <-- ggf. anpassen
@@ -46,7 +46,7 @@ function bootstrapPromptEditorAdmin() {
 }
 
 // ?????????????????????????????????????????????????????????????????????
-// HELPERS – Admins
+// HELPERS ? Admins
 // ?????????????????????????????????????????????????????????????????????
 function getPromptEditorAdmins_() {
   try {
@@ -60,8 +60,8 @@ function isPromptEditorAdmin_(email) {
 }
 
 // ?????????????????????????????????????????????????????????????????????
-// HELPERS – Feingranulare Nutzer (Nicht-Admins)
-// entry = { email, types: ['technical','marketing'] oder ['*'] für alle,
+// HELPERS ? Feingranulare Nutzer (Nicht-Admins)
+// entry = { email, types: ['technical','marketing'] oder ['*'] f?r alle,
 //           canManageSettings: bool }
 // ?????????????????????????????????????????????????????????????????????
 function getPromptEditorUsers_() {
@@ -94,48 +94,13 @@ function canManageSettings_(email) {
   var u = findPromptEditorUser_(email);
   return !!(u && u.canManageSettings);
 }
-var EMAIL_RE_ = /^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/;
-function isValidEmail_(email) { return EMAIL_RE_.test(String(email || '').trim().toLowerCase()); }
-
 function getCurrentUserEmail_() {
   try { var e = Session.getActiveUser().getEmail(); if (e) return e; } catch (err) {}
   try { return Session.getEffectiveUser().getEmail() || ''; } catch (err) { return ''; }
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// ZUGRIFFSSCHUTZ AutoFix Hub (Index.html)
-// Jede öffentliche Funktion (ohne "_" am Ende) ist per google.script.run
-// für JEDEN Nutzer der Domain aufrufbar – auch ohne die UI. Deshalb muss
-// jede Hub-Funktion selbst prüfen, ob der Aufrufer berechtigt ist.
-// Berechtigt: Prompt-Editor-Admins und Nutzer mit canManageSettings.
-// ─────────────────────────────────────────────────────────────────────
-function hasHubAccess_(email) {
-  return canManageSettings_(email);
-}
-function requireHubAccess_() {
-  var email = getCurrentUserEmail_();
-  if (!hasHubAccess_(email)) {
-    throw new Error('Nicht autorisiert: Der AutoFix Hub ist nur für freigeschaltete Admins verfügbar.');
-  }
-  return email;
-}
-
-/** Wird von Index.html beim Start aufgerufen, um die Zugriffsseite zu zeigen. */
-function apiHubGetAccess() {
-  var email = getCurrentUserEmail_();
-  var ok = hasHubAccess_(email);
-  return {
-    authorized: ok,
-    email: email,
-    isAdmin: ok && isPromptEditorAdmin_(email),
-    ticketUrl: PROMPT_EDITOR_TICKET_URL_,
-    models: ok ? ALLOWED_GEMINI_MODELS_.slice() : [],
-    appUrl: (function () { try { return ScriptApp.getService().getUrl() || ''; } catch (e) { return ''; } })()
-  };
-}
-
 // ?????????????????????????????????????????????????????????????????????
-// HELPERS – UI Sprache (pro Google Account, über UserProperties)
+// HELPERS ? UI Sprache (pro Google Account, ?ber UserProperties)
 // ?????????????????????????????????????????????????????????????????????
 function getUiLang_() {
   try {
@@ -152,7 +117,7 @@ function apiPromptEditorSetUiLang(lang) {
 }
 
 // ?????????????????????????????????????????????????????????????????????
-// HELPERS – Prompt Spaces (Typen), dynamisch erweiterbar durch Admin
+// HELPERS ? Prompt Spaces (Typen), dynamisch erweiterbar durch Admin
 // ?????????????????????????????????????????????????????????????????????
 function getPromptTypesConfig_() {
   var raw  = PropertiesService.getScriptProperties().getProperty(PROMPT_TYPES_CONFIG_PROP_);
@@ -192,15 +157,15 @@ function exampleForType_(type) {
 }
 
 // ?????????????????????????????????????????????????????????????????????
-// HELPER – Effektive Gemini Konfiguration für einen Prompt Typ.
-// Nimmt die Typ-eigenen Werte (geminiModel_<type> etc.), fällt für
-// alles was nicht gesetzt ist auf die globalen Settings zurück.
+// HELPER ? Effektive Gemini Konfiguration f?r einen Prompt Typ.
+// Nimmt die Typ-eigenen Werte (geminiModel_<type> etc.), f?llt f?r
+// alles was nicht gesetzt ist auf die globalen Settings zur?ck.
 // ?????????????????????????????????????????????????????????????????????
-// Aktuell freigeschaltete Modelle für euren API-Key/Gateway. Muss synchron
+// Aktuell freigeschaltete Modelle f?r euren API-Key/Gateway. Muss synchron
 // zu GEMINI_MODELS im Frontend (PromptEditor.html) gehalten werden. Nur
-// Modelle aus dieser Liste können tatsächlich verwendet werden – ein alter,
-// im Sheet gespeicherter Modellname (z.B. "gemini-2.5-pro") fällt sonst
-// automatisch auf das erste Listenelement zurück.
+// Modelle aus dieser Liste k?nnen tats?chlich verwendet werden ? ein alter,
+// im Sheet gespeicherter Modellname (z.B. "gemini-2.5-pro") f?llt sonst
+// automatisch auf das erste Listenelement zur?ck.
 var ALLOWED_GEMINI_MODELS_ = [
   'gemini-3.6-flash',
   'gemini-3.6-flash-lite',
@@ -235,8 +200,8 @@ function getEffectiveGeminiConfig_(settings, type) {
     : globalThinking;
   return { model: model, temperature: temperature, maxTokens: maxTokens, tmThreshold: tmThreshold, thinking: thinking };
 }
-// Baut das generationConfig-Objekt für einen Gemini-Call. Thinking wird nur
-// dann explizit ausgeschaltet, wenn der Nutzer es deaktiviert hat – läuft es
+// Baut das generationConfig-Objekt f?r einen Gemini-Call. Thinking wird nur
+// dann explizit ausgeschaltet, wenn der Nutzer es deaktiviert hat ? l?uft es
 // an, wird gar kein thinkingConfig mitgeschickt und das Modell entscheidet
 // selbst (dynamisches Thinking), das ist der sicherste Default.
 function buildGenerationConfig_(eff, extra) {
@@ -246,7 +211,7 @@ function buildGenerationConfig_(eff, extra) {
 }
 
 // ?????????????????????????????????????????????????????????????????????
-// PAGE ENTRY – wird aus doGet(e) in Code.gs aufgerufen
+// PAGE ENTRY ? wird aus doGet(e) in Code.gs aufgerufen
 // ?????????????????????????????????????????????????????????????????????
 function renderPromptEditorPage_() {
   return HtmlService.createHtmlOutputFromFile('PromptEditor')
@@ -255,14 +220,14 @@ function renderPromptEditorPage_() {
 }
 
 // ?????????????????????????????????????????????????????????????????????
-// API – Konfiguration / Prompts
+// API ? Konfiguration / Prompts
 // ?????????????????????????????????????????????????????????????????????
 function apiPromptEditorGetConfig() {
   return buildConfigForEmail_(getCurrentUserEmail_(), getUiLang_());
 }
 
 // Baut denselben Konfigurations-Payload wie apiPromptEditorGetConfig, aber
-// für eine beliebige E-Mail. Wird sowohl vom eigentlichen Aufruf als auch
+// f?r eine beliebige E-Mail. Wird sowohl vom eigentlichen Aufruf als auch
 // von der Admin-Vorschau ("So sieht User X das") genutzt, damit beide Wege
 // garantiert exakt dieselbe Logik durchlaufen.
 function buildConfigForEmail_(email, uiLang) {
@@ -284,7 +249,7 @@ function buildConfigForEmail_(email, uiLang) {
       return {
         type: tp.type,
         label: tp.label,
-        instructions: getPeInstructions_(settings, tp.type), // aus Settings.gs, funktioniert für jeden Typ
+        instructions: getPeInstructions_(settings, tp.type), // aus Settings.gs, funktioniert f?r jeden Typ
         example: tp.example || '',
         canEdit: canEditType_(email, tp.type),
         geminiOverride: getEffectiveGeminiConfig_(settings, tp.type),
@@ -322,16 +287,16 @@ function buildConfigForEmail_(email, uiLang) {
 }
 
 // ?????????????????????????????????????????????????????????????????????
-// API – ADMIN-ONLY: Vorschau, wie ein anderer freigeschalteter Nutzer den
-// Prompt Editor sehen würde (welche Typen, welche Rechte, welche Gemini-
-// Werte). Rein lesend – nichts davon lässt sich aus der Vorschau heraus
+// API ? ADMIN-ONLY: Vorschau, wie ein anderer freigeschalteter Nutzer den
+// Prompt Editor sehen w?rde (welche Typen, welche Rechte, welche Gemini-
+// Werte). Rein lesend ? nichts davon l?sst sich aus der Vorschau heraus
 // speichern.
 // ?????????????????????????????????????????????????????????????????????
 function apiPromptEditorPreviewAsUser(targetEmail) {
   var email = getCurrentUserEmail_();
-  if (!isPromptEditorAdmin_(email)) return { authorized: false, error: 'Nur für Admins.' };
+  if (!isPromptEditorAdmin_(email)) return { authorized: false, error: 'Nur f?r Admins.' };
   var target = String(targetEmail || '').trim().toLowerCase();
-  if (!isValidEmail_(target)) return { authorized: false, error: 'Bitte eine gültige E-Mail-Adresse angeben.' };
+  if (!target || target.indexOf('@') === -1) return { authorized: false, error: 'Bitte eine g?ltige E-Mail-Adresse angeben.' };
   var cfg = buildConfigForEmail_(target, getUiLang_());
   cfg.previewOf = target;
   return cfg;
@@ -339,11 +304,11 @@ function apiPromptEditorPreviewAsUser(targetEmail) {
 
 function apiPromptEditorSave(autoFixType, text) {
   var email = getCurrentUserEmail_();
-  if (!canEditType_(email, autoFixType)) return { success: false, error: 'Nicht autorisiert für diesen Prompt-Typ.' };
+  if (!canEditType_(email, autoFixType)) return { success: false, error: 'Nicht autorisiert f?r diesen Prompt-Typ.' };
   if (!autoFixType || typeof text !== 'string' || text.trim() === '') {
     return { success: false, error: 'Prompt darf nicht leer sein.' };
   }
-  var res = saveSinglePrompt_(autoFixType, text); // aus Settings.gs
+  var res = saveSinglePrompt(autoFixType, text); // aus Settings.gs
   if (res.success) {
     try { logAudit_('Prompt Editor', 'Prompt "' + autoFixType + '" bearbeitet von ' + email); } catch (e) {}
   }
@@ -351,26 +316,26 @@ function apiPromptEditorSave(autoFixType, text) {
 }
 function apiPromptEditorReset(autoFixType) {
   var email = getCurrentUserEmail_();
-  if (!canEditType_(email, autoFixType)) return { success: false, error: 'Nicht autorisiert für diesen Prompt-Typ.' };
-  var res = resetPromptForType_(autoFixType); // aus Settings.gs
+  if (!canEditType_(email, autoFixType)) return { success: false, error: 'Nicht autorisiert f?r diesen Prompt-Typ.' };
+  var res = resetPromptForType(autoFixType); // aus Settings.gs
   if (res.success) {
-    try { logAudit_('Prompt Editor', 'Prompt "' + autoFixType + '" zurückgesetzt von ' + email); } catch (e) {}
+    try { logAudit_('Prompt Editor', 'Prompt "' + autoFixType + '" zur?ckgesetzt von ' + email); } catch (e) {}
   }
   return res;
 }
 
 // ?????????????????????????????????????????????????????????????????????
-// API – "Mit Gemini verbessern"
+// API ? "Mit Gemini verbessern"
 // ?????????????????????????????????????????????????????????????????????
 function apiPromptEditorHelpMeWrite(autoFixType, currentText, likes, dislikes, freeText) {
   var email = getCurrentUserEmail_();
-  if (!canEditType_(email, autoFixType)) return { success: false, error: 'Nicht autorisiert für diesen Prompt-Typ.' };
+  if (!canEditType_(email, autoFixType)) return { success: false, error: 'Nicht autorisiert f?r diesen Prompt-Typ.' };
   if (!currentText || !currentText.trim()) return { success: false, error: 'Kein aktueller Prompt-Text vorhanden.' };
   try {
     var settings = getSettings_();
     var key      = getGeminiKey_();
     var eff      = getEffectiveGeminiConfig_(settings, autoFixType);
-    var url      = getGeminiUrl_(eff.model);
+    var url      = 'https://34-111-99-134.nip.io/gemini/v1beta/models/' + eff.model + ':generateContent';
     var metaPrompt = buildHelpMeWritePrompt_(currentText, likes, dislikes, freeText);
     var res = UrlFetchApp.fetch(url, {
       method: 'post', contentType: 'application/json', muteHttpExceptions: true,
@@ -386,7 +351,7 @@ function apiPromptEditorHelpMeWrite(autoFixType, currentText, likes, dislikes, f
     var text = (json.candidates && json.candidates[0].content.parts[0].text) || '';
     text = text.replace(/^```[a-zA-Z]*\s*/, '').replace(/```\s*$/, '').trim();
     if (!text) return { success: false, error: 'Gemini hat keinen Vorschlag geliefert.' };
-    try { logAudit_('Prompt Editor', 'Gemini-Vorschlag für "' + autoFixType + '" generiert von ' + email); } catch (e) {}
+    try { logAudit_('Prompt Editor', 'Gemini-Vorschlag f?r "' + autoFixType + '" generiert von ' + email); } catch (e) {}
     return { success: true, suggestion: text };
   } catch (e) {
     return { success: false, error: e.message };
@@ -394,36 +359,36 @@ function apiPromptEditorHelpMeWrite(autoFixType, currentText, likes, dislikes, f
 }
 function buildHelpMeWritePrompt_(currentText, likes, dislikes, freeText) {
   var parts = [];
-  parts.push('Du hilfst dabei, einen bestehenden Post-Editing-Prompt für ein Übersetzungstool (Kärcher, Gemini-basiert) zu überarbeiten.');
+  parts.push('Du hilfst dabei, einen bestehenden Post-Editing-Prompt f?r ein ?bersetzungstool (K?rcher, Gemini-basiert) zu ?berarbeiten.');
   parts.push('');
   parts.push('=== AKTUELLER PROMPT ===');
   parts.push(currentText);
   parts.push('');
-  parts.push('=== GEWÜNSCHTE ANPASSUNGEN ===');
+  parts.push('=== GEW?NSCHTE ANPASSUNGEN ===');
   var hasAny = false;
-  if (likes && likes.trim())       { parts.push('BEIBEHALTEN / VERSTÄRKEN: ' + likes.trim()); hasAny = true; }
-  if (dislikes && dislikes.trim()) { parts.push('ENTFERNEN / ÄNDERN: ' + dislikes.trim()); hasAny = true; }
-  if (freeText && freeText.trim()) { parts.push('ZUSÄTZLICHE ANWEISUNG: ' + freeText.trim()); hasAny = true; }
+  if (likes && likes.trim())       { parts.push('BEIBEHALTEN / VERST?RKEN: ' + likes.trim()); hasAny = true; }
+  if (dislikes && dislikes.trim()) { parts.push('ENTFERNEN / ?NDERN: ' + dislikes.trim()); hasAny = true; }
+  if (freeText && freeText.trim()) { parts.push('ZUS?TZLICHE ANWEISUNG: ' + freeText.trim()); hasAny = true; }
   if (!hasAny) parts.push('(keine spezifischen Angaben, allgemein verbessern und klarer strukturieren)');
   parts.push('');
   parts.push('=== AUFGABE ===');
-  parts.push('Gib eine überarbeitete Version des KOMPLETTEN Prompts zurück. Behalte Format, Struktur ' +
-    '(Nummerierung, Abschnitte wie "PFLICHT-KORREKTUREN", "NICHT VERÄNDERN" etc.) und die Sprache (Deutsch) bei. ' +
-    'ändere nur, was durch die obigen Angaben verlangt wird. Antworte AUSSCHLIESSLICH mit dem neuen Prompt-Text, ' +
-    'kein Markdown, keine Code-Fences, keine Erklärung davor oder danach.');
+  parts.push('Gib eine ?berarbeitete Version des KOMPLETTEN Prompts zur?ck. Behalte Format, Struktur ' +
+    '(Nummerierung, Abschnitte wie "PFLICHT-KORREKTUREN", "NICHT VER?NDERN" etc.) und die Sprache (Deutsch) bei. ' +
+    '?ndere nur, was durch die obigen Angaben verlangt wird. Antworte AUSSCHLIESSLICH mit dem neuen Prompt-Text, ' +
+    'kein Markdown, keine Code-Fences, keine Erkl?rung davor oder danach.');
   return parts.join('\n');
 }
 
 // ?????????????????????????????????????????????????????????????????????
-// API – Test / Playground: schickt den aktuellen Prompt-Text (auch wenn
+// API ? Test / Playground: schickt den aktuellen Prompt-Text (auch wenn
 // noch nicht gespeichert) zusammen mit einem selbst eingegebenen Text
-// an Gemini und liefert die echte Post-Editing-Antwort zurück. Nutzt
+// an Gemini und liefert die echte Post-Editing-Antwort zur?ck. Nutzt
 // dieselbe buildPePrompt_() wie ein echter AutoFix-Lauf (aus Code.gs),
 // nur mit einem einzelnen Test-Segment ohne Termbase-Treffer.
 // ?????????????????????????????????????????????????????????????????????
 function apiPromptEditorTestPrompt(type, promptText, sourceLang, targetLang, sourceText) {
   var email = getCurrentUserEmail_();
-  if (!canEditType_(email, type)) return { success: false, error: 'Nicht autorisiert für diesen Prompt-Typ.' };
+  if (!canEditType_(email, type)) return { success: false, error: 'Nicht autorisiert f?r diesen Prompt-Typ.' };
   if (!promptText || !promptText.trim()) return { success: false, error: 'Der Prompt darf nicht leer sein.' };
   if (!sourceText || !sourceText.trim()) return { success: false, error: 'Bitte einen Testtext eingeben.' };
   try {
@@ -436,7 +401,7 @@ function apiPromptEditorTestPrompt(type, promptText, sourceLang, targetLang, sou
     testSettings['peInstructions_' + type] = promptText;
     var segment = { id: 'test-1', source: sourceText.trim(), target: sourceText.trim(), tmMatches: [], tbHits: [] };
     var prompt  = buildPePrompt_(testSettings, sourceLang || 'de_de', targetLang || 'en_us', [segment], null, type); // aus Code.gs
-    var url     = getGeminiUrl_(eff.model);
+    var url     = 'https://34-111-99-134.nip.io/gemini/v1beta/models/' + eff.model + ':generateContent';
     var res = UrlFetchApp.fetch(url, {
       method: 'post', contentType: 'application/json', muteHttpExceptions: true,
       headers: { 'x-api-key': key, 'Accept': 'application/json' },
@@ -453,7 +418,7 @@ function apiPromptEditorTestPrompt(type, promptText, sourceLang, targetLang, sou
     var parsed = JSON.parse(raw);
     var r = (parsed.results || [])[0];
     if (!r) return { success: false, error: 'Gemini hat keine verwertbare Antwort geliefert.' };
-    try { logAudit_('Prompt Editor', 'Prompt-Test für Typ "' + type + '" ausgeführt von ' + email); } catch (e) {}
+    try { logAudit_('Prompt Editor', 'Prompt-Test f?r Typ "' + type + '" ausgef?hrt von ' + email); } catch (e) {}
     return {
       success: true,
       output: r.corrected || sourceText,
@@ -467,7 +432,7 @@ function apiPromptEditorTestPrompt(type, promptText, sourceLang, targetLang, sou
 }
 
 // ?????????????????????????????????????????????????????????????????????
-// API – Globale Gemini-Einstellungen (nur canManageSettings)
+// API ? Globale Gemini-Einstellungen (nur canManageSettings)
 // ?????????????????????????????????????????????????????????????????????
 function apiPromptEditorGetGeminiSettings() {
   var email = getCurrentUserEmail_();
@@ -481,53 +446,53 @@ function apiPromptEditorGetGeminiSettings() {
 function apiPromptEditorSaveGeminiSettings(payload) {
   var email = getCurrentUserEmail_();
   if (!canManageSettings_(email)) return { success: false, error: 'Nicht autorisiert.' };
-  var res = getAutoFixSettings_();
+  var res = getAutoFixSettings();
   if (!res.success) return { success: false, error: res.error };
   var settings = res.settings;
-  if (payload.primaryModel) settings.primaryModel = sanitizeGeminiModel_(payload.primaryModel);
+  if (payload.primaryModel) settings.primaryModel = payload.primaryModel;
   if (payload.peTemperature !== undefined && payload.peTemperature !== '') settings.peTemperature = parseFloat(payload.peTemperature);
   if (payload.maxTokens     !== undefined && payload.maxTokens     !== '') settings.maxTokens     = parseInt(payload.maxTokens, 10);
   if (payload.tmThreshold   !== undefined && payload.tmThreshold   !== '') settings.tmThreshold   = parseFloat(payload.tmThreshold);
   if (payload.primaryThinking !== undefined) settings.primaryThinking = payload.primaryThinking ? 'true' : 'false';
-  var saveRes = saveAutoFixSettingsAudited_(settings);
+  var saveRes = saveAutoFixSettings(settings);
   if (saveRes.success) {
-    try { logAudit_('Prompt Editor', 'Globale Gemini-Settings geändert von ' + email + ': ' + JSON.stringify(payload)); } catch (e) {}
+    try { logAudit_('Prompt Editor', 'Globale Gemini-Settings ge?ndert von ' + email + ': ' + JSON.stringify(payload)); } catch (e) {}
   }
   return saveRes;
 }
 
 // ?????????????????????????????????????????????????????????????????????
-// API – Gemini-Einstellungen PRO PROMPT TYP, für jeden mit Editier-
-// recht auf diesen Typ, unabhängig von canManageSettings.
+// API ? Gemini-Einstellungen PRO PROMPT TYP, f?r jeden mit Editier-
+// recht auf diesen Typ, unabh?ngig von canManageSettings.
 // ?????????????????????????????????????????????????????????????????????
 function apiPromptEditorGetTypeGeminiSettings(type) {
   var email = getCurrentUserEmail_();
-  if (!canEditType_(email, type)) return { success: false, error: 'Nicht autorisiert für diesen Prompt-Typ.' };
+  if (!canEditType_(email, type)) return { success: false, error: 'Nicht autorisiert f?r diesen Prompt-Typ.' };
   var s = getSettings_();
   var hasOverride = !!(s['geminiModel_' + type] || s['geminiTemp_' + type] || s['geminiMaxTokens_' + type] || s['geminiTmThreshold_' + type] || s['geminiThinking_' + type]);
   return { success: true, hasOverride: hasOverride, effective: getEffectiveGeminiConfig_(s, type) };
 }
 function apiPromptEditorSaveTypeGeminiSettings(type, payload) {
   var email = getCurrentUserEmail_();
-  if (!canEditType_(email, type)) return { success: false, error: 'Nicht autorisiert für diesen Prompt-Typ.' };
-  var res = getAutoFixSettings_();
+  if (!canEditType_(email, type)) return { success: false, error: 'Nicht autorisiert f?r diesen Prompt-Typ.' };
+  var res = getAutoFixSettings();
   if (!res.success) return { success: false, error: res.error };
   var settings = res.settings;
-  if (payload.model) settings['geminiModel_' + type] = sanitizeGeminiModel_(payload.model);
+  if (payload.model) settings['geminiModel_' + type] = payload.model;
   if (payload.temperature !== undefined && payload.temperature !== '') settings['geminiTemp_' + type] = parseFloat(payload.temperature);
   if (payload.maxTokens   !== undefined && payload.maxTokens   !== '') settings['geminiMaxTokens_' + type] = parseInt(payload.maxTokens, 10);
   if (payload.tmThreshold !== undefined && payload.tmThreshold !== '') settings['geminiTmThreshold_' + type] = parseFloat(payload.tmThreshold);
   if (payload.thinking !== undefined) settings['geminiThinking_' + type] = payload.thinking ? 'true' : 'false';
-  var saveRes = saveAutoFixSettingsAudited_(settings);
+  var saveRes = saveAutoFixSettings(settings);
   if (saveRes.success) {
-    try { logAudit_('Prompt Editor', 'Gemini-Settings für Typ "' + type + '" geändert von ' + email); } catch (e) {}
+    try { logAudit_('Prompt Editor', 'Gemini-Settings f?r Typ "' + type + '" ge?ndert von ' + email); } catch (e) {}
   }
   return saveRes;
 }
 function apiPromptEditorClearTypeGeminiSettings(type) {
   var email = getCurrentUserEmail_();
-  if (!canEditType_(email, type)) return { success: false, error: 'Nicht autorisiert für diesen Prompt-Typ.' };
-  var res = getAutoFixSettings_();
+  if (!canEditType_(email, type)) return { success: false, error: 'Nicht autorisiert f?r diesen Prompt-Typ.' };
+  var res = getAutoFixSettings();
   if (!res.success) return { success: false, error: res.error };
   var settings = res.settings;
   delete settings['geminiModel_' + type];
@@ -535,23 +500,23 @@ function apiPromptEditorClearTypeGeminiSettings(type) {
   delete settings['geminiMaxTokens_' + type];
   delete settings['geminiTmThreshold_' + type];
   delete settings['geminiThinking_' + type];
-  var saveRes = saveAutoFixSettingsAudited_(settings);
+  var saveRes = saveAutoFixSettings(settings);
   if (saveRes.success) {
-    try { logAudit_('Prompt Editor', 'Gemini-Settings für Typ "' + type + '" auf global zurückgesetzt von ' + email); } catch (e) {}
+    try { logAudit_('Prompt Editor', 'Gemini-Settings f?r Typ "' + type + '" auf global zur?ckgesetzt von ' + email); } catch (e) {}
   }
   return saveRes;
 }
 
 // ?????????????????????????????????????????????????????????????????????
-// API – ADMIN-ONLY: Prompt Spaces anlegen / löschen
+// API ? ADMIN-ONLY: Prompt Spaces anlegen / l?schen
 // ?????????????????????????????????????????????????????????????????????
 function apiPromptEditorAddType(label, exampleText, seedInstructions) {
   var email = getCurrentUserEmail_();
-  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur für Admins.' };
+  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur f?r Admins.' };
   var cleanLabel = String(label || '').trim();
-  if (!cleanLabel) return { success: false, error: 'Bitte einen Namen für den neuen Prompt Space angeben.' };
+  if (!cleanLabel) return { success: false, error: 'Bitte einen Namen f?r den neuen Prompt Space angeben.' };
   var type = sanitizeTypeKey_(cleanLabel);
-  if (!type) return { success: false, error: 'Aus diesem Namen lässt sich kein gültiger interner Schlüssel bilden. Bitte Buchstaben oder Zahlen verwenden.' };
+  if (!type) return { success: false, error: 'Aus diesem Namen l?sst sich kein g?ltiger interner Schl?ssel bilden. Bitte Buchstaben oder Zahlen verwenden.' };
   var list = getPromptTypesConfig_();
   if (list.some(function (t) { return t.type === type; })) {
     return { success: false, error: 'Es gibt bereits einen Prompt Space mit diesem Namen.' };
@@ -559,53 +524,51 @@ function apiPromptEditorAddType(label, exampleText, seedInstructions) {
   list.push({ type: type, label: cleanLabel, example: exampleText || '', builtIn: false });
   savePromptTypesConfig_(list);
   var baseInstructions = (seedInstructions && seedInstructions.trim()) ? seedInstructions : (DEFAULT_PROMPTS_['technical'] || '');
-  try { saveSinglePrompt_(type, baseInstructions); } catch (e) {}
+  try { saveSinglePrompt(type, baseInstructions); } catch (e) {}
   try { logAudit_('Prompt Editor', 'Neuer Prompt Space "' + cleanLabel + '" (' + type + ') angelegt von ' + email); } catch (e) {}
   return { success: true, type: type, types: list };
 }
 function apiPromptEditorRemoveType(type) {
   var email = getCurrentUserEmail_();
-  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur für Admins.' };
+  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur f?r Admins.' };
   var list  = getPromptTypesConfig_();
   var entry = list.find(function (t) { return t.type === type; });
   if (!entry) return { success: false, error: 'Prompt Space nicht gefunden.' };
-  if (entry.builtIn) return { success: false, error: 'Fest eingebaute Prompt Spaces können nicht gelöscht werden.' };
+  if (entry.builtIn) return { success: false, error: 'Fest eingebaute Prompt Spaces k?nnen nicht gel?scht werden.' };
   list = list.filter(function (t) { return t.type !== type; });
   savePromptTypesConfig_(list);
-  try { logAudit_('Prompt Editor', 'Prompt Space "' + type + '" gelöscht von ' + email); } catch (e) {}
+  try { logAudit_('Prompt Editor', 'Prompt Space "' + type + '" gel?scht von ' + email); } catch (e) {}
   return { success: true, types: list };
 }
 function apiPromptEditorGetTypesConfig() {
   var email = getCurrentUserEmail_();
-  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur für Admins.' };
+  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur f?r Admins.' };
   return { success: true, types: getPromptTypesConfig_() };
 }
 
 // ?????????????????????????????????????????????????????????????????????
-// API – ADMIN-ONLY: Nutzerverwaltung
+// API ? ADMIN-ONLY: Nutzerverwaltung
 // ?????????????????????????????????????????????????????????????????????
 function apiPromptEditorGetUsers() {
   var email = getCurrentUserEmail_();
-  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur für Admins.' };
+  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur f?r Admins.' };
   var knownTypes = getPromptTypesConfig_().map(function (t) { return { type: t.type, label: t.label }; });
   return { success: true, admins: getPromptEditorAdmins_(), users: getPromptEditorUsers_(), knownTypes: knownTypes };
 }
 function apiPromptEditorSaveUser(entry) {
   var email = getCurrentUserEmail_();
-  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur für Admins.' };
-  if (!entry || !isValidEmail_(entry.email)) return { success: false, error: 'Ungültige E-Mail.' };
+  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur f?r Admins.' };
+  if (!entry || !entry.email || entry.email.indexOf('@') === -1) return { success: false, error: 'Ung?ltige E-Mail.' };
   var e = entry.email.trim().toLowerCase();
   var users = getPromptEditorUsers_().filter(function (u) { return u.email !== e; });
-  var knownKeys = getPromptTypesConfig_().map(function (t) { return t.type; });
-  var types = entry.allTypes ? ['*'] : (Array.isArray(entry.types) ? entry.types : []).filter(function (t) { return knownKeys.indexOf(t) !== -1; });
-  users.push({ email: e, types: types, canManageSettings: !!entry.canManageSettings });
+  users.push({ email: e, types: entry.allTypes ? ['*'] : (entry.types || []), canManageSettings: !!entry.canManageSettings });
   savePromptEditorUsers_(users);
   try { logAudit_('Prompt Editor', 'Nutzer ' + e + ' gespeichert von ' + email + ': ' + JSON.stringify(entry)); } catch (err) {}
   return { success: true, users: users };
 }
 function apiPromptEditorRemoveUser(rmEmail) {
   var email = getCurrentUserEmail_();
-  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur für Admins.' };
+  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur f?r Admins.' };
   var e = String(rmEmail).toLowerCase();
   var users = getPromptEditorUsers_().filter(function (u) { return u.email !== e; });
   savePromptEditorUsers_(users);
@@ -614,37 +577,36 @@ function apiPromptEditorRemoveUser(rmEmail) {
 }
 function apiPromptEditorAddAdmin(newEmail) {
   var email = getCurrentUserEmail_();
-  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur für Admins.' };
-  if (!isValidEmail_(newEmail)) return { success: false, error: 'Ungültige E-Mail.' };
+  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur f?r Admins.' };
+  if (!newEmail || newEmail.indexOf('@') === -1) return { success: false, error: 'Ung?ltige E-Mail.' };
   var admins = getPromptEditorAdmins_();
   var e = newEmail.trim().toLowerCase();
   if (admins.indexOf(e) === -1) {
     admins.push(e);
     PropertiesService.getScriptProperties().setProperty(PROMPT_EDITOR_ADMIN_PROP_, JSON.stringify(admins));
-    try { logAudit_('Prompt Editor', 'Admin ' + e + ' hinzugefügt von ' + email); } catch (err) {}
+    try { logAudit_('Prompt Editor', 'Admin ' + e + ' hinzugef?gt von ' + email); } catch (err) {}
   }
   return { success: true, admins: admins };
 }
 function apiPromptEditorRemoveAdmin(rmEmail) {
   var email = getCurrentUserEmail_();
-  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur für Admins.' };
+  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur f?r Admins.' };
   var e = String(rmEmail).toLowerCase();
   var admins = getPromptEditorAdmins_().filter(function (x) { return x !== e; });
-  if (!admins.length) return { success: false, error: 'Der letzte Admin kann nicht entfernt werden.' };
   PropertiesService.getScriptProperties().setProperty(PROMPT_EDITOR_ADMIN_PROP_, JSON.stringify(admins));
   try { logAudit_('Prompt Editor', 'Admin ' + e + ' entfernt von ' + email); } catch (err) {}
   return { success: true, admins: admins };
 }
 
 // ?????????????????????????????????????????????????????????????????????
-// API – ADMIN-ONLY: Export / Import der kompletten Prompt-Konfiguration
-// als JSON. Beides lässt sich nach Typ filtern, der Import läuft zweistufig
+// API ? ADMIN-ONLY: Export / Import der kompletten Prompt-Konfiguration
+// als JSON. Beides l?sst sich nach Typ filtern, der Import l?uft zweistufig
 // (erst analysieren, dann gezielt anwenden), damit man nie versehentlich
-// alles auf einmal überschreibt.
+// alles auf einmal ?berschreibt.
 // ?????????????????????????????????????????????????????????????????????
 function apiPromptEditorExportConfig(typeKeys, includeGlobal) {
   var email = getCurrentUserEmail_();
-  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur für Admins.' };
+  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur f?r Admins.' };
   var settings    = getSettings_();
   var typesConfig = getPromptTypesConfig_();
   var wanted      = (Array.isArray(typeKeys) && typeKeys.length) ? typeKeys : typesConfig.map(function (t) { return t.type; });
@@ -680,46 +642,43 @@ function apiPromptEditorExportConfig(typeKeys, includeGlobal) {
   return { success: true, data: payload };
 }
 
-// Analysiert nur, wendet nichts an. Liefert pro gefundenem Typ zurück, ob er
-// schon existiert (würde beim Import überschrieben) und ob er Gemini-
+// Analysiert nur, wendet nichts an. Liefert pro gefundenem Typ zur?ck, ob er
+// schon existiert (w?rde beim Import ?berschrieben) und ob er Gemini-
 // Overrides mitbringt, damit die UI vorab eine Checkliste zeigen kann.
 function apiPromptEditorPreviewImport(jsonText) {
   var email = getCurrentUserEmail_();
-  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur für Admins.' };
+  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur f?r Admins.' };
   var parsed;
-  try { parsed = JSON.parse(jsonText); } catch (e) { return { success: false, error: 'Kein gültiges JSON.' }; }
+  try { parsed = JSON.parse(jsonText); } catch (e) { return { success: false, error: 'Kein g?ltiges JSON.' }; }
   if (!parsed || !Array.isArray(parsed.types)) return { success: false, error: 'Keine "types"-Liste im JSON gefunden.' };
   var existing = getPromptTypesConfig_().map(function (t) { return t.type; });
   var list = parsed.types
-    .filter(function (tp) { return tp && sanitizeTypeKey_(tp.type) && typeof tp.instructions === 'string'; })
+    .filter(function (tp) { return tp && tp.type && tp.instructions; })
     .map(function (tp) {
-      tp.type = sanitizeTypeKey_(tp.type);
       return { type: tp.type, label: tp.label || tp.type, exists: existing.indexOf(tp.type) !== -1, hasOverride: !!tp.geminiOverride };
     });
   return { success: true, types: list, hasGlobal: !!parsed.global };
 }
 
-// Wendet den Import gefiltert auf die ausgewählten Typen an. Neue Typen
-// werden als eigener Prompt Space angelegt, bestehende werden überschrieben
+// Wendet den Import gefiltert auf die ausgew?hlten Typen an. Neue Typen
+// werden als eigener Prompt Space angelegt, bestehende werden ?berschrieben
 // (Instruktionen, Beispiel, Gemini-Overrides). Globale Settings werden nur
-// übernommen, wenn applyGlobal explizit gesetzt ist.
+// ?bernommen, wenn applyGlobal explizit gesetzt ist.
 function apiPromptEditorApplyImport(jsonText, typeKeys, applyGlobal) {
   var email = getCurrentUserEmail_();
-  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur für Admins.' };
+  if (!isPromptEditorAdmin_(email)) return { success: false, error: 'Nur f?r Admins.' };
   var parsed;
-  try { parsed = JSON.parse(jsonText); } catch (e) { return { success: false, error: 'Kein gültiges JSON.' }; }
+  try { parsed = JSON.parse(jsonText); } catch (e) { return { success: false, error: 'Kein g?ltiges JSON.' }; }
   if (!parsed || !Array.isArray(parsed.types)) return { success: false, error: 'Keine "types"-Liste im JSON gefunden.' };
   var wanted = Array.isArray(typeKeys) ? typeKeys : [];
-  var res = getAutoFixSettings_();
+  var res = getAutoFixSettings();
   if (!res.success) return { success: false, error: res.error };
   var settings    = res.settings;
   var typesConfig = getPromptTypesConfig_();
   var applied     = [];
 
   parsed.types.forEach(function (tp) {
-    if (!tp || typeof tp.instructions !== 'string' || !tp.instructions.trim()) return;
-    tp.type = sanitizeTypeKey_(tp.type);   // Typ-Keys landen in HTML-IDs/onclick – nie ungeprüft übernehmen
-    if (!tp.type) return;
+    if (!tp || !tp.type || !tp.instructions) return;
     if (wanted.indexOf(tp.type) === -1) return;
     var idx = -1;
     for (var i = 0; i < typesConfig.length; i++) if (typesConfig[i].type === tp.type) { idx = i; break; }
@@ -730,7 +689,7 @@ function apiPromptEditorApplyImport(jsonText, typeKeys, applyGlobal) {
     }
     settings['peInstructions_' + tp.type] = tp.instructions;
     if (tp.geminiOverride) {
-      if (tp.geminiOverride.model) settings['geminiModel_' + tp.type] = sanitizeGeminiModel_(tp.geminiOverride.model);
+      if (tp.geminiOverride.model) settings['geminiModel_' + tp.type] = tp.geminiOverride.model;
       if (tp.geminiOverride.temperature !== undefined) settings['geminiTemp_' + tp.type] = parseFloat(tp.geminiOverride.temperature);
       if (tp.geminiOverride.tmThreshold !== undefined) settings['geminiTmThreshold_' + tp.type] = parseFloat(tp.geminiOverride.tmThreshold);
       if (tp.geminiOverride.thinking !== undefined) settings['geminiThinking_' + tp.type] = tp.geminiOverride.thinking ? 'true' : 'false';
@@ -739,14 +698,14 @@ function apiPromptEditorApplyImport(jsonText, typeKeys, applyGlobal) {
   });
 
   if (applyGlobal && parsed.global) {
-    if (parsed.global.primaryModel) settings.primaryModel = sanitizeGeminiModel_(parsed.global.primaryModel);
+    if (parsed.global.primaryModel) settings.primaryModel = parsed.global.primaryModel;
     if (parsed.global.peTemperature !== undefined) settings.peTemperature = parseFloat(parsed.global.peTemperature);
     if (parsed.global.tmThreshold !== undefined) settings.tmThreshold = parseFloat(parsed.global.tmThreshold);
     if (parsed.global.primaryThinking !== undefined) settings.primaryThinking = parsed.global.primaryThinking ? 'true' : 'false';
   }
 
   savePromptTypesConfig_(typesConfig);
-  var saveRes = saveAutoFixSettingsAudited_(settings);
+  var saveRes = saveAutoFixSettings(settings);
   if (saveRes.success) {
     try { logAudit_('Prompt Editor', 'Import angewendet: ' + applied.join(', ') + (applyGlobal && parsed.global ? ' + global' : '') + ' durch ' + email); } catch (e) {}
   }

@@ -1,22 +1,22 @@
 // =====================================================================
 // AUTOFIX HUB - SETTINGS (Settings.gs)
-// FIX 9  – Multi-Prompt: Jeder AutoFix-Typ hat einen eigenen Prompt.
+// FIX 9  ? Multi-Prompt: Jeder AutoFix-Typ hat einen eigenen Prompt.
 //          Prompts werden im Settings-Sheet als separate Zeilen gespeichert
-//          (Key: peInstructions_<type>) und sind über die UI editierbar.
-// FIX 15 – resolveAutoFixType_ matched jetzt zusätzlich über den sichtbaren
+//          (Key: peInstructions_<type>) und sind ?ber die UI editierbar.
+// FIX 15 ? resolveAutoFixType_ matched jetzt zus?tzlich ?ber den sichtbaren
 //          Options-Text (z.B. "Campus") gegen die dynamisch im Prompt
 //          Editor angelegten Prompt Spaces (getPromptTypesConfig_ aus
 //          PromptEditorAccess.gs). Vorher fiel jede unbekannte Options-UID
-//          stillschweigend auf 'technical' zurück – ein neuer Space wie
+//          stillschweigend auf 'technical' zur?ck ? ein neuer Space wie
 //          Campus wurde dadurch zwar gefunden, aber mit dem falschen
 //          Prompt verarbeitet. Die alte AUTOFIX_OPTION_MAP_ bleibt als
-//          Legacy-Fallback für die zwei historischen UIDs erhalten.
+//          Legacy-Fallback f?r die zwei historischen UIDs erhalten.
 // =====================================================================
 
 // =====================================================================
-// OPTION UID – TYPE NAME MAPPING (Legacy-Fallback)
-// Nur noch für die beiden historischen Optionen nötig. Neue Optionen
-// werden automatisch über ihren sichtbaren Text den Prompt Spaces
+// OPTION UID ? TYPE NAME MAPPING (Legacy-Fallback)
+// Nur noch f?r die beiden historischen Optionen n?tig. Neue Optionen
+// werden automatisch ?ber ihren sichtbaren Text den Prompt Spaces
 // zugeordnet, siehe resolveAutoFixType_ unten.
 // =====================================================================
 var AUTOFIX_OPTION_MAP_ = {
@@ -31,71 +31,71 @@ var AUTOFIX_OPTION_MAP_ = {
 
 var DEFAULT_PROMPTS_ = {
 
-  technical: `=== POST-EDITIERUNG (PE) – KÄRCHER TECHNISCHE DOKUMENTATION ===
+  technical: `=== POST-EDITIERUNG (PE) ? K?RCHER TECHNISCHE DOKUMENTATION ===
 
-AUFTRAG: Du bist ein professioneller Übersetzer/Post-Editor bei Kärcher.
-Du erhältst maschinell übersetzte Segmente (DeepL) aus technischen Dokumenten
-(Servicehandbücher, Bedienungsanleitungen, Datenblätter) und verbesserst diese
-aktiv auf Publikationsqualität.
+AUFTRAG: Du bist ein professioneller ?bersetzer/Post-Editor bei K?rcher.
+Du erh?ltst maschinell ?bersetzte Segmente (DeepL) aus technischen Dokumenten
+(Servicehandb?cher, Bedienungsanleitungen, Datenbl?tter) und verbesserst diese
+aktiv auf Publikationsqualit?t.
 
-PFLICHT-KORREKTUREN (immer prüfen und ggf. korrigieren):
-1. TERMINOLOGIE: Alle tbHits (Termbase-Einträge) MÜSSEN exakt übernommen werden – kein Kompromiss.
-2. PRODUKTNAMEN: "Kärcher" immer mit Umlaut. Produktnamen wie "K 2", "HD 6/13" strukturell unverändert.
-3. ZAHLEN & EINHEITEN: Niemals Zahlen, Maßeinheiten (bar, °C, l/h, kW), Produktnummern verändern.
+PFLICHT-KORREKTUREN (immer pr?fen und ggf. korrigieren):
+1. TERMINOLOGIE: Alle tbHits (Termbase-Eintr?ge) M?SSEN exakt ?bernommen werden ? kein Kompromiss.
+2. PRODUKTNAMEN: "K?rcher" immer mit Umlaut. Produktnamen wie "K 2", "HD 6/13" strukturell unver?ndert.
+3. ZAHLEN & EINHEITEN: Niemals Zahlen, Ma?einheiten (bar, ?C, l/h, kW), Produktnummern ver?ndern.
 4. TAGS & PLATZHALTER: Alle {0}, %s, <x/>, <g> etc. 1:1 beibehalten.
-5. VOLLSTÄNDIGKEIT: Prüfen ob Source-Inhalt vollständig im Target vorhanden ist.
+5. VOLLST?NDIGKEIT: Pr?fen ob Source-Inhalt vollst?ndig im Target vorhanden ist.
 6. BEDEUTUNG: Mistranslations und falsche Bedeutungen korrigieren.
 
 AKTIVE VERBESSERUNGEN:
-7. NATÜRLICHKEIT: Wörtliche, unnatürliche Konstruktionen in idiomatische Zielsprache überführen.
-8. STIL & REGISTER: Technisch-präzise, sachlich, direkt. Kein Marketing-Ton.
-9. FLÜSSIGKEIT: Sätze die holprig klingen glätten – auch wenn die Bedeutung korrekt ist.
-10. KOHÄRENZ: Gleiche Begriffe und Strukturen konsistent halten.
+7. NAT?RLICHKEIT: W?rtliche, unnat?rliche Konstruktionen in idiomatische Zielsprache ?berf?hren.
+8. STIL & REGISTER: Technisch-pr?zise, sachlich, direkt. Kein Marketing-Ton.
+9. FL?SSIGKEIT: S?tze die holprig klingen gl?tten ? auch wenn die Bedeutung korrekt ist.
+10. KOH?RENZ: Gleiche Begriffe und Strukturen konsistent halten.
 11. FACHSPRACHE: Technische Terme in der Zielsprache korrekt und fachgerecht formulieren.
 
-NICHT VERÄNDERN:
-- Zahlen, Maßeinheiten, Produktcodes
+NICHT VER?NDERN:
+- Zahlen, Ma?einheiten, Produktcodes
 - Korrekte TM 100%-Matches ohne inhaltliche Fehler
 - Tags und Platzhalter
-- Warnhinweis-Schlüsselwörter (WARNING, ATTENTION, DANGER, NOTICE)
+- Warnhinweis-Schl?sselw?rter (WARNING, ATTENTION, DANGER, NOTICE)
 
 WICHTIG: Sei aktiv und verbessere. Wenn du eine bessere Formulierung siehst: verwende sie.`,
 
-  marketing: `=== POST-EDITIERUNG (PE) – KÄRCHER MARKETING ===
+  marketing: `=== POST-EDITIERUNG (PE) ? K?RCHER MARKETING ===
 
-AUFTRAG: Du bist ein professioneller Übersetzer/Post-Editor bei Kärcher.
-Du erhältst maschinell übersetzte Segmente (DeepL) aus Marketing-Materialien
+AUFTRAG: Du bist ein professioneller ?bersetzer/Post-Editor bei K?rcher.
+Du erh?ltst maschinell ?bersetzte Segmente (DeepL) aus Marketing-Materialien
 (Kampagnen, Produktbeschreibungen, Website-Texte, Social Media) und verbesserst
-diese aktiv auf Publikationsqualität.
+diese aktiv auf Publikationsqualit?t.
 
-PFLICHT-KORREKTUREN (immer prüfen und ggf. korrigieren):
-1. TERMINOLOGIE: Alle tbHits (Termbase-Einträge) MÜSSEN exakt übernommen werden – kein Kompromiss.
-2. PRODUKTNAMEN: "Kärcher" immer mit Umlaut. Produktnamen strukturell unverändert.
-3. ZAHLEN & EINHEITEN: Maßeinheiten und Produktnummern niemals verändern.
+PFLICHT-KORREKTUREN (immer pr?fen und ggf. korrigieren):
+1. TERMINOLOGIE: Alle tbHits (Termbase-Eintr?ge) M?SSEN exakt ?bernommen werden ? kein Kompromiss.
+2. PRODUKTNAMEN: "K?rcher" immer mit Umlaut. Produktnamen strukturell unver?ndert.
+3. ZAHLEN & EINHEITEN: Ma?einheiten und Produktnummern niemals ver?ndern.
 4. TAGS & PLATZHALTER: Alle {0}, %s, <x/>, <g> etc. 1:1 beibehalten.
-5. VOLLSTÄNDIGKEIT: Prüfen ob Source-Inhalt vollständig im Target vorhanden ist.
+5. VOLLST?NDIGKEIT: Pr?fen ob Source-Inhalt vollst?ndig im Target vorhanden ist.
 6. BEDEUTUNG: Mistranslations und falsche Bedeutungen korrigieren.
 
 AKTIVE VERBESSERUNGEN:
-7. TONALITÄT: Kärcher Marketing-Tonalität: kraftvoll, inspirierend, kundennah.
+7. TONALIT?T: K?rcher Marketing-Tonalit?t: kraftvoll, inspirierend, kundennah.
    Aktive Sprache bevorzugen. Direkte Ansprache wo passend.
-8. NATÜRLICHKEIT: Idiomatische Zielsprache – nicht wörtlich übersetzen.
-   Texte sollen sich anfühlen als wären sie original in der Zielsprache verfasst.
-9. WERBEWIRKUNG: Emotionale Stärke und Call-to-Action beibehalten.
-   Slogans, Headlines und Claims besonders sorgfältig behandeln.
-10. LOKALANPASSUNG: Kulturell passende Formulierungen für den Zielmarkt.
-    Was im Deutschen funktioniert, muss nicht 1:1 in jede Sprache übertragbar sein.
+8. NAT?RLICHKEIT: Idiomatische Zielsprache ? nicht w?rtlich ?bersetzen.
+   Texte sollen sich anf?hlen als w?ren sie original in der Zielsprache verfasst.
+9. WERBEWIRKUNG: Emotionale St?rke und Call-to-Action beibehalten.
+   Slogans, Headlines und Claims besonders sorgf?ltig behandeln.
+10. LOKALANPASSUNG: Kulturell passende Formulierungen f?r den Zielmarkt.
+    Was im Deutschen funktioniert, muss nicht 1:1 in jede Sprache ?bertragbar sein.
 11. KONSISTENZ: Gleiche Kernbotschaften einheitlich kommunizieren.
 
-NICHT VERÄNDERN:
+NICHT VER?NDERN:
 - Produktcodes und technische Spezifikationen
 - Tags und Platzhalter
 - Eingetragene Markennamen und Slogans (nur wenn explizit lokalisiert)
 - Kampagnen-Hashtags und Social-Media-Handles
 
-WICHTIG: Marketing-Texte brauchen Energie und Überzeugungskraft.
-Eine korrekte aber flache Übersetzung ist nicht ausreichend – sei mutig und
-wähle die Formulierung die in der Zielsprache wirklich überzeugt.`
+WICHTIG: Marketing-Texte brauchen Energie und ?berzeugungskraft.
+Eine korrekte aber flache ?bersetzung ist nicht ausreichend ? sei mutig und
+w?hle die Formulierung die in der Zielsprache wirklich ?berzeugt.`
 
 };
 
@@ -124,7 +124,7 @@ function getDefaultAutoFixSettings_() {
     markDoneAfterFix: true
   };
 
-  // Prompts als separate Keys einfügen
+  // Prompts als separate Keys einf?gen
   Object.keys(DEFAULT_PROMPTS_).forEach(function(type) {
     settings['peInstructions_' + type] = DEFAULT_PROMPTS_[type];
   });
@@ -133,14 +133,14 @@ function getDefaultAutoFixSettings_() {
 }
 
 // =====================================================================
-// FIX 15: OPTION UID/TEXT – TYPE AUFLÖSEN
+// FIX 15: OPTION UID/TEXT ? TYPE AUFL?SEN
 //
 // Reihenfolge:
-//   1. Legacy-UID-Map (AUTOFIX_OPTION_MAP_) – für die beiden historischen
+//   1. Legacy-UID-Map (AUTOFIX_OPTION_MAP_) ? f?r die beiden historischen
 //      Optionen, die schon vor den dynamischen Prompt Spaces existierten.
 //   2. Sichtbarer Options-Text gegen das Label eines Prompt Spaces
-//      matchen (case-insensitive) – das ist der Normalfall für alles,
-//      was über den Prompt Editor neu angelegt wurde, z.B. "Campus".
+//      matchen (case-insensitive) ? das ist der Normalfall f?r alles,
+//      was ?ber den Prompt Editor neu angelegt wurde, z.B. "Campus".
 //   3. Sichtbarer Options-Text gegen den internen Typ-Key matchen,
 //      falls Label und Key auseinanderlaufen.
 //   4. Fallback: 'technical'.
@@ -167,7 +167,7 @@ function resolveAutoFixType_(optionUid, optionValue) {
 }
 
 /**
- * Gibt alle bekannten AutoFix-Typen zurück – jetzt aus der dynamischen
+ * Gibt alle bekannten AutoFix-Typen zur?ck ? jetzt aus der dynamischen
  * Prompt-Space-Konfiguration (getPromptTypesConfig_), nicht mehr nur aus
  * der alten Legacy-UID-Map. So tauchen neu angelegte Spaces wie Campus
  * auch hier automatisch auf.
@@ -179,7 +179,7 @@ function getKnownAutoFixTypes_() {
       return typesConfig.map(function(t) { return t.type; });
     }
   } catch (e) {}
-  // Fallback, falls PromptEditorAccess.gs aus irgendeinem Grund nicht verfügbar ist
+  // Fallback, falls PromptEditorAccess.gs aus irgendeinem Grund nicht verf?gbar ist
   var types = [], seen = {};
   Object.keys(AUTOFIX_OPTION_MAP_).forEach(function(uid) {
     var t = AUTOFIX_OPTION_MAP_[uid];
@@ -217,11 +217,6 @@ function unescapeSheetValue_(val) {
 // =====================================================================
 
 function getAutoFixSettings() {
-  requireHubAccess_();
-  return getAutoFixSettings_();
-}
-
-function getAutoFixSettings_() {
   try {
     var ss       = getDbSheet_();
     var sheet    = ss.getSheetByName('Settings');
@@ -238,11 +233,10 @@ function getAutoFixSettings_() {
     }
 
     // Typkonvertierungen
-    // Bewusst kein "|| default": sonst wäre z.B. Temperature 0 nicht speicherbar.
-    settings.peTemperature         = numOr_(parseFloat(settings.peTemperature), 0.1);
-    settings.maxTokens             = numOr_(parseInt(settings.maxTokens, 10), 32768);
-    settings.tmThreshold           = numOr_(parseFloat(settings.tmThreshold), 0.7);
-    settings.pollerIntervalMinutes = numOr_(parseInt(settings.pollerIntervalMinutes, 10), 10);
+    settings.peTemperature         = parseFloat(settings.peTemperature)         || 0.1;
+    settings.maxTokens             = parseInt(settings.maxTokens)               || 32768;
+    settings.tmThreshold           = parseFloat(settings.tmThreshold)           || 0.7;
+    settings.pollerIntervalMinutes = parseInt(settings.pollerIntervalMinutes)   || 10;
     settings.markDoneAfterFix      = settings.markDoneAfterFix === 'true' || settings.markDoneAfterFix === true;
 
     // Sicherstellen dass alle bekannten Typen einen Prompt haben
@@ -260,8 +254,8 @@ function getAutoFixSettings_() {
 }
 
 /**
- * Gibt den Prompt für einen bestimmten AutoFix-Typ zurück.
- * Fallback: technical – default
+ * Gibt den Prompt f?r einen bestimmten AutoFix-Typ zur?ck.
+ * Fallback: technical ? default
  */
 function getPeInstructions_(settings, autoFixType) {
   var type    = autoFixType || 'technical';
@@ -281,88 +275,42 @@ function getPeInstructions_(settings, autoFixType) {
 // SETTINGS SCHREIBEN
 // =====================================================================
 
-function numOr_(n, fallback) { return (typeof n === 'number' && !isNaN(n)) ? n : fallback; }
-
-// Schreibt das komplette Settings-Objekt in EINEM setValues-Aufruf (statt
-// clearContents + appendRow pro Key). Vorher gab es zwischen clearContents
-// und dem letzten appendRow ein Fenster, in dem parallele Leser ein leeres
-// Sheet sahen und mit Default-Prompts weiterarbeiteten.
 function saveAutoFixSettings_(settings, ssObj) {
   var ss    = ssObj || getDbSheet_();
   var sheet = ss.getSheetByName('Settings');
-  var rows  = [['Key', 'Value']];
+  sheet.clearContents();
+  sheet.appendRow(['Key', 'Value']);
   Object.keys(settings).forEach(function(k) {
     var raw = settings[k];
-    rows.push([k, escapeSheetValue_(raw === null || raw === undefined ? '' : String(raw))]);
+    var val = escapeSheetValue_(raw === null || raw === undefined ? '' : String(raw));
+    sheet.appendRow([k, val]);
   });
-  var lock = LockService.getScriptLock();
-  lock.waitLock(20000);
-  try {
-    sheet.clearContents();
-    sheet.getRange(1, 1, rows.length, 2).setNumberFormat('@').setValues(rows);
-  } finally {
-    lock.releaseLock();
-  }
 }
 
-function saveAutoFixSettingsAudited_(settings) {
+function saveAutoFixSettings(settings) {
   try {
     saveAutoFixSettings_(settings);
-    logAudit_('Settings Updated', 'AutoFix Settings aktualisiert von ' + getCurrentUserEmail_() + '.');
+    logAudit_('Settings Updated', 'AutoFix Settings aktualisiert.');
     return { success: true };
   } catch(e) {
     return { success: false, error: e.message };
   }
 }
 
-// Felder, die der Hub-Settings-Tab ändern darf. Alles andere (Prompts,
-// Typ-Overrides, primaryThinking …) bleibt unangetastet. Vorher hat
-// saveAutoFixSettings das übergebene Objekt 1:1 ins Sheet geschrieben –
-// der Settings-Tab schickt aber nur 7 Felder, dadurch wurden bei jedem
-// Speichern ALLE eigenen Prompts und Gemini-Overrides gelöscht.
-var HUB_EDITABLE_SETTINGS_ = ['cfFieldUid', 'wfStepName', 'primaryModel', 'tmThreshold',
-                              'pollerIntervalMinutes', 'peTemperature', 'markDoneAfterFix'];
-
-function saveAutoFixSettings(patch) {
-  requireHubAccess_();
-  var res = getAutoFixSettings_();
-  if (!res.success) return { success: false, error: res.error };
-  var settings = res.settings;
-  HUB_EDITABLE_SETTINGS_.forEach(function(k) {
-    if (patch && patch[k] !== undefined && patch[k] !== null && String(patch[k]).trim() !== '') {
-      settings[k] = String(patch[k]).trim();
-    }
-  });
-  settings.primaryModel = sanitizeGeminiModel_(settings.primaryModel);
-  var t = parseFloat(settings.peTemperature);
-  if (isNaN(t) || t < 0 || t > 2) return { success: false, error: 'PE Temperature muss zwischen 0 und 2 liegen.' };
-  var tm = parseFloat(settings.tmThreshold);
-  if (isNaN(tm) || tm < 0 || tm > 1) return { success: false, error: 'TM Threshold muss zwischen 0 und 1 liegen.' };
-  var iv = parseInt(settings.pollerIntervalMinutes, 10);
-  if ([1, 5, 10, 15, 30].indexOf(iv) === -1) return { success: false, error: 'Poller-Intervall muss 1, 5, 10, 15 oder 30 Minuten sein.' };
-  return saveAutoFixSettingsAudited_(settings);
-}
-
 /**
- * Speichert einen einzelnen Prompt für einen Typ.
+ * Speichert einen einzelnen Prompt f?r einen Typ.
  * Wird vom Frontend aufgerufen wenn ein einzelner Prompt-Editor gespeichert wird.
  */
 function saveSinglePrompt(autoFixType, promptText) {
-  requireHubAccess_();
-  return saveSinglePrompt_(autoFixType, promptText);
-}
-
-function saveSinglePrompt_(autoFixType, promptText) {
   try {
     if (!autoFixType || typeof promptText !== 'string') {
-      return { success: false, error: 'Ungültige Parameter.' };
+      return { success: false, error: 'Ung?ltige Parameter.' };
     }
-    var res      = getAutoFixSettings_();
-    if (!res.success) return { success: false, error: res.error };
+    var res      = getAutoFixSettings();
     var settings = res.settings;
     settings['peInstructions_' + autoFixType] = promptText;
     saveAutoFixSettings_(settings);
-    logAudit_('Prompt Updated', 'Prompt für Typ "' + autoFixType + '" aktualisiert.');
+    logAudit_('Prompt Updated', 'Prompt f?r Typ "' + autoFixType + '" aktualisiert.');
     return { success: true };
   } catch(e) {
     return { success: false, error: e.message };
@@ -370,18 +318,12 @@ function saveSinglePrompt_(autoFixType, promptText) {
 }
 
 /**
- * Setzt den Prompt eines Typs auf den Default zurück.
+ * Setzt den Prompt eines Typs auf den Default zur?ck.
  */
 function resetPromptForType(autoFixType) {
-  requireHubAccess_();
-  return resetPromptForType_(autoFixType);
-}
-
-function resetPromptForType_(autoFixType) {
   try {
     var type    = autoFixType || 'technical';
-    var res     = getAutoFixSettings_();
-    if (!res.success) return { success: false, error: res.error };
+    var res     = getAutoFixSettings();
     var settings = res.settings;
     settings['peInstructions_' + type] = DEFAULT_PROMPTS_[type] || DEFAULT_PROMPTS_['technical'];
     saveAutoFixSettings_(settings);
@@ -392,20 +334,19 @@ function resetPromptForType_(autoFixType) {
 }
 
 /**
- * Legacy-Kompatibilität: resetPeInstructions setzt technical zurück.
+ * Legacy-Kompatibilit?t: resetPeInstructions setzt technical zur?ck.
  */
 function resetPeInstructions() {
   return resetPromptForType('technical');
 }
 
 /**
- * Gibt alle Prompt-Typen mit ihren aktuellen Prompts zurück.
- * Wird vom Frontend für die dynamische Prompt-Card-Liste verwendet.
+ * Gibt alle Prompt-Typen mit ihren aktuellen Prompts zur?ck.
+ * Wird vom Frontend f?r die dynamische Prompt-Card-Liste verwendet.
  */
 function getAllPrompts() {
-  requireHubAccess_();
   try {
-    var res      = getAutoFixSettings_();
+    var res      = getAutoFixSettings();
     var settings = res.settings;
     var types    = getKnownAutoFixTypes_();
     var prompts  = types.map(function(type) {

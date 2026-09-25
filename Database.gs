@@ -2,28 +2,21 @@
 // AUTOFIX HUB - DATABASE (Database.gs)
 // Google Sheets: Settings, Run Log (mit Changes-Spalte), Audit Log
 //
-// FIX 9  – autoFixType wird im Run Log gespeichert (Spalte 12)
-// FIX 10 – getRunLogsFiltered_() für MQM Report Tab
-//           exportMqmReportToSheet_() schreibt MQM-Report ins G-Sheet
+// FIX 9  ? autoFixType wird im Run Log gespeichert (Spalte 12)
+// FIX 10 ? getRunLogsFiltered() f?r MQM Report Tab
+//           exportMqmReportToSheet() schreibt MQM-Report ins G-Sheet
 // =====================================================================
 
-// Pro Ausführung nur einmal öffnen – jedes openById ist ein weiterer
-// Drive-Zugriff, der sporadisch mit "You do not have permission to access
-// the requested document" scheitern kann.
-var dbSheetCache_ = null;
-
 function getDbSheet_() {
-  if (dbSheetCache_) return dbSheetCache_;
   var props   = PropertiesService.getScriptProperties();
   var sheetId = props.getProperty('AUTOFIX_DB_SHEET_ID');
   var ss;
 
   if (sheetId) {
-    // Ein Fehler hier ist fast immer transient (Drive-Berechtigungsprüfung).
-    // Früher wurde dann stillschweigend eine NEUE Datenbank angelegt und die
-    // ID überschrieben – Settings und Logs wären verloren gewesen.
-    ss = openByIdWithRetry_(sheetId);
-  } else {
+    try { ss = SpreadsheetApp.openById(sheetId); } catch(e) { sheetId = null; }
+  }
+
+  if (!sheetId) {
     ss = SpreadsheetApp.create('AutoFix Hub - Database');
     props.setProperty('AUTOFIX_DB_SHEET_ID', ss.getId());
 
@@ -54,22 +47,7 @@ function getDbSheet_() {
     saveAutoFixSettings_(getDefaultAutoFixSettings_(), ss);
     logAudit_('System', 'AutoFix Database Sheet erstellt.', ss);
   }
-  dbSheetCache_ = ss;
   return ss;
-}
-
-function openByIdWithRetry_(sheetId) {
-  var lastErr;
-  for (var attempt = 0; attempt < 3; attempt++) {
-    try {
-      return SpreadsheetApp.openById(sheetId);
-    } catch(e) {
-      lastErr = e;
-      Logger.log('[DB] openById Versuch ' + (attempt + 1) + ' fehlgeschlagen: ' + e.message);
-      if (attempt < 2) Utilities.sleep(1000 * Math.pow(2, attempt));
-    }
-  }
-  throw new Error('AutoFix-Datenbank nicht erreichbar (' + sheetId + '): ' + lastErr.message);
 }
 
 function logAudit_(action, details, ssObj) {
@@ -94,35 +72,28 @@ function logRun_(projectUid, projectName, job, result) {
     var sheet   = ss.getSheetByName('Run Log');
     var changes = result.changes || [];
 
-    var changesJson = changes.length > 0 ? JSON.stringify(changes) : '';
-    // Google Sheets erlaubt max. 50.000 Zeichen pro Zelle – größere Jobs
-    // hätten sonst einen Fehler geworfen und gar keinen Log-Eintrag erzeugt.
-    if (changesJson.length > 49000) changesJson = '';
-    // Projektnamen/Fehlertexte können mit "=", "+", "-", "@" beginnen und
-    // würden sonst von Sheets als Formel ausgewertet (Formula Injection).
     sheet.appendRow([
       new Date().toISOString(),
-      escapeSheetValue_(String(projectUid || '')),
-      escapeSheetValue_(String(projectName || '')),
-      escapeSheetValue_(String(job.uid || '')),
-      escapeSheetValue_(String(job.targetLang || '')),
+      projectUid,
+      projectName,
+      job.uid,
+      job.targetLang,
       result.success ? 'TRUE' : 'FALSE',
       result.segmentsTotal   || 0,
       result.segmentsChanged || 0,
-      escapeSheetValue_(String(result.model || '-')),
-      escapeSheetValue_(String(result.error || result.reason || 'OK')),
-      changesJson,
-      escapeSheetValue_(String(job.autoFixType || 'technical'))   // FIX 9
+      result.model || '-',
+      result.error || result.reason || 'OK',
+      changes.length > 0 ? JSON.stringify(changes) : '',
+      job.autoFixType || 'technical'   // FIX 9
     ]);
   } catch(e) { Logger.log('RunLog Error: ' + e.message); }
 }
 
 // =====================================================================
-// RUN LOG LESEN – Standard (neueste 200, für Run Log Tab)
+// RUN LOG LESEN ? Standard (neueste 200, f?r Run Log Tab)
 // =====================================================================
 
 function getRunLogs() {
-  requireHubAccess_();
   try {
     var ss    = getDbSheet_();
     var sheet = ss.getSheetByName('Run Log');
@@ -164,7 +135,7 @@ function getRunLogs() {
 }
 
 // =====================================================================
-// FIX 10: RUN LOG LESEN – Gefiltert (für MQM Report)
+// FIX 10: RUN LOG LESEN ? Gefiltert (f?r MQM Report)
 //
 // Filter-Objekt:
 //   dateFrom    {string}  ISO-Datum, z.B. "2026-01-01"
@@ -173,11 +144,11 @@ function getRunLogs() {
 //   autoFixType {string}  exakter Match, z.B. "technical"
 //   targetLang  {string}  exakter Match, z.B. "en_gb"
 //
-// Gibt nur Logs mit changes.length > 0 zurück (nur geänderte Jobs).
-// Max 1000 Einträge.
+// Gibt nur Logs mit changes.length > 0 zur?ck (nur ge?nderte Jobs).
+// Max 1000 Eintr?ge.
 // =====================================================================
 
-function getRunLogsFiltered_(filters) {
+function getRunLogsFiltered(filters) {
   try {
     filters = filters || {};
     var ss    = getDbSheet_();
@@ -242,11 +213,10 @@ function getRunLogsFiltered_(filters) {
 }
 
 /**
- * Gibt alle eindeutigen Werte für Filter-Dropdowns zurück:
- * Projektname, AutoFix-Typen, Zielsprachen – direkt aus dem Run Log.
+ * Gibt alle eindeutigen Werte f?r Filter-Dropdowns zur?ck:
+ * Projektname, AutoFix-Typen, Zielsprachen ? direkt aus dem Run Log.
  */
 function getRunLogFilterOptions() {
-  requireHubAccess_();
   try {
     var ss    = getDbSheet_();
     var sheet = ss.getSheetByName('Run Log');
@@ -274,18 +244,18 @@ function getRunLogFilterOptions() {
 }
 
 // =====================================================================
-// FIX 10: MQM REPORT – GOOGLE SHEET EXPORT
+// FIX 10: MQM REPORT ? GOOGLE SHEET EXPORT
 //
 // Erstellt ein neues Sheet "MQM Report YYYY-MM-DD HH:MM" im Database-
 // Spreadsheet mit zwei Bereichen:
-//   1. Aggregat (Kategorie – Severity)
+//   1. Aggregat (Kategorie ? Severity)
 //   2. Detail-Tabelle (alle klassifizierten Segmente)
 // =====================================================================
 
-function exportMqmReportToSheet_(reportData) {
+function exportMqmReportToSheet(reportData) {
   try {
     if (!reportData || !reportData.details || !reportData.aggregate) {
-      return { success: false, error: 'Keine Report-Daten übergeben.' };
+      return { success: false, error: 'Keine Report-Daten ?bergeben.' };
     }
 
     var sheetName = 'MQM Report ' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
@@ -296,12 +266,12 @@ function exportMqmReportToSheet_(reportData) {
     sheet.setName('MQM Report');
 
     // ?? Metadaten ????????????????????????????????????????????????????
-    sheet.appendRow(['AutoFix Hub – MQM Quality Report']);
+    sheet.appendRow(['AutoFix Hub ? MQM Quality Report']);
     sheet.appendRow(['Generated:', new Date().toISOString()]);
     sheet.appendRow(['Filters:', JSON.stringify(reportData.filters || {})]);
     sheet.appendRow(['Total logs analysed:', reportData.totalLogs || 0]);
     sheet.appendRow(['Total segments changed:', reportData.totalSegments || 0]);
-    sheet.appendRow(['—', '—', '—', '—', '—', '—', '—']);
+    sheet.appendRow(['?', '?', '?', '?', '?', '?', '?']);
 
     // ?? Aggregat ?????????????????????????????????????????????????????
     sheet.appendRow(['=== AGGREGAT ===']);
@@ -313,12 +283,12 @@ function exportMqmReportToSheet_(reportData) {
     aggRows.forEach(function(r) {
       var pct = totalErr > 0 ? ((r.total / totalErr) * 100).toFixed(1) + '%' : '0%';
       sheet.appendRow([
-        escapeSheetValue_(String(r.category || '')), escapeSheetValue_(String(r.subcategory || '')),
+        r.category || '', r.subcategory || '',
         r.critical || 0, r.major || 0, r.minor || 0, r.total || 0, pct
       ]);
     });
 
-    sheet.appendRow(['—', '—', '—', '—', '—', '—', '—']);
+    sheet.appendRow(['?', '?', '?', '?', '?', '?', '?']);
     sheet.appendRow(['=== DETAIL ===']);
     sheet.appendRow([
       'Timestamp', 'Project', 'AutoFix Type', 'Target Lang',
@@ -327,18 +297,23 @@ function exportMqmReportToSheet_(reportData) {
     ]);
 
     // ?? Detail-Zeilen ?????????????????????????????????????????????????
-    // Ein setValues statt appendRow pro Zeile (bei hunderten Segmenten
-    // sonst sehr langsam / Timeout). Übersetzungstexte werden escaped,
-    // damit z.B. "=== WARNING" oder "-5 °C" nicht als Formel landen.
     var details = reportData.details || [];
-    if (details.length) {
-      var rows = details.map(function(d) {
-        return [d.timestamp, d.projectName, d.autoFixType, d.targetLang, d.segId, d.source,
-                d.original, d.corrected, d.reason, d.mqmCategory, d.mqmSubcategory, d.mqmSeverity]
-          .map(function(v) { return escapeSheetValue_(String(v === null || v === undefined ? '' : v)); });
-      });
-      sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, 12).setValues(rows);
-    }
+    details.forEach(function(d) {
+      sheet.appendRow([
+        d.timestamp    || '',
+        d.projectName  || '',
+        d.autoFixType  || '',
+        d.targetLang   || '',
+        d.segId        || '',
+        d.source       || '',
+        d.original     || '',
+        d.corrected    || '',
+        d.reason       || '',
+        d.mqmCategory  || '',
+        d.mqmSubcategory || '',
+        d.mqmSeverity  || ''
+      ]);
+    });
 
     // ?? Formatierung ??????????????????????????????????????????????????
     // Header-Zeile Aggregat
@@ -374,15 +349,11 @@ function exportMqmReportToSheet_(reportData) {
 // =====================================================================
 
 function getDatabaseUrl() {
-  requireHubAccess_();
   try { return { success: true, url: getDbSheet_().getUrl() }; }
   catch(e) { return { success: false, error: e.message }; }
 }
 
 function recreateDatabase() {
-  // Nur echte Admins: legt ein neues, leeres DB-Sheet an und "vergisst" das alte.
-  var email = getCurrentUserEmail_();
-  if (!isPromptEditorAdmin_(email)) throw new Error('Nur für Admins.');
   try {
     PropertiesService.getScriptProperties().deleteProperty('AUTOFIX_DB_SHEET_ID');
     var ss = getDbSheet_();

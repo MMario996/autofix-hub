@@ -1,7 +1,7 @@
 // =====================================================================
 // AUTOFIX HUB - CORE BACKEND (Code.gs)
-// FIX 14 – Fallback-Modell-Liste bereinigt: "gemini-2.5-pro" ist für
-//          unseren API-Key/Gateway nicht mehr verfügbar (404 "no longer
+// FIX 14 ? Fallback-Modell-Liste bereinigt: "gemini-2.5-pro" ist f?r
+//          unseren API-Key/Gateway nicht mehr verf?gbar (404 "no longer
 //          available to new users") und wurde aus allen Fallback-/
 //          Retry-Listen entfernt. Aktuell einziges freigeschaltetes
 //          Modell: gemini-3.6-flash. Alle anderen FIX-Kommentare wie
@@ -10,9 +10,6 @@
 
 function doGet(e) {
   var page = (e && e.parameter && e.parameter.page) || '';
-  // Die Seiten selbst enthalten keine Daten; alle Daten kommen über
-  // google.script.run und sind dort per requireHubAccess_ bzw. die
-  // Prompt-Editor-Rechte geschützt.
   if (page === 'prompts') {
     return renderPromptEditorPage_(); // aus PromptEditorAccess.gs
   }
@@ -21,19 +18,6 @@ function doGet(e) {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-
-// =====================================================================
-// ÖFFENTLICHE, ZUGRIFFSGESCHÜTZTE WRAPPER
-// google.script.run kann jede Funktion ohne "_" aufrufen. Die eigentliche
-// Logik liegt in den *_-Varianten (auch vom Poller genutzt), die Wrapper
-// prüfen vorher die Berechtigung (requireHubAccess_ in PromptEditorAccess.gs).
-// =====================================================================
-function getAutoFixProjects()                   { requireHubAccess_(); return getAutoFixProjects_(); }
-function clearProjectCache()                    { requireHubAccess_(); return clearProjectCache_(); }
-function generateMqmReport(filters, doExport)   { requireHubAccess_(); return generateMqmReport_(filters, doExport); }
-function getTerminologyDrift(filters, threshold){ requireHubAccess_(); return getTerminologyDrift_(filters, threshold); }
-function removeAutoFixTrigger()                 { requireHubAccess_(); return removeAutoFixTrigger_(); }
-
 // =====================================================================
 // KONSTANTEN
 // =====================================================================
@@ -41,25 +25,12 @@ var AUTOFIX_CF_FIELD_UID_DEFAULT_ = '1uw8kvE6WNhT6Gw0XeX4Z4';
 var AUTOFIX_WF_STEP_NAME_DEFAULT_ = 'PE Gemini';
 var AUTOFIX_BATCH_SIZE_           = 25;
 
-// Gemini-Gateway: zentral statt 7x hartkodiert. Über die Script Property
-// GEMINI_GATEWAY_BASE überschreibbar (z.B. sobald das Gateway einen echten
-// DNS-Namen mit eigenem Zertifikat hat – siehe Security-Hinweis zu nip.io).
-var GEMINI_GATEWAY_BASE_DEFAULT_ = 'https://34-111-99-134.nip.io/gemini/v1beta/models/';
-function getGeminiUrl_(model) {
-  var base = PropertiesService.getScriptProperties().getProperty('GEMINI_GATEWAY_BASE') || GEMINI_GATEWAY_BASE_DEFAULT_;
-  if (base.charAt(base.length - 1) !== '/') base += '/';
-  return base + encodeURIComponent(sanitizeGeminiModel_(model)) + ':generateContent';
-}
-
 function writeRunStatus_(msg, level) {
   try {
     var props   = PropertiesService.getScriptProperties();
     var raw     = props.getProperty('AUTOFIX_RUN_LOG');
     var entries = raw ? JSON.parse(raw) : [];
-    var seq = parseInt(props.getProperty('AUTOFIX_RUN_LOG_SEQ') || '0', 10) + 1;
-    props.setProperty('AUTOFIX_RUN_LOG_SEQ', String(seq));
     entries.push({
-      seq:   seq,
       t:     new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       level: level || 'INFO',
       msg:   msg
@@ -72,16 +43,10 @@ function writeRunStatus_(msg, level) {
   }
 }
 
-function getRunStatus(sinceSeq) {
-  requireHubAccess_();
+function getRunStatus() {
   try {
     var raw     = PropertiesService.getScriptProperties().getProperty('AUTOFIX_RUN_LOG');
     var entries = raw ? JSON.parse(raw) : [];
-    var since   = parseInt(sinceSeq, 10) || 0;
-    // Nur neue Einträge (nach Sequenznummer). Das Log ist auf 150 Einträge
-    // gekappt – das alte Frontend hat per Index gezählt und nach 150
-    // Einträgen keine neuen Zeilen mehr angezeigt.
-    if (since) entries = entries.filter(function(e) { return (e.seq || 0) > since; });
     return { success: true, entries: entries };
   } catch(e) {
     return { success: false, entries: [] };
@@ -89,11 +54,6 @@ function getRunStatus(sinceSeq) {
 }
 
 function clearRunStatus() {
-  requireHubAccess_();
-  return clearRunStatus_();
-}
-
-function clearRunStatus_() {
   try {
     PropertiesService.getScriptProperties().deleteProperty('AUTOFIX_RUN_LOG');
     return { success: true };
@@ -116,7 +76,7 @@ function getCachedProjects_() {
       return null;
     }
     var ageMin = Math.round((Date.now() - cache.ts) / 60000);
-    Logger.log('[Cache] Hit – ' + cache.projects.length + ' Projekte, Alter: ' + ageMin + ' Min.');
+    Logger.log('[Cache] Hit ? ' + cache.projects.length + ' Projekte, Alter: ' + ageMin + ' Min.');
     return cache.projects;
   } catch(e) {
     Logger.log('[Cache] Lese-Fehler: ' + e.message);
@@ -128,7 +88,7 @@ function setCachedProjects_(projects) {
   try {
     var payload = JSON.stringify({ ts: Date.now(), projects: projects });
     if (payload.length > 8500) {
-      Logger.log('[Cache] Payload zu groß (' + payload.length + ' Bytes) – kein Caching.');
+      Logger.log('[Cache] Payload zu gro? (' + payload.length + ' Bytes) ? kein Caching.');
       return;
     }
     PropertiesService.getScriptProperties().setProperty(AUTOFIX_PROJECT_CACHE_KEY_, payload);
@@ -138,7 +98,7 @@ function setCachedProjects_(projects) {
   }
 }
 
-function clearProjectCache_() {
+function clearProjectCache() {
   try {
     PropertiesService.getScriptProperties().deleteProperty(AUTOFIX_PROJECT_CACHE_KEY_);
     return { success: true };
@@ -156,32 +116,16 @@ function isRunning_() {
     if (!raw) return false;
     var data = JSON.parse(raw);
     if (Date.now() - data.ts > AUTOFIX_RUNNING_TIMEOUT_) {
-      Logger.log('[RunLock] Stale lock – automatisch freigegeben.');
+      Logger.log('[RunLock] Stale lock ? automatisch freigegeben.');
       clearRunning_();
       return false;
     }
     var ageMin = Math.round((Date.now() - data.ts) / 60000);
-    Logger.log('[RunLock] Run aktiv seit ' + ageMin + ' Min – neuer Start übersprungen.');
+    Logger.log('[RunLock] Run aktiv seit ' + ageMin + ' Min ? neuer Start ?bersprungen.');
     return true;
   } catch(e) {
     Logger.log('[RunLock] Lese-Fehler: ' + e.message);
     return false;
-  }
-}
-
-// Prüft und setzt den Run-Lock atomar (Script Lock). Vorher waren isRunning_()
-// und setRunning_() zwei getrennte Schritte – zwei gleichzeitige Klicks auf
-// "Run AutoFix Now" (oder Klick + Poller-Tick) konnten beide durchlaufen und
-// dieselben Jobs doppelt bearbeiten/hochladen.
-function tryAcquireRun_() {
-  var lock = LockService.getScriptLock();
-  if (!lock.tryLock(10000)) return false;
-  try {
-    if (isRunning_()) return false;
-    setRunning_();
-    return true;
-  } finally {
-    lock.releaseLock();
   }
 }
 
@@ -200,14 +144,12 @@ function clearRunning_() {
   try {
     PropertiesService.getScriptProperties().deleteProperty(AUTOFIX_RUNNING_KEY_);
   } catch(e) {
-    Logger.log('[RunLock] Lösch-Fehler: ' + e.message);
+    Logger.log('[RunLock] L?sch-Fehler: ' + e.message);
   }
 }
 
 function forceUnlock() {
-  var email = requireHubAccess_();
   clearRunning_();
-  logAudit_('RunLock', 'Manuell freigegeben von ' + email);
   return { success: true, message: 'RunLock manuell freigegeben.' };
 }
 
@@ -242,30 +184,28 @@ function phraseFetch_(url, options) {
 }
 
 function getSettings_() {
-  var res = getAutoFixSettings_();
+  var res = getAutoFixSettings();
   return res.success ? res.settings : getDefaultAutoFixSettings_();
 }
 
 function testConnection() {
-  requireHubAccess_();
   try {
     var phrase   = phraseFetch_('https://cloud.memsource.com/web/api2/v1/auth/whoAmI');
     var settings = getSettings_();
     var key      = getGeminiKey_();
-    var model    = sanitizeGeminiModel_(settings.primaryModel);
-    var url      = getGeminiUrl_(model);
+    var url      = 'https://34-111-99-134.nip.io/gemini/v1beta/models/' +
+                   (settings.primaryModel || 'gemini-3.6-flash') + ':generateContent';
     var res = UrlFetchApp.fetchAll([{
       url: url, method: 'post', contentType: 'application/json', muteHttpExceptions: true,
       headers: { 'x-api-key': key, 'Accept': 'application/json' },
       payload: JSON.stringify({ contents: [{ parts: [{ text: 'Hi' }] }] })
     }]);
     if (res[0].getResponseCode() >= 400) throw new Error('Gemini ' + res[0].getResponseCode());
-    return { success: true, user: phrase.user.userName, model: model + ' OK' };
+    return { success: true, user: phrase.user.userName, model: (settings.primaryModel || 'gemini-3.6-flash') + ' OK' };
   } catch(e) { return { success: false, error: e.message }; }
 }
 
 function testProjectSearch() {
-  requireHubAccess_();
   try {
     var settings     = getSettings_();
     var cfFieldUid   = settings.cfFieldUid || AUTOFIX_CF_FIELD_UID_DEFAULT_;
@@ -313,7 +253,7 @@ function testProjectSearch() {
   } catch(e) { return { success: false, error: e.message }; }
 }
 
-function getAutoFixProjects_() {
+function getAutoFixProjects() {
   try {
     var settings   = getSettings_();
     var cfFieldUid = settings.cfFieldUid || AUTOFIX_CF_FIELD_UID_DEFAULT_;
@@ -321,7 +261,7 @@ function getAutoFixProjects_() {
     var cached = getCachedProjects_();
     if (cached !== null) return { success: true, projects: cached, fromCache: true };
 
-    Logger.log('[AutoFix] Cache-Miss – lade Projekte von Phrase (ASSIGNED + NEW)?');
+    Logger.log('[AutoFix] Cache-Miss ? lade Projekte von Phrase (ASSIGNED + NEW)?');
     var url  = 'https://cloud.memsource.com/web/api2/v1/projects' +
                '?pageSize=50&status=ASSIGNED&status=NEW&sort=DATE_CREATED&order=DESC';
     var data = phraseFetch_(url);
@@ -472,12 +412,9 @@ function patchMxliffString_(xmlString, corrections, segments) {
       newTargetAttrs = ' state="translated"' + newTargetAttrs;
     }
     var newTarget = '<target' + newTargetAttrs + '>' + escapeXml_(corrected) + '</target>';
-    // Funktions-Replacer: bei String-Replacern würden "$&", "$$", "$'" im
-    // korrigierten Text (z.B. Preisangaben) als Ersetzungsmuster interpretiert.
-    var newTuBody = tuBody.replace(originalTarget, function() { return newTarget; });
+    var newTuBody = tuBody.replace(originalTarget, newTarget);
     if (tuOpen + tuBody + tuClose !== tuOpen + newTuBody + tuClose) {
-      var replacement = tuOpen + newTuBody + tuClose;
-      patched = patched.replace(tuOpen + tuBody + tuClose, function() { return replacement; });
+      patched = patched.replace(tuOpen + tuBody + tuClose, tuOpen + newTuBody + tuClose);
       patchCount++;
     }
   }
@@ -524,7 +461,7 @@ function getTbHitsForAllSegments_(projectUid, jobUid, segments, sourceLang) {
     var isDeSource = lang === 'de_de' || lang === 'de_at' || lang === 'de_ch' ||
                      lang.indexOf('de') === 0;
     var reverseFlag = !isDeSource;
-    Logger.log('[TB] sourceLang=' + lang + ' – reverse=' + reverseFlag);
+    Logger.log('[TB] sourceLang=' + lang + ' ? reverse=' + reverseFlag);
 
     var data = phraseFetch_(
       'https://cloud.memsource.com/web/api2/v2/projects/' + projectUid +
@@ -555,46 +492,41 @@ function filterTbHitsForSegment_(globalTbHits, sourceText) {
 function buildPePrompt_(settings, sourceLang, targetLang, segments, batchInfo, autoFixType) {
   var batchBlock = batchInfo
     ? '\n=== BATCH ' + batchInfo.current + '/' + batchInfo.total +
-      ' (Seg ' + batchInfo.from + '–' + batchInfo.to + ') ===\n'
+      ' (Seg ' + batchInfo.from + '?' + batchInfo.to + ') ===\n'
     : '';
   var allIds = segments.map(function(s) { return '"' + s.id + '"'; }).join(', ');
 
   var peInstructions = getPeInstructions_(settings, autoFixType);
 
-  return 'Du bist ein professioneller Post-Editor für Alfred Kärcher SE & Co. KG.\n' +
+  return 'Du bist ein professioneller Post-Editor f?r Alfred K?rcher SE & Co. KG.\n' +
     'Quellsprache: ' + sourceLang + ' | Zielsprache: ' + targetLang + '\n' +
     'Dokumenttyp: ' + typeToLabel_(autoFixType || 'technical') + '\n' +
     batchBlock + '\n' +
     '=== PE-ANWEISUNGEN ===\n' +
     peInstructions + '\n\n' +
     '=== TERMBASE (verbindlich) ===\n' +
-    'Jedes Segment enthält "tbHits". Wenn tbHit.src im Source vorkommt: IMMER tbHit.tgt im Target verwenden.\n\n' +
+    'Jedes Segment enth?lt "tbHits". Wenn tbHit.src im Source vorkommt: IMMER tbHit.tgt im Target verwenden.\n\n' +
     '=== SEGMENTE ===\n' +
     JSON.stringify(segments, null, 2) + '\n\n' +
     '=== AUSGABE ===\n' +
     'KRITISCHE REGELN ZUR SEGMENT-ISOLATION UND TAGS (NO BOUNDARY BLEEDING!):\n' +
-    '1. Jede "id" ist eine physische Systemgrenze. Du darfst NIEMALS den Text aus einem Segment kopieren und in die Übersetzung eines anderen Segments einfügen.\n' +
-    '2. Die Tags im Text haben das Format {1>...<1} oder <1/>. Diese Tags sind heilige Platzhalter! Sie dürfen weder gelöscht, noch verschoben, noch verändert werden. Du darfst keine eigenen Tags erfinden.\n' +
-    '3. ANKER-REGEL: Um sicherzustellen, dass du nicht im Segment verrutschst, MUSST du im Feld "source_reference" die ersten 3 Wörter des Quellsatzes eintragen. Das zwingt dich, beim richtigen Satz zu bleiben!\n' +
-    '4. Das Verschmelzen oder Zusammenfassen von zwei Segmenten führt zu einem kritischen Datenbankabsturz. Halte dich an die exakte Fragmentierung des Originals.\n\n' +
-    'VOLLSTÄNDIGKEIT: Du MUSST für JEDES der ' + segments.length + ' Segmente exakt einen Eintrag liefern.\n' +
+    '1. Jede "id" ist eine physische Systemgrenze. Du darfst NIEMALS den Text aus einem Segment kopieren und in die ?bersetzung eines anderen Segments einf?gen.\n' +
+    '2. Die Tags im Text haben das Format {1>...<1} oder <1/>. Diese Tags sind heilige Platzhalter! Sie d?rfen weder gel?scht, noch verschoben, noch ver?ndert werden. Du darfst keine eigenen Tags erfinden.\n' +
+    '3. ANKER-REGEL: Um sicherzustellen, dass du nicht im Segment verrutschst, MUSST du im Feld "source_reference" die ersten 3 W?rter des Quellsatzes eintragen. Das zwingt dich, beim richtigen Satz zu bleiben!\n' +
+    '4. Das Verschmelzen oder Zusammenfassen von zwei Segmenten f?hrt zu einem kritischen Datenbankabsturz. Halte dich an die exakte Fragmentierung des Originals.\n\n' +
+    'VOLLST?NDIGKEIT: Du MUSST f?r JEDES der ' + segments.length + ' Segmente exakt einen Eintrag liefern.\n' +
     'Erwartete IDs: [' + allIds + ']\n\n' +
     'FORMAT (nur valides JSON, kein Markdown):\n' +
-    '{\n  "results": [\n    {\n      "id": "<id>",\n      "source_reference": "<erste 3 Wörter des Source-Texts>",\n      "corrected": "<text>",\n      "changed": true/false,\n      "reason": "<max 80 Zeichen Begründung>"\n    }\n  ]\n}\n' +
+    '{\n  "results": [\n    {\n      "id": "<id>",\n      "source_reference": "<erste 3 W?rter des Source-Texts>",\n      "corrected": "<text>",\n      "changed": true/false,\n      "reason": "<max 80 Zeichen Begr?ndung>"\n    }\n  ]\n}\n' +
     '- bei changed=false: corrected identisch mit target lassen\n' +
-    '- Zahlen, Produktnamen, Maßeinheiten NICHT ändern';
+    '- Zahlen, Produktnamen, Ma?einheiten NICHT ?ndern';
 }
 
 function runGeminiPeBatchesParallel_(settings, sourceLang, targetLang, enrichedSegments, autoFixType) {
   var totalBatches = Math.ceil(enrichedSegments.length / AUTOFIX_BATCH_SIZE_);
   var key          = getGeminiKey_();
-  // Typ-spezifische Gemini-Einstellungen aus dem Prompt Editor (Modell,
-  // Temperature, Max Tokens, Thinking). Vorher wurden hier nur die globalen
-  // Werte gelesen – die im Prompt Editor pro Typ gesetzten Overrides hatten
-  // auf echte AutoFix-Läufe keinerlei Wirkung.
-  var eff          = getEffectiveGeminiConfig_(settings, autoFixType || 'technical');
-  var primaryModel = eff.model;
-  var geminiUrl    = getGeminiUrl_(primaryModel);
+  var primaryModel = settings.primaryModel || 'gemini-3.6-flash';
+  var geminiUrl    = 'https://34-111-99-134.nip.io/gemini/v1beta/models/' + primaryModel + ':generateContent';
 
   var batches = [];
   for (var b = 0; b < totalBatches; b++) {
@@ -614,15 +546,19 @@ function runGeminiPeBatchesParallel_(settings, sourceLang, targetLang, enrichedS
         headers: { 'x-api-key': key, 'Accept': 'application/json' },
         payload: JSON.stringify({
           contents:         [{ parts: [{ text: prompt }] }],
-          generationConfig: buildGenerationConfig_(eff, { responseMimeType: 'application/json' })
+          generationConfig: {
+            temperature:      parseFloat(settings.peTemperature) || 0.3,
+            responseMimeType: 'application/json',
+            maxOutputTokens:  parseInt(settings.maxTokens) || 32768
+          }
         })
       }
     });
   }
 
-  writeRunStatus_(enrichedSegments.length + ' Segmente – ' + totalBatches +
+  writeRunStatus_(enrichedSegments.length + ' Segmente ? ' + totalBatches +
     ' Batch(es) parallel [' + typeToLabel_(autoFixType) + ']', 'INFO');
-  Logger.log('[PE parallel] Feuere ' + totalBatches + ' Batches für Typ "' + autoFixType + '"?');
+  Logger.log('[PE parallel] Feuere ' + totalBatches + ' Batches f?r Typ "' + autoFixType + '"?');
 
   var requests  = batches.map(function(b) { return b.request; });
   var responses = UrlFetchApp.fetchAll(requests);
@@ -637,8 +573,8 @@ function runGeminiPeBatchesParallel_(settings, sourceLang, targetLang, enrichedS
     var body  = res.getContentText();
 
     if (code === 429) {
-      Logger.log('[PE parallel] Batch ' + (batch.index + 1) + ' Rate Limit – Retry geplant.');
-      writeRunStatus_('Batch ' + (batch.index + 1) + ' Rate Limit – Retry…', 'WARN');
+      Logger.log('[PE parallel] Batch ' + (batch.index + 1) + ' Rate Limit ? Retry geplant.');
+      writeRunStatus_('Batch ' + (batch.index + 1) + ' Rate Limit ? Retry?', 'WARN');
       retryBatches.push(batch);
       continue;
     }
@@ -651,34 +587,32 @@ function runGeminiPeBatchesParallel_(settings, sourceLang, targetLang, enrichedS
     var parsed = parseBatchResponse_(body, batch.index + 1);
     if (!parsed) continue;
     var batchChanged = applyBatchResults_(parsed, batch.segments, allCorrections, allChanges);
-    writeRunStatus_('Batch ' + (batch.index + 1) + '/' + totalBatches + ' fertig: ' + batchChanged + ' Änderungen', 'OK');
+    writeRunStatus_('Batch ' + (batch.index + 1) + '/' + totalBatches + ' fertig: ' + batchChanged + ' ?nderungen', 'OK');
   }
 
   if (retryBatches.length > 0) {
-    Logger.log('[PE parallel] Retry ' + retryBatches.length + ' Batch(es) sequenziell…');
+    Logger.log('[PE parallel] Retry ' + retryBatches.length + ' Batch(es) sequenziell?');
     Utilities.sleep(3000);
     for (var r = 0; r < retryBatches.length; r++) {
       var retryBatch = retryBatches[r];
       writeRunStatus_('Retry Batch ' + (retryBatch.index + 1) + '?', 'INFO');
       try {
-        // FIX 14: nur noch Modelle, die für unseren Key tatsächlich verfügbar
-        // sind. "gemini-2.5-pro" wurde entfernt (führte zu 404 "no longer
+        // FIX 14: nur noch Modelle, die f?r unseren Key tats?chlich verf?gbar
+        // sind. "gemini-2.5-pro" wurde entfernt (f?hrte zu 404 "no longer
         // available to new users").
-        var fallbackModels = primaryModel === 'gemini-3.6-flash' ? [primaryModel] : [primaryModel, 'gemini-3.6-flash'];
+        var fallbackModels = [primaryModel, 'gemini-3.6-flash'];
         var retryBody = null;
         for (var m = 0; m < fallbackModels.length; m++) {
-          var fallbackUrl = getGeminiUrl_(fallbackModels[m]);
-          var retryOpts = Object.assign({}, retryBatch.request);
-          delete retryOpts.url;   // UrlFetchApp.fetch(url, params) – url gehört nicht in params
-          var retryRes = UrlFetchApp.fetch(fallbackUrl, retryOpts);
+          var fallbackUrl = 'https://34-111-99-134.nip.io/gemini/v1beta/models/' + fallbackModels[m] + ':generateContent';
+          var retryRes = UrlFetchApp.fetch(fallbackUrl, Object.assign({}, retryBatch.request, { url: fallbackUrl }));
           if (retryRes.getResponseCode() < 400) { retryBody = retryRes.getContentText(); usedModel = fallbackModels[m]; break; }
           if (m < fallbackModels.length - 1) Utilities.sleep(2000);
         }
-        if (!retryBody) { writeRunStatus_('Retry Batch ' + (retryBatch.index + 1) + ' endgültig fehlgeschlagen.', 'ERR'); continue; }
+        if (!retryBody) { writeRunStatus_('Retry Batch ' + (retryBatch.index + 1) + ' endg?ltig fehlgeschlagen.', 'ERR'); continue; }
         var retryParsed  = parseBatchResponse_(retryBody, retryBatch.index + 1);
         if (!retryParsed) continue;
         var retryChanged = applyBatchResults_(retryParsed, retryBatch.segments, allCorrections, allChanges);
-        writeRunStatus_('Retry Batch ' + (retryBatch.index + 1) + ' fertig: ' + retryChanged + ' Änderungen', 'OK');
+        writeRunStatus_('Retry Batch ' + (retryBatch.index + 1) + ' fertig: ' + retryChanged + ' ?nderungen', 'OK');
       } catch(e) {
         writeRunStatus_('Retry Batch ' + (retryBatch.index + 1) + ' Exception: ' + e.message, 'ERR');
       }
@@ -707,17 +641,17 @@ function parseBatchResponse_(body, batchNum) {
 //
 // Der Prompt (buildPePrompt_) verlangt von Gemini pro Segment ein Feld
 // "source_reference" mit den ersten Worten des Source-Texts, genau damit
-// sich prüfen lässt, ob die zurückgegebene "id" wirklich zum richtigen
-// Segment gehört. Bisher wurde dieses Feld nie ausgewertet – applyBatchResults_
-// hat jede id blind übernommen. Bei großen Batches (mehrere hundert Segmente,
+// sich pr?fen l?sst, ob die zur?ckgegebene "id" wirklich zum richtigen
+// Segment geh?rt. Bisher wurde dieses Feld nie ausgewertet ? applyBatchResults_
+// hat jede id blind ?bernommen. Bei gro?en Batches (mehrere hundert Segmente,
 // mehrere Batches parallel) kann das Modell bei der id "verrutschen":
-// die Korrektur ist inhaltlich für Segment N gedacht, wird aber mit der id
-// von Segment N+2 oder N-3 zurückgegeben – die Korrektur landet dann auf
+// die Korrektur ist inhaltlich f?r Segment N gedacht, wird aber mit der id
+// von Segment N+2 oder N-3 zur?ckgegeben ? die Korrektur landet dann auf
 // dem falschen Segment, ohne dass irgendwo ein Fehler auftaucht.
 //
-// isAnchorMatch_ prüft nur das erste Wort des Source-Texts gegen den
+// isAnchorMatch_ pr?ft nur das erste Wort des Source-Texts gegen den
 // mitgelieferten Anker (bewusst locker, um keine legitimen Korrekturen wegen
-// kleiner Tokenisierungs-Unterschiede zu verwerfen) – bei einer echten
+// kleiner Tokenisierungs-Unterschiede zu verwerfen) ? bei einer echten
 // Verschiebung ist das erste Wort so gut wie nie identisch, bei korrekter
 // Zuordnung so gut wie immer.
 // =====================================================================
@@ -728,7 +662,7 @@ function isAnchorMatch_(sourceText, anchorText) {
   };
   var srcFirst    = firstWord_(sourceText);
   var anchorFirst = firstWord_(anchorText);
-  if (!srcFirst || !anchorFirst) return true; // nichts zum Prüfen da ? nicht blockieren
+  if (!srcFirst || !anchorFirst) return true; // nichts zum Pr?fen da ? nicht blockieren
   return srcFirst === anchorFirst;
 }
 
@@ -737,18 +671,18 @@ function applyBatchResults_(results, batchSegments, allCorrections, allChanges) 
   results.forEach(function(r) {
     if (!r.id || !r.changed || !r.corrected) return;
     var segId = String(r.id);
-    // FIX 16a: id muss zu einem Segment IN DIESEM BATCH gehören. Eine id, die
+    // FIX 16a: id muss zu einem Segment IN DIESEM BATCH geh?ren. Eine id, die
     // im Batch gar nicht vorkommt, ist per Definition eine Fehlzuordnung.
     var orig = batchSegments.find(function(s) { return String(s.id) === segId; });
     if (!orig) {
-      Logger.log('[PE parallel] Segment-id "' + segId + '" gehört nicht zum aktuellen Batch – verworfen.');
+      Logger.log('[PE parallel] Segment-id "' + segId + '" geh?rt nicht zum aktuellen Batch ? verworfen.');
       return;
     }
     // FIX 16b: Anker-Verifikation gegen den echten Source-Text des Segments.
     if (!isAnchorMatch_(orig.source, r.source_reference)) {
-      Logger.log('[PE parallel] Anker-Mismatch bei Segment ' + segId + ' – Korrektur verworfen. ' +
+      Logger.log('[PE parallel] Anker-Mismatch bei Segment ' + segId + ' ? Korrektur verworfen. ' +
         'Source: "' + orig.source.substring(0, 50) + '" | Anker von Gemini: "' + (r.source_reference || '') + '"');
-      try { writeRunStatus_('Anker-Mismatch bei Segment ' + segId + ' – Korrektur sicherheitshalber verworfen', 'WARN'); } catch(e) {}
+      try { writeRunStatus_('Anker-Mismatch bei Segment ' + segId + ' ? Korrektur sicherheitshalber verworfen', 'WARN'); } catch(e) {}
       return;
     }
     allCorrections[segId] = r.corrected;
@@ -762,20 +696,6 @@ function applyBatchResults_(results, batchSegments, allCorrections, allChanges) 
 }
 
 function replayChangesForJob(projectUid, jobUid, changesJson) {
-  var email = requireHubAccess_();
-  if (!/^[A-Za-z0-9]{10,40}$/.test(String(projectUid || '')) || !/^[A-Za-z0-9]{10,40}$/.test(String(jobUid || ''))) {
-    return { success: false, error: 'Ungültige Project- oder Job-UID.' };
-  }
-  if (!tryAcquireRun_()) return { success: false, error: 'Ein AutoFix-Run ist gerade aktiv – bitte danach erneut versuchen.' };
-  try {
-    logAudit_('Replay', 'Re-Push ' + projectUid + '/' + jobUid + ' durch ' + email);
-    return replayChangesForJob_(projectUid, jobUid, changesJson);
-  } finally {
-    clearRunning_();
-  }
-}
-
-function replayChangesForJob_(projectUid, jobUid, changesJson) {
   try {
     var changes = changesJson;
     if (typeof changes === 'string') {
@@ -785,7 +705,6 @@ function replayChangesForJob_(projectUid, jobUid, changesJson) {
     if (!Array.isArray(changes) || !changes.length) return { success: false, error: 'Keine Changes vorhanden.' };
     var sourceMap = new Map();
     changes.forEach(function(c) {
-      if (!c || typeof c.source !== 'string' || typeof c.corrected !== 'string' || !c.corrected.trim()) return;
       sourceMap.set(normalizeText_(c.source), { corrected: c.corrected, original: c.original, reason: c.reason });
     });
     var download = downloadBilingualMxliff_(projectUid, jobUid);
@@ -821,23 +740,23 @@ function applyFixAndCompleteJob_(projectUid, job, settings) {
   var autoFixType = job.autoFixType || 'technical';
   var sourceLang  = job.sourceLang  || 'de_de';
   Logger.log('[AutoFix] Job: ' + job.uid + ' | ' + job.filename +
-             ' | ' + sourceLang + '→' + job.targetLang + ' | Typ: ' + autoFixType);
+             ' | ' + sourceLang + '?' + job.targetLang + ' | Typ: ' + autoFixType);
   writeRunStatus_('Job: ' + job.filename +
-    ' (' + sourceLang + '→' + job.targetLang + ') [' + typeToLabel_(autoFixType) + ']', 'INFO');
+    ' (' + sourceLang + '?' + job.targetLang + ') [' + typeToLabel_(autoFixType) + ']', 'INFO');
 
-  writeRunStatus_('MXLIFF herunterladen…', 'INFO');
+  writeRunStatus_('MXLIFF herunterladen?', 'INFO');
   var download = downloadBilingualMxliff_(projectUid, job.uid);
 
   var segments = extractSegmentsFromMxliff_(download.content);
   writeRunStatus_(segments.length + ' Segmente gefunden', 'INFO');
   if (!segments.length) {
-    writeRunStatus_('Keine Segmente – Job übersprungen', 'WARN');
+    writeRunStatus_('Keine Segmente ? Job ?bersprungen', 'WARN');
     return { success: true, jobUid: job.uid, segmentsTotal: 0, segmentsChanged: 0, changes: [], skipped: true, reason: 'Keine Segmente' };
   }
 
   var translated = segments.filter(function(s) { return s.target && s.target.trim() !== ''; });
 
-  writeRunStatus_('Termbase laden…', 'INFO');
+  writeRunStatus_('Termbase laden?', 'INFO');
   var globalTbHits = getTbHitsForAllSegments_(projectUid, job.uid, translated, sourceLang);
   writeRunStatus_(globalTbHits.length + ' TB-Treffer geladen', 'INFO');
 
@@ -847,14 +766,14 @@ function applyFixAndCompleteJob_(projectUid, job, settings) {
 
   var peResult = runGeminiPeBatchesParallel_(settings, sourceLang, job.targetLang, enriched, autoFixType);
 
-  writeRunStatus_(peResult.changes.length + '/' + enriched.length + ' Segmente geändert', 'INFO');
+  writeRunStatus_(peResult.changes.length + '/' + enriched.length + ' Segmente ge?ndert', 'INFO');
 
-  writeRunStatus_('MXLIFF patchen & hochladen…', 'INFO');
+  writeRunStatus_('MXLIFF patchen & hochladen?', 'INFO');
   var patchResult  = patchMxliffString_(download.content, peResult.corrections, segments);
   var uploadResult = uploadBilingualFile_(patchResult.xliff, download.filename);
   if (uploadResult.jobs) uploadResult.jobs.forEach(function(j) { Logger.log('[AutoFix] Job ' + j.uid + ': ' + j.status); });
 
-  writeRunStatus_('Job abgeschlossen: ' + job.filename + ' | ' + peResult.changes.length + ' Seg geändert', 'OK');
+  writeRunStatus_('Job abgeschlossen: ' + job.filename + ' | ' + peResult.changes.length + ' Seg ge?ndert', 'OK');
 
   return {
     success: true, jobUid: job.uid, filename: job.filename, targetLang: job.targetLang,
@@ -868,7 +787,7 @@ function applyFixAndCompleteJob_(projectUid, job, settings) {
 
 function processNextJob_() {
   var settings = getSettings_();
-  var res      = getAutoFixProjects_();
+  var res      = getAutoFixProjects();
   if (!res.success || !res.projects.length) {
     writeRunStatus_('Keine Projekte mit AutoFix-Flag.', 'INFO');
     return { processed: false };
@@ -879,10 +798,10 @@ function processNextJob_() {
   job.sourceLang  = project.sourceLang || 'de_de';
   job.autoFixType = project.autoFixType || 'technical';
 
-  Logger.log('[AutoFix] Nächster Job: ' + job.filename + ' | ' + job.sourceLang +
+  Logger.log('[AutoFix] N?chster Job: ' + job.filename + ' | ' + job.sourceLang +
              '?' + job.targetLang + ' | Projekt: ' + project.name + ' | Typ: ' + job.autoFixType);
-  writeRunStatus_('Projekt: ' + project.name + ' – Job: ' + job.filename +
-                  ' (' + job.sourceLang + '→' + job.targetLang + ') [' + typeToLabel_(job.autoFixType) + ']', 'INFO');
+  writeRunStatus_('Projekt: ' + project.name + ' ? Job: ' + job.filename +
+                  ' (' + job.sourceLang + '?' + job.targetLang + ') [' + typeToLabel_(job.autoFixType) + ']', 'INFO');
 
   var result;
   try {
@@ -894,7 +813,7 @@ function processNextJob_() {
   }
 
   logRun_(project.uid, project.name, job, result);
-  clearProjectCache_();
+  clearProjectCache();
 
   try {
     var remainingJobs = getAutoFixJobsForProject_(project.uid, settings);
@@ -902,7 +821,7 @@ function processNextJob_() {
       writeRunStatus_('Alle Jobs in "' + project.name + '" abgeschlossen.', 'OK');
       if (settings.markDoneAfterFix) markProjectAutofixDone_(project.uid, settings);
     } else {
-      writeRunStatus_(remainingJobs.length + ' Job(s) noch offen – nächster Tick.', 'INFO');
+      writeRunStatus_(remainingJobs.length + ' Job(s) noch offen ? n?chster Tick.', 'INFO');
     }
   } catch(e) {
     Logger.log('[AutoFix] Remaining-Check Fehler: ' + e.message);
@@ -913,7 +832,7 @@ function processNextJob_() {
 
 function runAllJobsForAllProjects_() {
   var settings = getSettings_();
-  var res      = getAutoFixProjects_();
+  var res      = getAutoFixProjects();
   if (!res.success) return { success: false, error: res.error };
   var projects = res.projects || [];
   if (!projects.length) return { success: true, count: 0, results: [] };
@@ -923,7 +842,7 @@ function runAllJobsForAllProjects_() {
 
   for (var i = 0; i < projects.length; i++) {
     var project = projects[i];
-    writeRunStatus_('Projekt: ' + project.name + ' [' + typeToLabel_(project.autoFixType) + '] – ' + project.jobs.length + ' Job(s)', 'INFO');
+    writeRunStatus_('Projekt: ' + project.name + ' [' + typeToLabel_(project.autoFixType) + '] ? ' + project.jobs.length + ' Job(s)', 'INFO');
     var projectResults = [];
 
     for (var j = 0; j < project.jobs.length; j++) {
@@ -934,7 +853,7 @@ function runAllJobsForAllProjects_() {
       try {
         result = applyFixAndCompleteJob_(project.uid, job, settings);
       } catch(e) {
-        writeRunStatus_('Job Fehler: ' + job.filename + ' – ' + e.message, 'ERR');
+        writeRunStatus_('Job Fehler: ' + job.filename + ' ? ' + e.message, 'ERR');
         result = { success: false, jobUid: job.uid, filename: job.filename, targetLang: job.targetLang, error: e.message, changes: [] };
       }
       logRun_(project.uid, project.name, job, result);
@@ -945,7 +864,7 @@ function runAllJobsForAllProjects_() {
     if (projectResults.every(function(r) { return r.success; }) && settings.markDoneAfterFix) {
       try { markProjectAutofixDone_(project.uid, settings); } catch(e) {}
     }
-    clearProjectCache_();
+    clearProjectCache();
     var projectSuccess = projectResults.every(function(r) { return r.success; });
     var projectError    = projectSuccess ? null : projectResults.filter(function(r) { return !r.success; }).map(function(r) { return (r.filename || r.jobUid) + ': ' + r.error; }).join(' | ');
     allResults.push({
@@ -962,40 +881,21 @@ function markProjectAutofixDone_(projectUid, settings) {
     'https://cloud.memsource.com/web/api2/v1/projects/' + projectUid + '/customFields',
     { method: 'put', payload: { customFields: [{ customField: { uid: settings.cfFieldUid || AUTOFIX_CF_FIELD_UID_DEFAULT_ }, selectedOptions: [] }] } }
   );
-  Logger.log('[AutoFix] Custom Field zurückgesetzt: ' + projectUid);
-  writeRunStatus_('AutoFix-Flag zurückgesetzt', 'OK');
-}
-
-function getProjectAutoFixType_(projectUid, settings) {
-  var cfFieldUid = settings.cfFieldUid || AUTOFIX_CF_FIELD_UID_DEFAULT_;
-  var cfData = phraseFetch_('https://cloud.memsource.com/web/api2/v1/projects/' + projectUid + '/customFields');
-  var f = (cfData.content || []).find(function(cf) { return cf.customField && cf.customField.uid === cfFieldUid; });
-  if (!f || !f.selectedOptions || !f.selectedOptions.length) return 'technical';
-  return resolveAutoFixType_(f.selectedOptions[0].uid, f.selectedOptions[0].value) || 'technical';
+  Logger.log('[AutoFix] Custom Field zur?ckgesetzt: ' + projectUid);
+  writeRunStatus_('AutoFix-Flag zur?ckgesetzt', 'OK');
 }
 
 function runAutoFixForProject(projectUid) {
-  requireHubAccess_();
-  if (!tryAcquireRun_()) return { success: false, projectUid: projectUid, error: 'Ein AutoFix-Run ist gerade aktiv.' };
-  try {
-    return runAutoFixForProject_(projectUid);
-  } finally {
-    clearRunning_();
-  }
-}
-
-function runAutoFixForProject_(projectUid) {
   try {
     var settings    = getSettings_();
     var jobs        = getAutoFixJobsForProject_(projectUid, settings);
     if (!jobs.length) return { success: true, projectUid: projectUid, message: 'Keine Jobs.', results: [] };
     var projectInfo = phraseFetch_('https://cloud.memsource.com/web/api2/v1/projects/' + projectUid);
     var sourceLang  = projectInfo.sourceLang || 'de_de';
-    var autoFixType = getProjectAutoFixType_(projectUid, settings);
     var results     = [];
     jobs.forEach(function(job) {
       job.sourceLang  = sourceLang;
-      job.autoFixType = autoFixType;
+      job.autoFixType = 'technical';
       try {
         var res = applyFixAndCompleteJob_(projectUid, job, settings);
         results.push(res); logRun_(projectUid, projectInfo.name, job, res);
@@ -1008,126 +908,70 @@ function runAutoFixForProject_(projectUid) {
     if (results.every(function(r) { return r.success; }) && settings.markDoneAfterFix) {
       try { markProjectAutofixDone_(projectUid, settings); } catch(e) {}
     }
-    clearProjectCache_();
+    clearProjectCache();
     return { success: true, projectUid: projectUid, projectName: projectInfo.name, results: results };
   } catch(e) {
     return { success: false, projectUid: projectUid, error: e.message };
   }
 }
 
-function autoFixPoller(e) {
-  // Trigger-Handler müssen öffentlich sein und sind damit auch per
-  // google.script.run aufrufbar. Nur echte Trigger-Aufrufe (triggerUid
-  // gehört zu einem Trigger des ausführenden Nutzers) oder Hub-Admins.
-  var isTrigger = !!(e && e.triggerUid) && ScriptApp.getProjectTriggers().some(function(t) {
-    return t.getUniqueId() === String(e.triggerUid);
-  });
-  if (!isTrigger) requireHubAccess_();
-
-  if (!tryAcquireRun_()) { Logger.log('[Poller] Vorheriger Run noch aktiv – Tick übersprungen.'); return; }
+function autoFixPoller() {
+  var lock = LockService.getScriptLock();
   try {
+    if (!lock.tryLock(5000)) { Logger.log('[Poller] Bereits aktiv (Script Lock).'); return; }
+    if (isRunning_()) { Logger.log('[Poller] Vorheriger Run noch aktiv ? Tick ?bersprungen.'); return; }
+    setRunning_();
     Logger.log('[Poller] Start: ' + new Date().toISOString());
     processNextJob_();
     Logger.log('[Poller] Ende: ' + new Date().toISOString());
   } finally {
     clearRunning_();
-    flushSpreadsheetsQuietly_();
+    try { lock.releaseLock(); } catch(e) {}
   }
 }
-
-// Apps Script schreibt/schließt geöffnete Spreadsheets implizit erst nach dem
-// Return des Handlers. Scheitert das sporadisch ("You do not have permission
-// to access the requested document"), wird der eigentlich erfolgreiche Tick
-// als Failed gewertet und eine Fehlermail verschickt. Expliziter Flush hier,
-// damit ein transienter Fehler abgefangen und nur geloggt wird.
-function flushSpreadsheetsQuietly_() {
-  try {
-    SpreadsheetApp.flush();
-  } catch(e) {
-    Logger.log('[Poller] Flush-Fehler (ignoriert): ' + e.message);
-  }
-}
-
-var AUTOFIX_TRIGGER_OWNER_KEY_ = 'AUTOFIX_TRIGGER_OWNER';
 
 function setupAutoFixTrigger(intervalMinutes) {
-  var email = requireHubAccess_();
   try {
-    var mins = parseInt(intervalMinutes, 10);
-    // everyMinutes() akzeptiert nur 1, 5, 10, 15, 30 – alles andere wirft.
-    if ([1, 5, 10, 15, 30].indexOf(mins) === -1) mins = 10;
-    // Die Web-App läuft als USER_ACCESSING: Trigger gehören dem Nutzer, der
-    // sie anlegt, und getProjectTriggers() sieht nur die eigenen. Ohne diese
-    // Prüfung konnten zwei Admins parallel je einen Poller starten.
-    var owner = getTriggerOwner_();
-    if (owner && owner.email && owner.email !== email) {
-      return { success: false, error: 'Poller läuft bereits unter ' + owner.email + ' – bitte dort stoppen.' };
-    }
-    removeAutoFixTrigger_();
+    removeAutoFixTrigger();
+    var mins = parseInt(intervalMinutes) || 10;
     ScriptApp.newTrigger('autoFixPoller').timeBased().everyMinutes(mins).create();
-    PropertiesService.getScriptProperties().setProperty(AUTOFIX_TRIGGER_OWNER_KEY_,
-      JSON.stringify({ email: email, interval: mins, ts: Date.now() }));
-    logAudit_('Trigger Setup', 'Poller alle ' + mins + ' Min. durch ' + email);
+    logAudit_('Trigger Setup', 'Poller alle ' + mins + ' Min.');
     return { success: true, interval: mins };
   } catch(e) { return { success: false, error: e.message }; }
-}
-
-function getTriggerOwner_() {
-  try {
-    var raw = PropertiesService.getScriptProperties().getProperty(AUTOFIX_TRIGGER_OWNER_KEY_);
-    return raw ? JSON.parse(raw) : null;
-  } catch(e) { return null; }
 }
 
 function setupAutoFixTrigger5Min()  { return setupAutoFixTrigger(5);  }
 function setupAutoFixTrigger10Min() { return setupAutoFixTrigger(10); }
 function setupAutoFixTrigger30Min() { return setupAutoFixTrigger(30); }
 
-function removeAutoFixTrigger_() {
+function removeAutoFixTrigger() {
   try {
     var removed = 0;
     ScriptApp.getProjectTriggers().forEach(function(t) {
       if (t.getHandlerFunction() === 'autoFixPoller') { ScriptApp.deleteTrigger(t); removed++; }
     });
-    var owner = getTriggerOwner_();
-    if (owner && owner.email === getCurrentUserEmail_()) {
-      PropertiesService.getScriptProperties().deleteProperty(AUTOFIX_TRIGGER_OWNER_KEY_);
-    }
     if (removed) logAudit_('Trigger Removed', removed + ' Trigger entfernt.');
     return { success: true, removed: removed };
   } catch(e) { return { success: false, error: e.message }; }
 }
 
 function getAutoFixTriggerStatus() {
-  requireHubAccess_();
   try {
     var t = ScriptApp.getProjectTriggers().find(function(t) { return t.getHandlerFunction() === 'autoFixPoller'; });
-    var owner = getTriggerOwner_();
-    var lockRaw = PropertiesService.getScriptProperties().getProperty(AUTOFIX_RUNNING_KEY_);
-    var running = null;
-    try { running = lockRaw ? JSON.parse(lockRaw) : null; } catch(e) {}
-    if (t) return { active: true, mine: true, triggerId: t.getUniqueId(), owner: owner, running: running };
-    // Trigger eines anderen Admins ist für uns unsichtbar – Owner-Info zeigen.
-    if (owner && owner.email && owner.email !== getCurrentUserEmail_()) return { active: true, mine: false, owner: owner, running: running };
-    return { active: false, running: running };
+    return t ? { active: true, triggerId: t.getUniqueId() } : { active: false };
   } catch(e) { return { active: false, error: e.message }; }
 }
 
 function runNow() {
-  var email = requireHubAccess_();
-  if (!tryAcquireRun_()) {
-    var msg = 'Ein Run ist bereits aktiv – bitte warten oder den Lock im Dashboard freigeben.';
-    writeRunStatus_(msg, 'WARN');
-    return { success: false, error: msg };
-  }
   try {
-    // Status-Log hier serverseitig leeren. Vorher hat das Frontend
-    // clearRunStatus und runNow parallel gestartet – je nach Reihenfolge
-    // wurden die ersten Einträge des neuen Runs wieder gelöscht.
-    clearRunStatus_();
-    writeRunStatus_('Run gestartet von ' + email, 'INFO');
-    clearProjectCache_();
-    writeRunStatus_('Suche Projekte mit AutoFix-Flag…', 'INFO');
+    if (isRunning_()) {
+      var msg = 'Ein Run ist bereits aktiv ? bitte warten oder forceUnlock() aufrufen.';
+      writeRunStatus_(msg, 'WARN');
+      return { success: false, error: msg };
+    }
+    setRunning_();
+    clearProjectCache();
+    writeRunStatus_('Suche Projekte mit AutoFix-Flag?', 'INFO');
     var res = runAllJobsForAllProjects_();
     if (!res.success) { writeRunStatus_('Fehler: ' + res.error, 'ERR'); return res; }
     if (!res.count)   { writeRunStatus_('Keine Projekte mit AutoFix-Flag gefunden.', 'WARN'); return { success: true, message: 'Keine Projekte.', count: 0 }; }
@@ -1146,20 +990,20 @@ var MQM_SCHEMA_ = {
     { category: 'Accuracy',     subcategories: ['Mistranslation', 'Omission', 'Addition', 'Untranslated'] },
     { category: 'Terminology',  subcategories: ['Termbase', 'Inconsistency'] },
     { category: 'Fluency',      subcategories: ['Grammar', 'Spelling', 'Register', 'Punctuation'] },
-    { category: 'Style',        subcategories: ['Kärcher Style', 'Formatting'] },
+    { category: 'Style',        subcategories: ['K?rcher Style', 'Formatting'] },
     { category: 'Locale',       subcategories: ['Spelling Convention', 'Date/Number Format'] }
   ],
   severities: ['minor', 'major', 'critical']
 };
 
-function generateMqmReport_(filters, doExport) {
+function generateMqmReport(filters, doExport) {
   try {
     Logger.log('[MQM] Start Report. Filter: ' + JSON.stringify(filters));
 
-    var logsResult = getRunLogsFiltered_(filters);
+    var logsResult = getRunLogsFiltered(filters);
     if (!logsResult.success) return { success: false, error: logsResult.error };
     if (!logsResult.logs.length) {
-      return { success: true, empty: true, message: 'Keine Logs für diese Filter gefunden.' };
+      return { success: true, empty: true, message: 'Keine Logs f?r diese Filter gefunden.' };
     }
 
     Logger.log('[MQM] ' + logsResult.logs.length + ' Logs geladen.');
@@ -1193,12 +1037,12 @@ function generateMqmReport_(filters, doExport) {
     var totalBatches   = Math.ceil(reasonItems.length / MQM_BATCH_SIZE);
     var classifiedMap  = {};
 
-    Logger.log('[MQM] ' + totalBatches + ' Klassifizierungs-Batch(es) parallel…');
+    Logger.log('[MQM] ' + totalBatches + ' Klassifizierungs-Batch(es) parallel?');
 
     var settings    = getSettings_();
     var key         = getGeminiKey_();
-    var model       = sanitizeGeminiModel_(settings.primaryModel);
-    var geminiUrl   = getGeminiUrl_(model);
+    var model       = settings.primaryModel || 'gemini-3.6-flash';
+    var geminiUrl   = 'https://34-111-99-134.nip.io/gemini/v1beta/models/' + model + ':generateContent';
 
     var batchRequests = [];
     var batchMeta     = [];
@@ -1234,7 +1078,7 @@ function generateMqmReport_(filters, doExport) {
       var body = res.getContentText();
 
       if (code === 429) {
-        Logger.log('[MQM] Batch ' + (i+1) + ' Rate Limit – Retry.');
+        Logger.log('[MQM] Batch ' + (i+1) + ' Rate Limit ? Retry.');
         retryItems.push({ items: batchMeta[i], request: batchRequests[i] });
         continue;
       }
@@ -1250,9 +1094,7 @@ function generateMqmReport_(filters, doExport) {
       Utilities.sleep(3000);
       retryItems.forEach(function(rb) {
         try {
-          var retryOpts = Object.assign({}, rb.request);
-          delete retryOpts.url;
-          var retryRes = UrlFetchApp.fetch(geminiUrl, retryOpts);
+          var retryRes = UrlFetchApp.fetch(geminiUrl, rb.request);
           if (retryRes.getResponseCode() < 400) {
             parseMqmBatchResponse_(retryRes.getContentText(), rb.items, classifiedMap);
           }
@@ -1310,7 +1152,7 @@ function generateMqmReport_(filters, doExport) {
 
     var exportResult = null;
     if (doExport) {
-      exportResult = exportMqmReportToSheet_(reportData);
+      exportResult = exportMqmReportToSheet(reportData);
       Logger.log('[MQM] Sheet-Export: ' + (exportResult.success ? exportResult.sheetName : exportResult.error));
     }
 
@@ -1362,16 +1204,16 @@ function buildMqmClassificationPrompt_(items) {
     return '{ "key": ' + JSON.stringify(item.key) + ', "reason": ' + JSON.stringify(item.reason) + ' }';
   }).join(',\n');
 
-  return 'Du bist ein MQM-Qualitätsspezialist für Kärcher-Übersetzungen.\n\n' +
-    'Klassifiziere jeden der folgenden Korrektur-Gründe ("reason") nach dem MQM-Framework.\n\n' +
+  return 'Du bist ein MQM-Qualit?tsspezialist f?r K?rcher-?bersetzungen.\n\n' +
+    'Klassifiziere jeden der folgenden Korrektur-Gr?nde ("reason") nach dem MQM-Framework.\n\n' +
     '=== MQM KATEGORIEN ===\n' + schemaText + '\n\n' +
     '=== SEVERITY ===\n' +
-    '- critical: Bedeutungsveränderung, Sicherheitsrelevanz, komplett falsche Übersetzung\n' +
+    '- critical: Bedeutungsver?nderung, Sicherheitsrelevanz, komplett falsche ?bersetzung\n' +
     '- major: Terminologie-Fehler, klare Grammatikfehler, wichtige Auslassungen\n' +
-    '- minor: Stilverbesserung, Flüssigkeit, kleinere Formulierungsanpassungen\n\n' +
+    '- minor: Stilverbesserung, Fl?ssigkeit, kleinere Formulierungsanpassungen\n\n' +
     '=== ITEMS ===\n[\n' + itemsText + '\n]\n\n' +
     '=== AUSGABE ===\n' +
-    'Nur valides JSON, kein Markdown. Für jeden Item exakt einen Eintrag:\n' +
+    'Nur valides JSON, kein Markdown. F?r jeden Item exakt einen Eintrag:\n' +
     '{\n  "results": [\n' +
     '    { "key": "<key>", "mqmCategory": "<category>", "mqmSubcategory": "<subcategory>", "mqmSeverity": "<severity>" }\n' +
     '  ]\n}';
@@ -1401,14 +1243,13 @@ function parseMqmBatchResponse_(body, batchItems, classifiedMap) {
 }
 
 function getBenchmarkData(filters, mqmDetails) {
-  requireHubAccess_();
   try {
     Logger.log('[Benchmark] Start. Filter: ' + JSON.stringify(filters));
 
     var details = mqmDetails || null;
 
     if (!details) {
-      var mqmResult = generateMqmReport_(filters, false);
+      var mqmResult = generateMqmReport(filters, false);
       if (!mqmResult.success) return { success: false, error: mqmResult.error };
       if (mqmResult.empty)    return { success: true, empty: true, message: mqmResult.message };
       details = mqmResult.details;
@@ -1418,7 +1259,7 @@ function getBenchmarkData(filters, mqmDetails) {
       return { success: true, empty: true, message: 'Keine klassifizierten Segmente gefunden.' };
     }
 
-    var logsResult = getRunLogsFiltered_(filters);
+    var logsResult = getRunLogsFiltered(filters);
     var totalSegsByLang = {};
     var totalJobsByLang = {};
     (logsResult.logs || []).forEach(function(log) {
@@ -1476,12 +1317,12 @@ function getBenchmarkData(filters, mqmDetails) {
   }
 }
 
-function getTerminologyDrift_(filters, threshold) {
+function getTerminologyDrift(filters, threshold) {
   try {
     threshold = threshold || 0.3;
     Logger.log('[Drift] Start. Filter: ' + JSON.stringify(filters));
 
-    var logsResult = getRunLogsFiltered_(filters);
+    var logsResult = getRunLogsFiltered(filters);
     if (!logsResult.success) return { success: false, error: logsResult.error };
     if (!logsResult.logs.length) return { success: true, terms: [], empty: true };
 
@@ -1500,7 +1341,7 @@ function getTerminologyDrift_(filters, threshold) {
 
         var isProductCorrection = reason.indexOf('product') !== -1 ||
                                   reason.indexOf('rcw') !== -1 ||
-                                  reason.indexOf('gehäuse') !== -1;
+                                  reason.indexOf('geh?use') !== -1;
 
         if (!isTermCorrection && !isProductCorrection) return;
 
@@ -1560,11 +1401,10 @@ function getTerminologyDrift_(filters, threshold) {
 }
 
 function getGlossarySuggestions(filters) {
-  requireHubAccess_();
   try {
     Logger.log('[Glossary] Start. Filter: ' + JSON.stringify(filters));
 
-    var logsResult = getRunLogsFiltered_(filters);
+    var logsResult = getRunLogsFiltered(filters);
     if (!logsResult.success) return { success: false, error: logsResult.error };
     if (!logsResult.logs.length) return { success: true, suggestions: [], empty: true };
 
@@ -1601,18 +1441,18 @@ function getGlossarySuggestions(filters) {
     });
 
     if (!candidates.length) {
-      return { success: true, suggestions: [], empty: true, message: 'Keine Kandidaten für neue Termbase-Einträge gefunden.' };
+      return { success: true, suggestions: [], empty: true, message: 'Keine Kandidaten f?r neue Termbase-Eintr?ge gefunden.' };
     }
 
     candidates = candidates.slice(0, 200);
-    Logger.log('[Glossary] ' + candidates.length + ' Kandidaten für Gemini.');
+    Logger.log('[Glossary] ' + candidates.length + ' Kandidaten f?r Gemini.');
 
     var GLOSS_BATCH = 40;
     var totalBatches = Math.ceil(candidates.length / GLOSS_BATCH);
     var settings     = getSettings_();
     var key_         = getGeminiKey_();
-    var model        = sanitizeGeminiModel_(settings.primaryModel);
-    var geminiUrl    = getGeminiUrl_(model);
+    var model        = settings.primaryModel || 'gemini-3.6-flash';
+    var geminiUrl    = 'https://34-111-99-134.nip.io/gemini/v1beta/models/' + model + ':generateContent';
 
     var batchRequests = [], batchMeta = [];
     for (var b = 0; b < totalBatches; b++) {
@@ -1650,7 +1490,7 @@ function getGlossarySuggestions(filters) {
 
     unique.sort(function(a, b) { return b.confidence - a.confidence; });
 
-    Logger.log('[Glossary] ' + unique.length + ' Vorschläge generiert.');
+    Logger.log('[Glossary] ' + unique.length + ' Vorschl?ge generiert.');
     return { success: true, suggestions: unique };
 
   } catch(e) {
@@ -1671,28 +1511,28 @@ function buildGlossaryPrompt_(candidates) {
     });
   }).join(',\n');
 
-  return 'Du bist ein Terminologie-Experte für Kärcher-Übersetzungen.\n\n' +
+  return 'Du bist ein Terminologie-Experte f?r K?rcher-?bersetzungen.\n\n' +
     'Analysiere die folgenden Korrekturen und entscheide ob sie einen neuen Termbase-Eintrag rechtfertigen.\n' +
     'Ein Termbase-Eintrag ist sinnvoll wenn:\n' +
-    '- Der Source-Term kurz und eindeutig ist (1?5 Wörter)\n' +
-    '- Die Korrektur konsistent eine bessere Übersetzung darstellt\n' +
+    '- Der Source-Term kurz und eindeutig ist (1?5 W?rter)\n' +
+    '- Die Korrektur konsistent eine bessere ?bersetzung darstellt\n' +
     '- Der Term wahrscheinlich in vielen Dokumenten vorkommt\n' +
     '- Es sich um Fachvokabular, Produktterminologie oder Markenbegriffe handelt\n\n' +
     'NICHT vorschlagen wenn:\n' +
     '- Es sich um Satz-Umformulierungen handelt\n' +
     '- Der Unterschied nur Stil ist (nicht Terminologie)\n' +
-    '- Source oder Target zu lang sind (>6 Wörter)\n\n' +
+    '- Source oder Target zu lang sind (>6 W?rter)\n\n' +
     '=== KANDIDATEN ===\n[\n' + itemsText + '\n]\n\n' +
     '=== AUSGABE ===\n' +
-    'Nur valides JSON. Nur die Kandidaten zurückgeben die wirklich als Termbase-Eintrag sinnvoll sind:\n' +
+    'Nur valides JSON. Nur die Kandidaten zur?ckgeben die wirklich als Termbase-Eintrag sinnvoll sind:\n' +
     '{\n  "suggestions": [\n' +
     '    {\n' +
     '      "idx": <original idx>,\n' +
     '      "sourceDe": "<deutscher Source-Term, bereinigt>",\n' +
-    '      "targetTerm": "<empfohlene Zielsprachen-Übersetzung>",\n' +
+    '      "targetTerm": "<empfohlene Zielsprachen-?bersetzung>",\n' +
     '      "targetLang": "<Sprachcode>",\n' +
     '      "confidence": <0.0-1.0>,\n' +
-    '      "rationale": "<max 60 Zeichen Begründung>"\n' +
+    '      "rationale": "<max 60 Zeichen Begr?ndung>"\n' +
     '    }\n' +
     '  ]\n}';
 }
@@ -1720,12 +1560,11 @@ function parseGlossaryResponse_(body, suggestions) {
 }
 
 function generateMqmReportFull(filters, doExport) {
-  requireHubAccess_();
   try {
-    var mqmResult = generateMqmReport_(filters, doExport);
+    var mqmResult = generateMqmReport(filters, doExport);
     if (!mqmResult.success || mqmResult.empty) return mqmResult;
 
-    var driftResult = getTerminologyDrift_(filters);
+    var driftResult = getTerminologyDrift(filters);
     mqmResult.drift = driftResult.success ? driftResult : { terms: [] };
 
     return mqmResult;
