@@ -5,1185 +5,1181 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AutoFix Hub</title>
   <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
   <style>
-    /* ================================================================
-       Design übernommen aus Translation-Services (Index.html):
-       Kärcher-Gelb/Schwarz, Helvetica, eckige Karten mit farbiger
-       Oberkante, Uppercase-Tabs mit gelber Unterstreichung.
-       ================================================================ */
     :root {
-      --primary-yellow: #FFED00;
-      --primary-yellow-hover: #e6d500;
-      --primary-black: #000000;
-      --bg-gray: #F5F5F5;
-      --text-main: #333333;
-      --text-sub: #666666;
-      --text-muted: #999999;
-      --border-light: #e0e0e0;
-      --row-hover: #fffbe6;
-      --green: #2e7d32; --green-bg: #e8f5e9; --green-bdr: #c8e6c9;
-      --red: #c62828;   --red-bg: #ffebee;   --red-bdr: #ffcdd2;
-      --amber: #e65100; --amber-bg: #fff3e0; --amber-bdr: #ffe0b2;
-      --blue: #0d47a1;  --blue-bg: #e3f2fd;  --blue-bdr: #bbdefb;
-      --purple: #4a148c; --purple-bg: #f3e5f5; --purple-bdr: #e1bee7;
-      --mono: "SFMono-Regular", Consolas, "Courier New", monospace;
+      --primary:#FFD100; --primary-hover:#f0c400; --primary-text:#111;
+      --bg:#ffffff; --surface:#ffffff; --surface2:#F9FAFB;
+      --bdr:#E5E7EB; --bdr2:#F3F4F6;
+      --t1:#111827; --t2:#6B7280; --t3:#9CA3AF;
+      --radius:8px; --shadow:0 1px 3px rgba(0,0,0,.08);
+      --green:#059669; --green-bg:#ECFDF5; --green-bdr:#A7F3D0;
+      --red:#DC2626; --red-bg:#FEF2F2; --red-bdr:#FECACA;
+      --amber:#D97706; --amber-bg:#FFFBEB; --amber-bdr:#FDE68A;
+      --blue:#2563EB; --blue-bg:#EFF6FF;
+      --purple:#7E22CE; --purple-bg:#FDF4FF;
+      --mono:'Courier New',monospace;
     }
-    * { box-sizing: border-box; }
-    body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; background: #fff; color: var(--text-main); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 14px; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-thumb { background: #ccc; }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    ::-webkit-scrollbar{width:5px;height:5px;}
+    ::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:3px;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px;}
 
-    /* ---------- HEADER + TABS ---------- */
-    .app-header { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 14px 25px 0 25px; flex-shrink: 0; }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-mark { background: var(--primary-yellow); color: #000; font-weight: 900; font-size: 13px; padding: 6px 10px; letter-spacing: .5px; }
-    .brand-title { font-size: 18px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; }
-    .header-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-sub); }
-    .header-link { color: var(--text-main); font-weight: 700; text-transform: uppercase; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #ccc; padding: 6px 12px; }
-    .header-link:hover { background: var(--primary-yellow); border-color: var(--primary-yellow); color: #000; }
-    .header-link i { font-size: 16px; }
+    /* NAV */
+    .topnav{height:48px;border-bottom:1px solid var(--bdr);display:flex;align-items:stretch;padding:0 4px;flex-shrink:0;background:var(--surface);}
+    .nav-tab{display:flex;align-items:center;gap:6px;padding:0 14px;font-weight:500;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;font-size:12.5px;white-space:nowrap;user-select:none;transition:all .12s;}
+    .nav-tab .material-icons-outlined{font-size:17px;}
+    .nav-tab:hover{color:var(--t1);background:var(--surface2);}
+    .nav-tab.active{color:var(--t1);border-bottom-color:var(--primary);font-weight:600;}
 
-    .tab-nav { display: flex; justify-content: flex-start; border-bottom: 2px solid #eee; padding: 0 15px; overflow-x: auto; flex-shrink: 0; scrollbar-width: thin; }
-    /* zentriert, aber ohne links abgeschnittene Tabs bei Überlauf (justify-content:center clippt) */
-    .tab-nav > .tab-btn:first-child { margin-left: auto; }
-    .tab-nav > .tab-btn:last-child { margin-right: auto; }
-    .tab-btn { padding: 12px 18px; background: none; border: none; font-size: 13px; font-weight: 700; color: var(--text-sub); cursor: pointer; text-transform: uppercase; border-bottom: 4px solid transparent; transition: all .2s; margin: 0 2px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; }
-    .tab-btn i { font-size: 18px; }
-    .tab-btn:hover { background: #fafafa; color: var(--primary-black); }
-    .tab-btn.active { color: var(--primary-black); border-bottom-color: var(--primary-yellow); }
-    .tab-btn:focus-visible, .btn:focus-visible { outline: 2px solid #000; outline-offset: 2px; }
+    /* LAYOUT */
+    .content{flex:1;overflow-y:auto;padding:18px 20px;background:var(--surface2);}
+    .view{display:none;} .view.active{display:block;}
 
-    .container { flex: 1; overflow-y: auto; padding: 20px 25px 40px; }
-    .tab-content { display: none; animation: fadeIn .3s ease-in-out; }
-    .tab-content.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+    /* BUTTONS */
+    .btn{border:1px solid var(--bdr);padding:7px 12px;border-radius:var(--radius);cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:5px;font-size:12px;font-family:'Inter',sans-serif;background:var(--surface);color:var(--t1);transition:background .12s;white-space:nowrap;}
+    .btn:hover{background:var(--surface2);}
+    .btn .material-icons-outlined{font-size:16px;}
+    .btn-primary{background:var(--primary);color:var(--primary-text);border-color:transparent;}
+    .btn-primary:hover{background:var(--primary-hover);}
+    .btn-danger{background:var(--red-bg);color:var(--red);border-color:var(--red-bdr);}
+    .btn-success{background:var(--green-bg);color:var(--green);border-color:var(--green-bdr);}
+    .btn-amber{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-bdr);}
+    .btn-purple{background:var(--purple-bg);color:var(--purple);border-color:#E9D5FF;}
+    .btn-sm{padding:5px 9px;font-size:11px;}
+    .btn-sm .material-icons-outlined{font-size:14px;}
+    .btn:disabled{opacity:.45;cursor:not-allowed;}
+    .toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
 
-    /* ---------- CARDS / GRID ---------- */
-    .card { background: #fff; border: 1px solid var(--border-light); border-top: 5px solid var(--text-sub); padding: 22px; box-shadow: 0 4px 15px rgba(0,0,0,.05); margin-bottom: 22px; }
-    .card.accent { border-top-color: var(--primary-yellow); }
-    .card.danger { border-top-color: var(--red); }
-    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 22px; align-items: start; }
-    .card-grid .card { margin-bottom: 0; }
-    .section-title { font-size: 15px; font-weight: 800; text-transform: uppercase; border-bottom: 2px solid #eee; padding-bottom: 10px; margin: 0 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .section-title i { font-size: 20px; vertical-align: middle; margin-right: 6px; }
-    .hint { font-size: 12px; color: var(--text-sub); line-height: 1.6; margin: 0 0 14px; }
+    /* CARDS */
+    .card{background:var(--surface);border:1px solid var(--bdr);border-radius:var(--radius);overflow:hidden;}
+    .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+    .stat-card{background:var(--surface);border:1px solid var(--bdr);border-radius:var(--radius);padding:14px 16px;}
+    .stat-val{font-size:22px;font-weight:700;margin-bottom:3px;}
+    .stat-label{font-size:11px;color:var(--t2);text-transform:uppercase;letter-spacing:.04em;}
 
-    .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 25px; }
-    .dash-tile { background: #fff; border: 1px solid #eee; padding: 18px; text-align: center; border-top: 4px solid var(--primary-yellow); box-shadow: 0 2px 5px rgba(0,0,0,.05); }
-    .dash-tile.ok { border-top-color: var(--green); }
-    .dash-tile.bad { border-top-color: var(--red); }
-    .dash-tile.idle { border-top-color: #ccc; }
-    .dash-num { font-size: 28px; font-weight: 800; color: #000; margin-bottom: 4px; line-height: 1.1; word-break: break-word; }
-    .dash-label { font-size: 11px; text-transform: uppercase; color: var(--text-sub); font-weight: 700; letter-spacing: .4px; }
-    .dash-sub { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
-    .progress-track { height: 4px; background: #eee; margin-top: 10px; }
-    .progress-fill { height: 4px; background: var(--primary-yellow); width: 0; transition: width .4s ease; }
+    /* TABLE */
+    .tbl-wrap{background:var(--surface);border:1px solid var(--bdr);border-radius:var(--radius);overflow:hidden;}
+    table{width:100%;border-collapse:collapse;}
+    th{background:var(--surface2);padding:9px 14px;text-align:left;font-size:11px;color:var(--t2);text-transform:uppercase;border-bottom:1px solid var(--bdr);letter-spacing:.04em;white-space:nowrap;}
+    td{padding:9px 14px;border-bottom:1px solid var(--bdr2);vertical-align:middle;font-size:12.5px;}
+    tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:var(--surface2);}
 
-    /* ---------- BUTTONS ---------- */
-    .btn { border: none; padding: 0 20px; font-size: 13px; font-weight: 800; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 42px; border-radius: 0; letter-spacing: .5px; text-decoration: none; font-family: inherit; white-space: nowrap; transition: background .2s, opacity .2s, border-color .2s; }
-    .btn i { font-size: 18px; }
-    .btn-primary { background: var(--primary-yellow); color: #000; }
-    .btn-primary:hover { background: var(--primary-yellow-hover); }
-    .btn-black { background: #000; color: var(--primary-yellow); }
-    .btn-black:hover { opacity: .88; }
-    .btn-secondary { background: #f5f5f5; color: var(--text-main); border: 1px solid #ccc; }
-    .btn-secondary:hover { background: #e0e0e0; border-color: #999; }
-    .btn-red { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bdr); }
-    .btn-red:hover { background: #ffcdd2; }
-    .btn-sm { height: 32px; padding: 0 12px; font-size: 11px; }
-    .btn-sm i { font-size: 15px; }
-    .btn:disabled { opacity: .45; cursor: not-allowed; }
-    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
-    .toolbar .spacer { flex: 1; }
+    /* BADGE */
+    .badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;display:inline-block;}
+    .badge-green{background:var(--green-bg);color:var(--green);}
+    .badge-red{background:var(--red-bg);color:var(--red);}
+    .badge-grey{background:var(--surface2);color:var(--t2);border:1px solid var(--bdr);}
+    .badge-amber{background:var(--amber-bg);color:var(--amber);}
+    .badge-blue{background:var(--blue-bg);color:var(--blue);}
+    .badge-purple{background:var(--purple-bg);color:var(--purple);}
 
-    /* ---------- FORMS ---------- */
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-    .form-row { margin-bottom: 0; }
-    label.lbl { display: block; font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .3px; }
-    .input, .select, .textarea { width: 100%; padding: 0 12px; height: 42px; font-size: 14px; border: 1px solid #ccc; border-radius: 0; background: #fff; color: var(--text-main); font-family: inherit; transition: border-color .2s; -webkit-appearance: none; appearance: none; }
-    .select { background-image: linear-gradient(45deg, transparent 50%, #666 50%), linear-gradient(135deg, #666 50%, transparent 50%); background-position: calc(100% - 18px) 18px, calc(100% - 13px) 18px; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 32px; }
-    .textarea { height: auto; padding: 12px; line-height: 1.6; resize: vertical; font-family: var(--mono); font-size: 12.5px; }
-    .input:focus, .select:focus, .textarea:focus { border-color: #000; outline: none; background-color: #fafafa; }
-    .field-hint { font-size: 11px; color: var(--text-muted); margin-top: 5px; line-height: 1.5; }
+    /* MQM SEVERITY BADGES */
+    .sev-critical{background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;}
+    .sev-major{background:#FFFBEB;color:#D97706;border:1px solid #FDE68A;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;}
+    .sev-minor{background:#F0FDF4;color:#059669;border:1px solid #A7F3D0;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
 
-    /* ---------- TABLES ---------- */
-    .table-wrap { border: 1px solid #ddd; overflow-x: auto; background: #fff; }
-    .history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .history-table th { background: #f2f2f2; text-align: left; padding: 11px 14px; font-weight: 800; border-bottom: 2px solid #ddd; text-transform: uppercase; font-size: 11px; color: #444; letter-spacing: .3px; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
-    .history-table td { padding: 11px 14px; border-bottom: 1px solid #eee; vertical-align: top; }
-    .history-table tbody tr:hover > td { background: var(--row-hover); }
-    .history-table tr.detail-row > td { background: #fafafa; padding: 0 14px 14px; }
-    .history-table .num { text-align: right; font-variant-numeric: tabular-nums; }
-    .mono { font-family: var(--mono); font-size: 12px; }
-    .muted { color: var(--text-muted); }
-    .cell-clip { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .empty-state { text-align: center; padding: 45px 20px; color: var(--text-sub); font-size: 14px; }
-    .empty-state i { font-size: 46px; color: #ccc; display: block; margin-bottom: 10px; }
-    .scroll-y { max-height: 460px; overflow-y: auto; }
+    /* MQM CATEGORY BADGES */
+    .cat-accuracy{background:#EFF6FF;color:#1D4ED8;}
+    .cat-terminology{background:#FDF4FF;color:#7E22CE;}
+    .cat-fluency{background:#ECFDF5;color:#059669;}
+    .cat-style{background:#FFFBEB;color:#D97706;}
+    .cat-locale{background:#FFF7ED;color:#EA580C;}
+    .cat-uncategorized{background:var(--surface2);color:var(--t2);}
 
-    /* ---------- BADGES ---------- */
-    .status-badge { display: inline-block; padding: 4px 8px; border-radius: 3px; font-size: 10px; font-weight: 700; text-transform: uppercase; min-width: 70px; text-align: center; letter-spacing: .5px; border: 1px solid transparent; white-space: nowrap; }
-    .st-ok { background: #F1F8E9; color: #33691E; border-color: #C5E1A5; }
-    .st-fail { background: #FFEBEE; color: #C62828; border-color: #FFCDD2; }
-    .st-warn { background: #FFFCDB; color: #5D4037; border-color: var(--primary-yellow); }
-    .st-grey { background: #F5F5F5; color: #555; border-color: #E0E0E0; }
-    .pill { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .3px; background: #f0f0f0; color: #444; white-space: nowrap; }
-    .pill-lang { background: #f5f5f5; border: 1px solid #e0e0e0; text-transform: none; font-family: var(--mono); font-weight: 600; }
-    .pill-type { background: #000; color: var(--primary-yellow); }
-    .sev { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; border: 1px solid; }
-    .sev-critical { background: #FFEBEE; color: #C62828; border-color: #FFCDD2; }
-    .sev-major { background: #FFF3E0; color: #E65100; border-color: #FFE0B2; }
-    .sev-minor { background: #E8F5E9; color: #2E7D32; border-color: #C8E6C9; }
-    .cat { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 800; text-transform: uppercase; background: #f0f0f0; color: #444; }
-    .cat-accuracy { background: var(--blue-bg); color: var(--blue); }
-    .cat-terminology { background: var(--purple-bg); color: var(--purple); }
-    .cat-fluency { background: var(--green-bg); color: var(--green); }
-    .cat-style { background: #FFFDE7; color: #F57F17; }
-    .cat-locale { background: var(--amber-bg); color: var(--amber); }
-    .bar { height: 8px; background: var(--primary-yellow); display: inline-block; min-width: 2px; vertical-align: middle; }
+    /* FORM */
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .form-label{display:block;font-weight:600;color:var(--t2);margin-bottom:5px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
+    .input,.select,.textarea{width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:var(--radius);font-family:'Inter',sans-serif;font-size:13px;background:var(--surface);color:var(--t1);outline:none;}
+    .input:focus,.select:focus,.textarea:focus{border-color:var(--primary);}
+    .textarea{resize:vertical;line-height:1.6;}
+    .section-head{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;}
 
-    /* ---------- NOTICES ---------- */
-    .notice { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-left: 4px solid; font-size: 13px; line-height: 1.55; margin-bottom: 14px; }
-    .notice i { font-size: 18px; flex-shrink: 0; }
-    .notice-info { background: #f9f9f9; border-color: var(--primary-yellow); color: var(--text-main); }
-    .notice-warn { background: var(--amber-bg); border-color: var(--amber); color: #5d3a00; }
-    .notice-error { background: var(--red-bg); border-color: var(--red); color: var(--red); }
-    .notice-success { background: var(--green-bg); border-color: var(--green); color: var(--green); }
-    .notice a { color: inherit; font-weight: 700; }
-    .result-box { margin-top: 16px; }
-    .result-box pre { white-space: pre-wrap; word-break: break-word; font-family: var(--mono); font-size: 12px; line-height: 1.55; margin: 0; background: #fafafa; border: 1px solid #eee; padding: 14px; max-height: 420px; overflow: auto; }
+    /* PROMPT CARDS */
+    .prompt-card{background:var(--surface);border:1px solid var(--bdr);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;}
+    .prompt-card-header{padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;}
+    .prompt-card-title{display:flex;align-items:center;gap:8px;}
+    .prompt-type-badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;}
+    .type-technical{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;}
+    .type-marketing{background:#FDF4FF;color:#7E22CE;border:1px solid #E9D5FF;}
+    .type-default{background:var(--surface2);color:var(--t2);border:1px solid var(--bdr);}
+    .prompt-card-body{padding:14px 16px;}
+    .prompt-save-row{display:flex;align-items:center;gap:8px;margin-top:10px;}
+    .prompt-save-msg{font-size:11px;color:var(--green);display:none;}
+    .prompt-save-msg.show{display:inline;}
 
-    /* ---------- LIVE LOG ---------- */
-    .log-panel { border: 1px solid #ddd; border-top: 5px solid var(--primary-yellow); background: #fff; }
-    .log-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 800; text-transform: uppercase; font-size: 12px; }
-    .log-head .status { display: flex; align-items: center; gap: 8px; }
-    .run-dot { width: 10px; height: 10px; border-radius: 50%; background: #ccc; }
-    .run-dot.active { background: var(--primary-yellow); box-shadow: 0 0 0 3px rgba(255,237,0,.35); animation: blink 1s infinite; }
-    .run-dot.done { background: var(--green); }
-    .run-dot.error { background: var(--red); }
-    @keyframes blink { 50% { opacity: .35; } }
-    .log-entries { max-height: 420px; overflow-y: auto; font-family: var(--mono); font-size: 12px; line-height: 1.6; padding: 6px 0; }
-    .log-entry { display: flex; gap: 12px; padding: 2px 16px; }
-    .log-entry:hover { background: var(--row-hover); }
-    .le-time { color: var(--text-muted); min-width: 64px; flex-shrink: 0; }
-    .le-lvl { min-width: 40px; font-weight: 800; font-size: 11px; flex-shrink: 0; }
-    .le-msg { word-break: break-word; }
-    .le-sub { color: var(--text-sub); }
-    .lvl-INFO { color: var(--blue); } .lvl-OK { color: var(--green); } .lvl-WARN { color: var(--amber); } .lvl-ERR { color: var(--red); }
+    /* MODAL */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:900;display:none;align-items:center;justify-content:center;}
+    .modal-backdrop.open{display:flex;}
+    .modal{background:var(--surface);border-radius:var(--radius);box-shadow:0 8px 32px rgba(0,0,0,.15);width:560px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;}
+    .modal-header{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;background:var(--surface2);flex-shrink:0;}
+    .modal-header h2{font-size:14px;font-weight:600;}
+    .modal-body{padding:18px;overflow-y:auto;flex:1;}
+    .modal-footer{padding:12px 18px;border-top:1px solid var(--bdr);display:flex;justify-content:flex-end;gap:8px;background:var(--surface2);flex-shrink:0;}
+    .btn-ghost-modal{background:none;border:none;cursor:pointer;padding:4px;border-radius:var(--radius);display:inline-flex;align-items:center;color:var(--t2);}
+    .btn-ghost-modal:hover{background:var(--bdr);}
 
-    /* ---------- DIFF ---------- */
-    .expand-btn { background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 14px; padding: 5px 12px; font-size: 11px; font-weight: 700; color: #444; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-family: inherit; white-space: nowrap; }
-    .expand-btn:hover { background: var(--row-hover); border-color: var(--primary-yellow); }
-    .expand-btn.open { background: #fff9c4; border-color: #e5d500; }
-    .expand-btn i { font-size: 15px; }
-    .diff-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; background: #fff; border: 1px solid #eee; }
-    .diff-table th { background: #f2f2f2; font-size: 10px; text-transform: uppercase; text-align: left; padding: 7px 10px; font-weight: 800; color: #555; }
-    .diff-table td { padding: 8px 10px; border-top: 1px solid #f0f0f0; font-family: var(--mono); word-break: break-word; vertical-align: top; line-height: 1.45; }
-    .diff-old { background: #fff5f5; color: #b71c1c; }
-    .diff-new { background: #f1f8e9; color: #1b5e20; }
-    .diff-reason { color: var(--text-sub); font-family: inherit; font-size: 11px; margin-top: 4px; }
+    /* LIVE LOG */
+    .log-panel{background:var(--surface);border:1px solid var(--bdr);border-radius:var(--radius);overflow:hidden;}
+    .log-panel-header{padding:10px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;background:var(--surface2);}
+    .log-panel-title{font-weight:600;font-size:12px;display:flex;align-items:center;gap:8px;}
+    .run-dot{width:8px;height:8px;border-radius:50%;background:var(--t3);flex-shrink:0;}
+    .run-dot.active{background:var(--primary);animation:blink 1s infinite;}
+    .run-dot.done{background:var(--green);}
+    .run-dot.error{background:var(--red);}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    .log-entries{padding:4px 0;max-height:320px;overflow-y:auto;font-family:var(--mono);font-size:11.5px;line-height:1.55;}
+    .log-entry{display:flex;gap:10px;padding:3px 14px;}
+    .log-entry:hover{background:var(--surface2);}
+    .le-time{color:var(--t3);flex-shrink:0;min-width:64px;}
+    .le-lvl{flex-shrink:0;font-weight:700;min-width:38px;font-size:10.5px;}
+    .le-msg{word-break:break-all;} .le-sub{color:var(--t2);}
+    .lvl-info{color:var(--blue);} .lvl-ok{color:var(--green);} .lvl-warn{color:var(--amber);} .lvl-err{color:var(--red);}
+    .progress-track{height:3px;background:var(--bdr2);}
+    .progress-fill{height:3px;background:var(--primary);transition:width .4s ease;width:0%;}
+    .poll-indicator{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--t2);}
+    .poll-dot{width:6px;height:6px;border-radius:50%;background:var(--primary);animation:blink 1.4s infinite;}
 
-    /* ---------- PROMPT CARDS ---------- */
-    .prompt-card { border: 1px solid var(--border-light); border-left: 4px solid var(--primary-yellow); margin-bottom: 14px; background: #fff; }
-    .prompt-card summary { list-style: none; cursor: pointer; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-weight: 700; }
-    .prompt-card summary::-webkit-details-marker { display: none; }
-    .prompt-card summary::after { content: "expand_more"; font-family: "Material Icons Outlined"; font-size: 20px; color: #999; }
-    .prompt-card[open] summary::after { content: "expand_less"; }
-    .prompt-card .body { padding: 0 18px 18px; }
-    .prompt-card .actions { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
-    .save-msg { font-size: 12px; color: var(--green); font-weight: 700; }
+    /* DIFF */
+    .diff-toggle{cursor:pointer;color:var(--blue);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:3px;user-select:none;}
+    .diff-toggle:hover{text-decoration:underline;}
+    .diff-panel{display:none;margin-top:8px;border:1px solid var(--bdr);border-radius:var(--radius);overflow:hidden;}
+    .diff-panel.open{display:block;}
+    .diff-row{display:grid;grid-template-columns:80px 1fr 1fr 1fr;gap:0;border-bottom:1px solid var(--bdr2);font-size:11.5px;}
+    .diff-row:last-child{border-bottom:none;}
+    .diff-cell{padding:6px 10px;border-right:1px solid var(--bdr2);font-family:var(--mono);word-break:break-word;line-height:1.45;}
+    .diff-cell:last-child{border-right:none;}
+    .diff-head{background:var(--surface2);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--t2);}
+    .diff-original{background:#fff5f5;color:#b91c1c;}
+    .diff-corrected{background:#f0fdf4;color:#15803d;}
 
-    /* ---------- MODAL ---------- */
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); padding: 15px; }
-    .modal-backdrop.open { display: flex; }
-    .modal-content { background: #fff; width: 640px; max-width: 100%; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,.2); border-top: 8px solid var(--primary-yellow); }
-    .modal-header { padding: 18px 25px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
-    .modal-title { font-size: 18px; font-weight: 800; text-transform: uppercase; margin: 0; }
-    .modal-body { padding: 20px 25px; overflow-y: auto; flex: 1; }
-    .modal-body .form-row { margin-bottom: 14px; }
-    .modal-footer { padding: 15px 25px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 10px; }
-    .close-btn { background: none; border: none; cursor: pointer; padding: 6px; color: #666; }
-    .close-btn:hover { color: var(--red); }
+    /* ERROR / NOTICE */
+    .error-panel{margin-top:10px;background:var(--red-bg);border:1px solid var(--red-bdr);border-radius:var(--radius);padding:12px 14px;}
+    .error-panel pre{font-family:var(--mono);font-size:11px;color:var(--red);white-space:pre-wrap;word-break:break-all;}
+    .notice{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:var(--radius);border:1px solid;margin-bottom:12px;font-size:12px;}
+    .notice .material-icons-outlined{font-size:16px;flex-shrink:0;margin-top:1px;}
+    .notice-info{background:var(--blue-bg);border-color:#BFDBFE;color:var(--blue);}
+    .notice-warn{background:var(--amber-bg);border-color:var(--amber-bdr);color:var(--amber);}
+    .notice-success{background:var(--green-bg);border-color:var(--green-bdr);color:var(--green);}
 
-    /* ---------- LOADER / ACCESS / TOAST ---------- */
-    .loader { border: 5px solid #f3f3f3; border-top: 5px solid var(--primary-yellow); border-radius: 50%; width: 42px; height: 42px; animation: spin 1s linear infinite; margin: 0 auto 12px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-box { text-align: center; padding: 40px 20px; color: var(--text-sub); font-size: 14px; }
-    .fullscreen-overlay { position: fixed; inset: 0; background: #fff; z-index: 9000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-    .fullscreen-overlay h1 { text-transform: uppercase; margin: 10px 0; color: #000; }
-    .fullscreen-overlay p { font-size: 15px; max-width: 560px; line-height: 1.6; color: #555; }
-    #toast { position: fixed; bottom: 20px; right: 20px; background: #000; color: #fff; border-left: 5px solid var(--primary-yellow); padding: 12px 16px; font-size: 13px; z-index: 9999; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,.25); transform: translateY(20px); opacity: 0; pointer-events: none; transition: all .25s; }
-    #toast.show { transform: none; opacity: 1; }
-    #toast.error { border-left-color: #ff5252; }
+    /* MQM SPECIFIC */
+    .mqm-filter-card{background:var(--surface);border:1px solid var(--bdr);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+    .mqm-stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;}
+    .mqm-stat{background:var(--surface);border:1px solid var(--bdr);border-radius:var(--radius);padding:12px 14px;text-align:center;}
+    .mqm-stat-val{font-size:24px;font-weight:700;margin-bottom:2px;}
+    .mqm-stat-label{font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:.04em;}
+    .mqm-section-title{font-size:12px;font-weight:700;color:var(--t1);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+    .mqm-loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--t2);font-size:13px;}
+    .mqm-loading-dot{width:8px;height:8px;border-radius:50%;background:var(--primary);animation:blink 1s infinite;}
+    .mqm-loading-dot:nth-child(2){animation-delay:.2s;}
+    .mqm-loading-dot:nth-child(3){animation-delay:.4s;}
+    .mqm-empty{text-align:center;padding:40px;color:var(--t2);font-size:13px;}
+    .agg-bar{height:6px;border-radius:3px;background:var(--primary);display:inline-block;min-width:2px;}
+    .detail-tbl-wrap{max-height:400px;overflow-y:auto;border:1px solid var(--bdr);border-radius:var(--radius);}
+    .export-success{background:var(--green-bg);border:1px solid var(--green-bdr);border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--green);display:flex;align-items:center;gap:8px;margin-top:10px;}
 
-    @media (max-width: 900px) {
-      .container { padding: 14px; }
-      .app-header { padding: 12px 14px 0; }
-      .header-meta .email { display: none; }
-      .tab-btn { padding: 12px 12px; }
-      .tab-btn span.lbl-txt { display: none; }
-    }
+    /* TOAST */
+    #toast{position:fixed;bottom:16px;right:16px;background:#111;color:#fff;padding:10px 14px;border-radius:var(--radius);font-size:12.5px;display:none;z-index:9999;box-shadow:var(--shadow);max-width:340px;}
+    #toast.show{display:block;}
+    #testResult{margin-top:14px;padding:14px;border-radius:var(--radius);display:none;font-size:12.5px;line-height:1.6;}
   </style>
 </head>
 <body>
 
-  <!-- Zugriff wird beim Start geprüft; bis dahin Ladebildschirm -->
-  <div id="bootOverlay" class="fullscreen-overlay">
-    <div class="loader"></div>
-    <div style="color:var(--text-sub);">AutoFix Hub wird geladen …</div>
-  </div>
-  <div id="deniedOverlay" class="fullscreen-overlay" style="display:none;">
-    <span class="material-icons-outlined" style="color:var(--red);font-size:70px;">block</span>
-    <h1>Kein Zugriff</h1>
-    <p>Der AutoFix Hub ist nur für freigeschaltete Admins verfügbar.<br>Angemeldet als <strong id="deniedEmail"></strong>.</p>
-    <a id="deniedTicket" href="#" target="_blank" rel="noopener" class="btn btn-primary" style="margin-top:20px;"><i class="material-icons-outlined">lock_open</i>Zugriff beantragen</a>
-  </div>
-
-  <header class="app-header">
-    <div class="brand">
-      <span class="brand-mark">KÄRCHER</span>
-      <span class="brand-title">AutoFix Hub</span>
-    </div>
-    <div class="header-meta">
-      <span class="email" id="userEmail"></span>
-      <a class="header-link" id="promptEditorLink" href="#" target="_top"><i class="material-icons-outlined">edit_note</i>Prompt Editor</a>
-    </div>
-  </header>
-
-  <nav class="tab-nav" role="tablist">
-    <button class="tab-btn active" data-view="dashboard"><i class="material-icons-outlined">dashboard</i><span class="lbl-txt">Dashboard</span></button>
-    <button class="tab-btn" data-view="liverun"><i class="material-icons-outlined">bolt</i><span class="lbl-txt">Live Run</span></button>
-    <button class="tab-btn" data-view="queue"><i class="material-icons-outlined">list_alt</i><span class="lbl-txt">Queue</span></button>
-    <button class="tab-btn" data-view="runlog"><i class="material-icons-outlined">history</i><span class="lbl-txt">Run Log</span></button>
-    <button class="tab-btn" data-view="mqm"><i class="material-icons-outlined">analytics</i><span class="lbl-txt">MQM Report</span></button>
-    <button class="tab-btn" data-view="benchmark"><i class="material-icons-outlined">compare_arrows</i><span class="lbl-txt">Benchmark</span></button>
-    <button class="tab-btn" data-view="drift"><i class="material-icons-outlined">trending_up</i><span class="lbl-txt">Term Drift</span></button>
-    <button class="tab-btn" data-view="glossary"><i class="material-icons-outlined">menu_book</i><span class="lbl-txt">Glossar</span></button>
-    <button class="tab-btn" data-view="settings"><i class="material-icons-outlined">settings</i><span class="lbl-txt">Settings</span></button>
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <div class="nav-tab active" onclick="switchView('dashboard',this)"><i class="material-icons-outlined">dashboard</i>Dashboard</div>
+    <div class="nav-tab" onclick="switchView('liverun',this)"><i class="material-icons-outlined">bolt</i>Live Run</div>
+    <div class="nav-tab" onclick="switchView('projects',this)"><i class="material-icons-outlined">list_alt</i>Queue</div>
+    <div class="nav-tab" onclick="switchView('runlog',this)"><i class="material-icons-outlined">history</i>Run Log</div>
+    <div class="nav-tab" onclick="switchView('mqm',this)"><i class="material-icons-outlined">analytics</i>MQM Report</div>
+    <div class="nav-tab" onclick="switchView('benchmark',this)"><i class="material-icons-outlined">compare_arrows</i>Benchmarking</div>
+    <div class="nav-tab" onclick="switchView('drift',this)"><i class="material-icons-outlined">trending_up</i>Term Drift</div>
+    <div class="nav-tab" onclick="switchView('glossary',this)"><i class="material-icons-outlined">menu_book</i>Glossary</div>
+    <div class="nav-tab" onclick="switchView('settings',this)"><i class="material-icons-outlined">settings</i>Settings</div>
   </nav>
 
-  <main class="container">
-
-    <!-- ============================ DASHBOARD ============================ -->
-    <section id="view-dashboard" class="tab-content active">
-      <div class="dash-grid">
-        <div class="dash-tile idle" id="tilePoller"><div class="dash-num" id="dPoller">–</div><div class="dash-label">Background Poller</div><div class="dash-sub" id="dPollerSub"></div></div>
-        <div class="dash-tile idle" id="tileLock"><div class="dash-num" id="dLock">–</div><div class="dash-label">Run Status</div><div class="dash-sub" id="dLockSub"></div></div>
-        <div class="dash-tile"><div class="dash-num" id="dProjects">–</div><div class="dash-label">Projekte in Queue</div></div>
-        <div class="dash-tile"><div class="dash-num" id="dJobs">–</div><div class="dash-label">Jobs in Queue</div></div>
-      </div>
-
-      <div class="card-grid">
-        <div class="card accent">
-          <div class="section-title"><span><i class="material-icons-outlined">timer</i>Background Poller</span></div>
-          <p class="hint">Der Poller bearbeitet pro Durchlauf den nächsten Job aus der Queue (PE → Upload → Job wird in Phrase abgeschlossen).</p>
-          <div class="form-row" style="margin-bottom:14px;">
-            <label class="lbl" for="pollerInterval">Intervall</label>
-            <select class="select" id="pollerInterval">
-              <option value="5">Alle 5 Minuten</option>
-              <option value="10" selected>Alle 10 Minuten</option>
-              <option value="15">Alle 15 Minuten</option>
-              <option value="30">Alle 30 Minuten</option>
-            </select>
-          </div>
-          <div class="toolbar" style="margin-bottom:0;">
-            <button class="btn btn-primary" id="btnStartPoller"><i class="material-icons-outlined">play_arrow</i>Poller starten</button>
-            <button class="btn btn-red" id="btnStopPoller"><i class="material-icons-outlined">stop</i>Stoppen</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="section-title"><span><i class="material-icons-outlined">vitals</i>System</span></div>
-          <p class="hint">Verbindung zu Phrase und Gemini prüfen oder die letzten Projekte analysieren (nur lesend).</p>
-          <div class="toolbar" style="margin-bottom:0;">
-            <button class="btn btn-secondary" id="btnTest"><i class="material-icons-outlined">wifi_tethering</i>Verbindung testen</button>
-            <button class="btn btn-secondary" id="btnDebug"><i class="material-icons-outlined">bug_report</i>Projekte analysieren</button>
-            <button class="btn btn-secondary" id="btnSheet"><i class="material-icons-outlined">open_in_new</i>Datenbank öffnen</button>
-          </div>
-        </div>
-
-        <div class="card danger" id="lockCard" style="display:none;">
-          <div class="section-title"><span><i class="material-icons-outlined">lock</i>Run-Lock</span></div>
-          <p class="hint">Ein Run ist als aktiv markiert. Nur freigeben, wenn sicher ist, dass kein Run mehr läuft (z.B. nach einem Timeout) – sonst werden Jobs doppelt bearbeitet.</p>
-          <button class="btn btn-red" id="btnUnlock"><i class="material-icons-outlined">lock_open</i>Lock freigeben</button>
-        </div>
-      </div>
-
-      <div id="testResult" class="result-box"></div>
-    </section>
-
-    <!-- ============================ LIVE RUN ============================ -->
-    <section id="view-liverun" class="tab-content">
-      <div class="dash-grid">
-        <div class="dash-tile"><div class="dash-num" id="lrProjects">–</div><div class="dash-label">Projekte</div></div>
-        <div class="dash-tile"><div class="dash-num" id="lrJobs">–</div><div class="dash-label">Jobs</div><div class="progress-track"><div class="progress-fill" id="lrJobsBar"></div></div></div>
-        <div class="dash-tile"><div class="dash-num" id="lrSegs">–</div><div class="dash-label">Segmente geändert</div></div>
-        <div class="dash-tile"><div class="dash-num" id="lrErrors">–</div><div class="dash-label">Fehler</div></div>
-      </div>
-      <div class="notice notice-warn"><i class="material-icons-outlined">warning</i><span>„Run AutoFix Now“ bearbeitet <strong>alle</strong> Projekte der Queue, lädt die korrigierten Dateien nach Phrase hoch und schließt die Jobs ab. Das lässt sich nicht automatisch rückgängig machen.</span></div>
-      <div class="toolbar">
-        <button class="btn btn-primary" id="btnRunNow"><i class="material-icons-outlined">bolt</i>Run AutoFix Now</button>
-        <button class="btn btn-secondary" id="btnLrClear"><i class="material-icons-outlined">delete_sweep</i>Anzeige leeren</button>
-      </div>
-      <div class="log-panel">
-        <div class="log-head">
-          <span class="status"><span class="run-dot" id="lrDot"></span><span id="lrStatus">Bereit</span></span>
-          <span class="muted" id="lrTs" style="font-weight:400;text-transform:none;"></span>
-        </div>
-        <div class="log-entries" id="lrEntries" aria-live="polite"></div>
-      </div>
-    </section>
-
-    <!-- ============================ QUEUE ============================ -->
-    <section id="view-queue" class="tab-content">
-      <div class="toolbar">
-        <button class="btn btn-secondary" id="btnQueueRefresh"><i class="material-icons-outlined">refresh</i>Aktualisieren</button>
-        <span class="muted" id="queueMeta" style="font-size:12px;"></span>
-        <span class="spacer"></span>
-        <button class="btn btn-primary" id="btnQueueRun"><i class="material-icons-outlined">bolt</i>Run AutoFix Now</button>
-      </div>
-      <div class="table-wrap">
-        <table class="history-table">
-          <thead><tr><th>Projekt</th><th>UID</th><th>Typ</th><th>Zielsprachen</th><th class="num">Jobs</th><th class="num">Wörter</th></tr></thead>
-          <tbody id="queueBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ============================ RUN LOG ============================ -->
-    <section id="view-runlog" class="tab-content">
-      <div class="toolbar">
-        <button class="btn btn-secondary" id="btnLogRefresh"><i class="material-icons-outlined">refresh</i>Aktualisieren</button>
-        <input class="input" id="logFilter" placeholder="Filtern nach Projekt, Sprache, Typ …" style="max-width:320px;height:42px;">
-        <span class="spacer"></span>
-        <button class="btn btn-secondary" id="btnLogSheet"><i class="material-icons-outlined">open_in_new</i>Google Sheet</button>
-      </div>
-      <div class="table-wrap">
-        <table class="history-table">
-          <thead><tr><th>Datum</th><th>Projekt</th><th>Typ</th><th>Sprache</th><th>Status</th><th class="num">Segmente</th><th class="num">Geändert</th><th>Änderungen</th><th>Aktion</th><th>Info</th></tr></thead>
-          <tbody id="logBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ============================ MQM ============================ -->
-    <section id="view-mqm" class="tab-content">
-      <div class="card accent">
-        <div class="section-title"><span><i class="material-icons-outlined">filter_alt</i>Filter</span></div>
-        <div class="form-grid" style="margin-bottom:16px;">
-          <div><label class="lbl" for="mqmFrom">Von</label><input type="date" class="input" id="mqmFrom"></div>
-          <div><label class="lbl" for="mqmTo">Bis</label><input type="date" class="input" id="mqmTo"></div>
-          <div><label class="lbl" for="mqmProject">Projekt</label><select class="select" id="mqmProject"><option value="">Alle Projekte</option></select></div>
-          <div><label class="lbl" for="mqmType">AutoFix-Typ</label><select class="select" id="mqmType"><option value="all">Alle Typen</option></select></div>
-          <div><label class="lbl" for="mqmLang">Zielsprache</label><select class="select" id="mqmLang"><option value="all">Alle Sprachen</option></select></div>
-        </div>
-        <div class="toolbar" style="margin-bottom:0;">
-          <button class="btn btn-primary" id="btnMqm"><i class="material-icons-outlined">analytics</i>Report erstellen</button>
-          <button class="btn btn-black" id="btnMqmExport"><i class="material-icons-outlined">table_chart</i>Erstellen &amp; als Sheet exportieren</button>
-        </div>
-      </div>
-      <div id="mqmResults"><div class="empty-state"><i class="material-icons-outlined">analytics</i>Filter setzen und Report erstellen.</div></div>
-    </section>
-
-    <!-- ============================ BENCHMARK ============================ -->
-    <section id="view-benchmark" class="tab-content">
-      <div class="card accent">
-        <div class="section-title"><span><i class="material-icons-outlined">filter_alt</i>Filter</span></div>
-        <div class="form-grid" style="margin-bottom:16px;">
-          <div><label class="lbl" for="bmFrom">Von</label><input type="date" class="input" id="bmFrom"></div>
-          <div><label class="lbl" for="bmTo">Bis</label><input type="date" class="input" id="bmTo"></div>
-          <div><label class="lbl" for="bmType">AutoFix-Typ</label><select class="select" id="bmType"><option value="all">Alle Typen</option></select></div>
-        </div>
-        <button class="btn btn-primary" id="btnBm"><i class="material-icons-outlined">compare_arrows</i>Benchmark starten</button>
-      </div>
-      <div id="bmResults"><div class="empty-state"><i class="material-icons-outlined">compare_arrows</i>Filter setzen und Benchmark starten.</div></div>
-    </section>
-
-    <!-- ============================ DRIFT ============================ -->
-    <section id="view-drift" class="tab-content">
-      <div class="card accent">
-        <div class="section-title"><span><i class="material-icons-outlined">filter_alt</i>Filter</span></div>
-        <div class="form-grid" style="margin-bottom:16px;">
-          <div><label class="lbl" for="drFrom">Von</label><input type="date" class="input" id="drFrom"></div>
-          <div><label class="lbl" for="drTo">Bis</label><input type="date" class="input" id="drTo"></div>
-          <div><label class="lbl" for="drLang">Zielsprache</label><select class="select" id="drLang"><option value="all">Alle Sprachen</option></select></div>
-        </div>
-        <button class="btn btn-primary" id="btnDrift"><i class="material-icons-outlined">trending_up</i>Drift analysieren</button>
-      </div>
-      <div id="drResults"><div class="empty-state"><i class="material-icons-outlined">trending_up</i>Filter setzen und Drift-Analyse starten.</div></div>
-    </section>
-
-    <!-- ============================ GLOSSARY ============================ -->
-    <section id="view-glossary" class="tab-content">
-      <div class="card accent">
-        <div class="section-title"><span><i class="material-icons-outlined">filter_alt</i>Filter</span></div>
-        <div class="form-grid" style="margin-bottom:16px;">
-          <div><label class="lbl" for="glFrom">Von</label><input type="date" class="input" id="glFrom"></div>
-          <div><label class="lbl" for="glTo">Bis</label><input type="date" class="input" id="glTo"></div>
-          <div><label class="lbl" for="glLang">Zielsprache</label><select class="select" id="glLang"><option value="all">Alle Sprachen</option></select></div>
-        </div>
-        <button class="btn btn-primary" id="btnGloss"><i class="material-icons-outlined">menu_book</i>Vorschläge erzeugen</button>
-      </div>
-      <div id="glResults"><div class="empty-state"><i class="material-icons-outlined">menu_book</i>Filter setzen und Vorschläge erzeugen.</div></div>
-    </section>
-
-    <!-- ============================ SETTINGS ============================ -->
-    <section id="view-settings" class="tab-content">
-      <div class="card-grid" style="margin-bottom:22px;">
-        <div class="card accent">
-          <div class="section-title"><span><i class="material-icons-outlined">hub</i>Phrase TMS &amp; Workflow</span></div>
-          <div class="form-grid">
-            <div><label class="lbl" for="cfFieldUid">Custom Field UID</label><input type="text" class="input mono" id="cfFieldUid" autocomplete="off"></div>
-            <div><label class="lbl" for="wfStepName">Workflow Step Name</label><input type="text" class="input" id="wfStepName" autocomplete="off"></div>
-            <div><label class="lbl" for="markDoneAfterFix">Custom Field nach Fix zurücksetzen</label>
-              <select class="select" id="markDoneAfterFix"><option value="true">Ja – auf leer setzen</option><option value="false">Nein</option></select>
-            </div>
-          </div>
-        </div>
-        <div class="card accent">
-          <div class="section-title"><span><i class="material-icons-outlined">psychology</i>KI &amp; Poller</span></div>
-          <div class="form-grid">
-            <div><label class="lbl" for="primaryModel">Standard-Modell</label><select class="select" id="primaryModel"></select>
-              <div class="field-hint">Gilt für alle Typen ohne eigene Einstellung im Prompt Editor sowie für MQM/Glossar.</div></div>
-            <div><label class="lbl" for="peTemperature">PE Temperature</label><input type="number" step="0.05" min="0" max="2" class="input" id="peTemperature"></div>
-            <div><label class="lbl" for="tmThreshold">TM Threshold (0–1)</label><input type="number" step="0.05" min="0" max="1" class="input" id="tmThreshold"></div>
-            <div><label class="lbl" for="pollerIntervalMinutes">Poller-Intervall (Standard)</label>
-              <select class="select" id="pollerIntervalMinutes"><option value="5">5 Min.</option><option value="10">10 Min.</option><option value="15">15 Min.</option><option value="30">30 Min.</option></select></div>
-          </div>
-        </div>
-      </div>
-      <div class="toolbar">
-        <button class="btn btn-primary" id="btnSaveSettings"><i class="material-icons-outlined">save</i>Settings speichern</button>
-        <span class="save-msg" id="settingsMsg"></span>
-      </div>
-
-      <div class="card">
-        <div class="section-title"><span><i class="material-icons-outlined">description</i>Post-Editing-Prompts je Typ</span>
-          <a class="header-link" id="promptEditorLink2" href="#" target="_top"><i class="material-icons-outlined">open_in_new</i>Im Prompt Editor öffnen</a></div>
-        <p class="hint">Schnellbearbeitung. Beispieltexte, Test-Playground, Rechte und Gemini-Einstellungen pro Typ gibt es im Prompt Editor.</p>
-        <div id="promptCards"></div>
-      </div>
-    </section>
-  </main>
-
-  <!-- ============================ MODAL: RE-PUSH ============================ -->
-  <div class="modal-backdrop" id="modalReplay" role="dialog" aria-modal="true" aria-labelledby="replayTitle">
-    <div class="modal-content">
+  <!-- MODAL: RE-PUSH -->
+  <div class="modal-backdrop" id="modalReplay">
+    <div class="modal">
       <div class="modal-header">
-        <h2 class="modal-title" id="replayTitle">Änderungen erneut nach Phrase pushen</h2>
-        <button class="close-btn" data-close="modalReplay" aria-label="Schließen"><i class="material-icons-outlined">close</i></button>
+        <h2>Re-Push Changes to Phrase</h2>
+        <button class="btn-ghost-modal" onclick="closeModal('modalReplay')"><i class="material-icons-outlined">close</i></button>
       </div>
       <div class="modal-body">
-        <div class="notice notice-info"><i class="material-icons-outlined">info</i><span>Die gespeicherten Änderungen werden per <strong>Source-Text-Matching</strong> auf den Job angewendet – kein Gemini-Call.</span></div>
-        <div class="notice notice-warn"><i class="material-icons-outlined">warning</i><span>Der Job muss im PE-Gemini-Step den Status <strong>NEW oder ACCEPTED</strong> haben. Er wird danach in Phrase abgeschlossen.</span></div>
-        <div class="form-row"><label class="lbl" for="replayProjectUid">Project UID</label><input type="text" class="input mono" id="replayProjectUid" autocomplete="off"></div>
-        <div class="form-row"><label class="lbl" for="replayJobUid">Job UID</label><input type="text" class="input mono" id="replayJobUid" autocomplete="off"></div>
-        <div class="form-row"><label class="lbl" for="replayChangesJson">Changes JSON <span class="muted" style="text-transform:none;font-weight:400;">(vorausgefüllt)</span></label><textarea class="textarea" id="replayChangesJson" rows="8"></textarea></div>
-        <div id="replayResult"></div>
+        <div class="notice notice-info"><i class="material-icons-outlined">info</i><span>Die gespeicherten ?nderungen werden per <strong>Source-Text-Matching</strong> auf den neuen Job angewendet ? kein Gemini-Call.</span></div>
+        <div class="notice notice-warn"><i class="material-icons-outlined">warning</i><span>Der Job muss im PE Gemini Step mit Status <strong>NEW oder ACCEPTED</strong> sein.</span></div>
+        <div style="margin-bottom:12px;">
+          <label class="form-label">Project UID</label>
+          <input type="text" class="input" id="replayProjectUid" placeholder="uaIOjmcZIrbn7dQl8GSrR1">
+        </div>
+        <div style="margin-bottom:12px;">
+          <label class="form-label">Job UID</label>
+          <input type="text" class="input" id="replayJobUid" placeholder="GlJLRo1Iqgmfuikg0gwPJf">
+        </div>
+        <div style="margin-bottom:4px;">
+          <label class="form-label">Changes JSON <span style="color:var(--t3);font-weight:400;">(vorausgef?llt)</span></label>
+          <textarea class="textarea" style="font-family:var(--mono);font-size:11.5px;" id="replayChangesJson" rows="6"></textarea>
+        </div>
+        <div id="replayResult" style="display:none;margin-top:12px;"></div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" data-close="modalReplay">Abbrechen</button>
-        <button class="btn btn-primary" id="btnReplay"><i class="material-icons-outlined">upload</i>Nach Phrase pushen</button>
+        <button class="btn" onclick="closeModal('modalReplay')">Abbrechen</button>
+        <button class="btn btn-primary" id="replayBtn" onclick="executeReplay()"><i class="material-icons-outlined">upload</i>Re-Push to Phrase</button>
       </div>
     </div>
   </div>
 
-  <div id="toast" role="status"></div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="view-dashboard" class="view active">
+      <div class="stat-grid">
+        <div class="stat-card" id="pollerCard">
+          <div class="stat-val" id="pollerVal" style="font-size:18px;">?</div>
+          <div class="stat-label">Background Poller</div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="startTrigger(5)"><i class="material-icons-outlined">timer</i>Start (5 Min)</button>
+        <button class="btn btn-primary" onclick="startTrigger(10)"><i class="material-icons-outlined">timer</i>Start (10 Min)</button>
+        <button class="btn btn-primary" onclick="startTrigger(30)"><i class="material-icons-outlined">timer</i>Start (30 Min)</button>
+        <button class="btn btn-danger" onclick="stopTrigger()"><i class="material-icons-outlined">stop</i>Stop Poller</button>
+        <div style="margin-left:auto;display:flex;gap:8px;">
+          <button class="btn btn-sm" onclick="testSystem()"><i class="material-icons-outlined">vitals</i>Test Connection</button>
+          <button class="btn btn-sm" onclick="debugProjects()"><i class="material-icons-outlined">bug_report</i>Debug Projects</button>
+        </div>
+      </div>
+      <div id="testResult"></div>
+    </div>
+
+    <!-- LIVE RUN -->
+    <div id="view-liverun" class="view">
+      <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);">
+        <div class="stat-card"><div class="stat-val" id="lr-projects">?</div><div class="stat-label">Projects</div><div class="progress-track" style="margin-top:8px;"><div class="progress-fill" id="lr-pb-proj"></div></div></div>
+        <div class="stat-card"><div class="stat-val" id="lr-jobs">?</div><div class="stat-label">Jobs</div><div class="progress-track" style="margin-top:8px;"><div class="progress-fill" id="lr-pb-jobs"></div></div></div>
+        <div class="stat-card"><div class="stat-val" id="lr-segs">?</div><div class="stat-label">Segs changed</div></div>
+        <div class="stat-card"><div class="stat-val" id="lr-errors" style="color:var(--red);">?</div><div class="stat-label">Errors</div></div>
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-primary" id="lr-runBtn" onclick="lrStartRun()"><i class="material-icons-outlined">bolt</i>Run AutoFix Now</button>
+        <button class="btn" onclick="lrClear()"><i class="material-icons-outlined">delete_sweep</i>Clear</button>
+        <span class="poll-indicator" id="lr-pollIndicator" style="display:none;"><span class="poll-dot"></span>Live-Polling aktiv</span>
+      </div>
+      <div class="log-panel">
+        <div class="log-panel-header">
+          <div class="log-panel-title"><span class="run-dot" id="lr-dot"></span><span id="lr-status">Ready</span></div>
+          <span style="font-size:11px;color:var(--t2);" id="lr-ts"></span>
+        </div>
+        <div class="log-entries" id="lr-entries">
+          <div class="log-entry"><span class="le-time">?</span><span class="le-lvl lvl-info">INFO</span><span class="le-msg">Waiting?</span></div>
+        </div>
+      </div>
+      <div class="error-panel" id="lr-errPanel" style="display:none;">
+        <div style="font-size:10.5px;font-weight:700;color:var(--red);margin-bottom:6px;">Error Details</div>
+        <pre id="lr-errMsg"></pre>
+      </div>
+    </div>
+
+    <!-- QUEUE -->
+    <div id="view-projects" class="view">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="runManualFix()"><i class="material-icons-outlined">bolt</i>Run AutoFix Now</button>
+        <button class="btn" onclick="loadProjects()"><i class="material-icons-outlined">refresh</i>Refresh</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Project</th><th>UID</th><th>Type</th><th>Target Languages</th><th>Jobs (PE Gemini)</th></tr></thead>
+          <tbody id="queueBody"><tr><td colspan="5" style="color:var(--t2);padding:20px;text-align:center;">Loading?</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RUN LOG -->
+    <div id="view-runlog" class="view">
+      <div class="toolbar">
+        <button class="btn" onclick="loadLogs()"><i class="material-icons-outlined">refresh</i>Refresh</button>
+        <button class="btn" onclick="openSheet()"><i class="material-icons-outlined">open_in_new</i>Open Google Sheet</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Project</th><th>Type</th><th>Language</th><th>Status</th><th>Segs</th><th>Changed</th><th>Changes</th><th>Re-Push</th><th>Info</th></tr></thead>
+          <tbody id="logBody"><tr><td colspan="10" style="color:var(--t2);padding:20px;text-align:center;">Loading?</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MQM REPORT -->
+    <div id="view-mqm" class="view">
+
+      <!-- Filter Card -->
+      <div class="mqm-filter-card">
+        <div class="section-head" style="margin-bottom:14px;">Filter</div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+          <div>
+            <label class="form-label">Date From</label>
+            <input type="date" class="input" id="mqm-dateFrom">
+          </div>
+          <div>
+            <label class="form-label">Date To</label>
+            <input type="date" class="input" id="mqm-dateTo">
+          </div>
+          <div>
+            <label class="form-label">Project</label>
+            <select class="select" id="mqm-project">
+              <option value="">All Projects</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">AutoFix Type</label>
+            <select class="select" id="mqm-type">
+              <option value="all">All Types</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1fr 3fr;gap:12px;">
+          <div>
+            <label class="form-label">Target Language</label>
+            <select class="select" id="mqm-lang">
+              <option value="all">All Languages</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:8px;">
+            <button class="btn btn-primary" onclick="runMqmReport(false)" id="mqm-runBtn">
+              <i class="material-icons-outlined">analytics</i>Generate Report
+            </button>
+            <button class="btn btn-purple" onclick="runMqmReport(true)" id="mqm-exportBtn">
+              <i class="material-icons-outlined">table_chart</i>Generate &amp; Export to Sheet
+            </button>
+            <button class="btn btn-sm" onclick="loadMqmFilterOptions()">
+              <i class="material-icons-outlined">refresh</i>Refresh Filters
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results area -->
+      <div id="mqm-results">
+        <div class="mqm-empty">
+          <i class="material-icons-outlined" style="font-size:40px;color:var(--t3);display:block;margin-bottom:8px;">analytics</i>
+          Filter setzen und Report generieren.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BENCHMARKING -->
+    <div id="view-benchmark" class="view">
+      <div class="mqm-filter-card">
+        <div class="section-head" style="margin-bottom:14px;">Filter</div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+          <div><label class="form-label">Date From</label><input type="date" class="input" id="bm-dateFrom"></div>
+          <div><label class="form-label">Date To</label><input type="date" class="input" id="bm-dateTo"></div>
+          <div><label class="form-label">AutoFix Type</label>
+            <select class="select" id="bm-type"><option value="all">All Types</option></select>
+          </div>
+          <div style="display:flex;align-items:flex-end;">
+            <button class="btn btn-primary" onclick="runBenchmark()" id="bm-runBtn" style="width:100%;">
+              <i class="material-icons-outlined">compare_arrows</i>Run Benchmark
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="bm-results">
+        <div class="mqm-empty"><i class="material-icons-outlined" style="font-size:40px;color:var(--t3);display:block;margin-bottom:8px;">compare_arrows</i>Filter setzen und Benchmark starten.</div>
+      </div>
+    </div>
+
+    <!-- TERMINOLOGY DRIFT -->
+    <div id="view-drift" class="view">
+      <div class="mqm-filter-card">
+        <div class="section-head" style="margin-bottom:14px;">Filter</div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+          <div><label class="form-label">Date From</label><input type="date" class="input" id="dr-dateFrom"></div>
+          <div><label class="form-label">Date To</label><input type="date" class="input" id="dr-dateTo"></div>
+          <div><label class="form-label">Target Language</label>
+            <select class="select" id="dr-lang"><option value="all">All Languages</option></select>
+          </div>
+          <div style="display:flex;align-items:flex-end;">
+            <button class="btn btn-primary" onclick="runDrift()" id="dr-runBtn" style="width:100%;">
+              <i class="material-icons-outlined">trending_up</i>Analyse Drift
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="dr-results">
+        <div class="mqm-empty"><i class="material-icons-outlined" style="font-size:40px;color:var(--t3);display:block;margin-bottom:8px;">trending_up</i>Filter setzen und Drift-Analyse starten.</div>
+      </div>
+    </div>
+
+    <!-- GLOSSARY SUGGESTIONS -->
+    <div id="view-glossary" class="view">
+      <div class="mqm-filter-card">
+        <div class="section-head" style="margin-bottom:14px;">Filter</div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+          <div><label class="form-label">Date From</label><input type="date" class="input" id="gl-dateFrom"></div>
+          <div><label class="form-label">Date To</label><input type="date" class="input" id="gl-dateTo"></div>
+          <div><label class="form-label">Target Language</label>
+            <select class="select" id="gl-lang"><option value="all">All Languages</option></select>
+          </div>
+          <div style="display:flex;align-items:flex-end;">
+            <button class="btn btn-primary" onclick="runGlossary()" id="gl-runBtn" style="width:100%;">
+              <i class="material-icons-outlined">menu_book</i>Generate Suggestions
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="gl-results">
+        <div class="mqm-empty"><i class="material-icons-outlined" style="font-size:40px;color:var(--t3);display:block;margin-bottom:8px;">menu_book</i>Filter setzen und Vorschl?ge generieren.</div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="view-settings" class="view">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="saveSettings()"><i class="material-icons-outlined">save</i>Save Settings</button>
+        <div style="margin-left:auto;">
+          <button class="btn btn-sm" onclick="openSheet()"><i class="material-icons-outlined">open_in_new</i>Open Google Sheet</button>
+        </div>
+      </div>
+      <div class="card" style="padding:16px;margin-bottom:14px;">
+        <div class="section-head">Phrase TMS &amp; Workflow</div>
+        <div class="form-grid">
+          <div><label class="form-label">Custom Field UID</label><input type="text" class="input" id="cfFieldUid"></div>
+          <div><label class="form-label">Workflow Step Name</label><input type="text" class="input" id="wfStepName"></div>
+          <div><label class="form-label">Custom Field nach Fix zur?cksetzen?</label>
+            <select class="select" id="markDoneAfterFix">
+              <option value="true">Ja ? auf leer setzen</option>
+              <option value="false">Nein</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="padding:16px;margin-bottom:14px;">
+        <div class="section-head">AI &amp; Poller</div>
+        <div class="form-grid">
+          <div><label class="form-label">AI Model</label>
+            <select class="select" id="primaryModel">
+              <option value="gemini-3.6-flash">Gemini 3.6 Flash</option>
+            </select>
+            <div style="font-size:10.5px;color:var(--t2);margin-top:4px;">
+              Aktuell einziges f?r unseren API-Key freigeschaltetes Modell. Andere Modelle wie
+              gemini-2.5-pro oder gemini-2.5-flash geben 404 (nicht mehr f?r neue Keys verf?gbar) zur?ck.
+            </div>
+          </div>
+          <div><label class="form-label">TM Threshold (0.0?1.0)</label><input type="number" step="0.1" min="0" max="1" class="input" id="tmThreshold"></div>
+          <div><label class="form-label">Poller Interval (Min)</label><input type="number" min="1" class="input" id="pollerIntervalMinutes"></div>
+          <div><label class="form-label">PE Temperature</label><input type="number" step="0.05" min="0" max="1" class="input" id="peTemperature"></div>
+        </div>
+      </div>
+      <div style="margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
+        <div class="section-head" style="margin-bottom:0;">Post-Editing Instructions per Type</div>
+        <span style="font-size:11px;color:var(--t2);">Jeder AutoFix-Typ hat seinen eigenen Prompt.</span>
+      </div>
+      <div id="promptCards">
+        <div style="color:var(--t2);font-size:12px;padding:20px;text-align:center;">Loading prompts?</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast"></div>
 
   <script>
-    // ================================================================
-    // UTILS
-    // ================================================================
-    function $(id) { return document.getElementById(id); }
-    function esc(s) {
-      return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
+    // ?? UTILS ??????????????????????????????????????????????????????????
     var _toastT = null;
-    function toast(msg, isError, dur) {
-      var el = $('toast');
-      el.textContent = msg;
-      el.className = 'show' + (isError ? ' error' : '');
-      clearTimeout(_toastT);
-      _toastT = setTimeout(function () { el.className = ''; }, dur || (isError ? 6000 : 3000));
+    function toast(msg, dur) {
+      var el = document.getElementById('toast');
+      el.textContent = msg; el.classList.add('show');
+      if (_toastT) clearTimeout(_toastT);
+      _toastT = setTimeout(function() { el.classList.remove('show'); }, dur || 3000);
     }
-    function errMsg(e) { return (e && e.message) ? e.message : String(e); }
-    // Promise-Wrapper um google.script.run
-    function gas(fn) {
-      var args = Array.prototype.slice.call(arguments, 1);
-      return new Promise(function (resolve, reject) {
-        var runner = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
-        runner[fn].apply(runner, args);
+    function switchView(id, el) {
+      document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+      document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
+      document.getElementById('view-' + id).classList.add('active');
+      if (el) el.classList.add('active');
+      if (id === 'projects')  loadProjects();
+      if (id === 'runlog')    loadLogs();
+      if (id === 'settings')  loadSettings();
+      if (id === 'dashboard') checkTrigger();
+      if (id === 'mqm')       loadMqmFilterOptions();
+      if (id === 'benchmark') initBenchmarkTab_();
+      if (id === 'drift')     initDriftTab_();
+      if (id === 'glossary')  initGlossaryTab_();
+    }
+    function runGas(fn, args, cb, errCb) {
+      google.script.run
+        .withSuccessHandler(function(r) { try { cb(r); } catch(e) { console.error(e); } })
+        .withFailureHandler(function(e) { if (errCb) errCb(e); else toast('Error: ' + (e.message || e)); })
+        [fn].apply(null, args || []);
+    }
+    function openModal(id)  { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    function typeBadge_(type) {
+      var labels = { 'technical': 'Technical Docs', 'marketing': 'Marketing' };
+      var label  = labels[type] || (type ? type : '?');
+      var cls    = type ? 'prompt-type-badge type-' + type : 'badge badge-grey';
+      return '<span class="' + cls + '">' + esc(label) + '</span>';
+    }
+
+    // ?? DASHBOARD ??????????????????????????????????????????????????????
+    function checkTrigger() {
+      runGas('getAutoFixTriggerStatus', [], function(r) {
+        var val = document.getElementById('pollerVal'), card = document.getElementById('pollerCard');
+        if (r.active) { val.textContent = 'Active'; val.style.color = 'var(--green)'; card.style.borderColor = 'var(--green)'; }
+        else          { val.textContent = 'Inactive'; val.style.color = 'var(--t2)'; card.style.borderColor = 'var(--bdr)'; }
       });
     }
-    function loadingHtml(text) { return '<div class="loading-box"><div class="loader"></div>' + esc(text) + '</div>'; }
-    function emptyHtml(icon, text) { return '<div class="empty-state"><i class="material-icons-outlined">' + icon + '</i>' + esc(text) + '</div>'; }
-    function noticeHtml(kind, icon, html) { return '<div class="notice notice-' + kind + '"><i class="material-icons-outlined">' + icon + '</i><span>' + html + '</span></div>'; }
-    function tableMsg(colspan, text, cls) { return '<tr><td colspan="' + colspan + '"><div class="empty-state ' + (cls || '') + '" style="padding:25px;">' + esc(text) + '</div></td></tr>'; }
-    function fmtDate(ts, withTime) {
-      var d = new Date(ts);
-      if (isNaN(d)) return '–';
-      return withTime ? d.toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : d.toLocaleDateString('de-DE');
+    function startTrigger(mins) {
+      var fn = mins === 5 ? 'setupAutoFixTrigger5Min' : (mins === 30 ? 'setupAutoFixTrigger30Min' : 'setupAutoFixTrigger10Min');
+      runGas(fn, [], function() { toast('Poller gestartet: alle ' + mins + ' Min.'); checkTrigger(); });
     }
-    function isoDay(d) {
-      // lokales Datum (toISOString wäre UTC und springt nachts auf den Vortag)
-      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    }
-    function catClass(cat) { return 'cat cat-' + String(cat || 'uncategorized').toLowerCase().replace(/[^a-z]/g, ''); }
-    function sevHtml(sev) {
-      var s = ['critical', 'major', 'minor'].indexOf(sev) !== -1 ? sev : 'minor';
-      return '<span class="sev sev-' + s + '">' + s + '</span>';
-    }
-    function sevCount(n, sev) { return n > 0 ? '<span class="sev sev-' + sev + '">' + n + '</span>' : '<span class="muted">0</span>'; }
-    function langPill(l) { return '<span class="pill pill-lang">' + esc(l || '–') + '</span>'; }
-    var TYPE_LABELS = {};
-    function typePill(type) { return '<span class="pill pill-type">' + esc(TYPE_LABELS[type] || type || '–') + '</span>'; }
-    function setBusy(btn, busy) { btn.disabled = !!busy; }
-
-    // ================================================================
-    // NAVIGATION
-    // ================================================================
-    var VIEW_INIT = {
-      dashboard: refreshDashboard,
-      queue: function () { loadQueue(false); },
-      runlog: loadLogs,
-      mqm: initMqm,
-      benchmark: function () { initDates('bmFrom', 'bmTo', 90); loadFilterOptions(); },
-      drift: function () { initDates('drFrom', 'drTo', 90); loadFilterOptions(); },
-      glossary: function () { initDates('glFrom', 'glTo', 90); loadFilterOptions(); },
-      settings: loadSettings
-    };
-    function switchView(id) {
-      document.querySelectorAll('.tab-content').forEach(function (v) { v.classList.toggle('active', v.id === 'view-' + id); });
-      document.querySelectorAll('.tab-btn').forEach(function (b) {
-        var on = b.getAttribute('data-view') === id;
-        b.classList.toggle('active', on);
-        b.setAttribute('aria-selected', on ? 'true' : 'false');
+    function stopTrigger() { runGas('removeAutoFixTrigger', [], function() { toast('Poller gestoppt.'); checkTrigger(); }); }
+    function testSystem() {
+      var div = document.getElementById('testResult');
+      div.style.display = 'block'; div.style.background = 'var(--surface2)'; div.style.border = '1px solid var(--bdr)'; div.innerHTML = 'Testing?';
+      runGas('testConnection', [], function(r) {
+        if (r.success) { div.style.borderColor = 'var(--green)'; div.innerHTML = '<span style="color:var(--green);font-weight:700;">? OK</span> ? Phrase: <strong>' + esc(r.user) + '</strong> | Gemini: <strong>' + esc(r.model) + '</strong>'; }
+        else           { div.style.borderColor = 'var(--red)';   div.innerHTML = '<span style="color:var(--red);font-weight:700;">? Failed</span><br>' + esc(r.error); }
       });
-      if (VIEW_INIT[id]) VIEW_INIT[id]();
     }
-    document.querySelectorAll('.tab-btn').forEach(function (b) {
-      b.addEventListener('click', function () { switchView(b.getAttribute('data-view')); });
-    });
-    function openModal(id) { $(id).classList.add('open'); }
-    function closeModal(id) { $(id).classList.remove('open'); }
-    document.querySelectorAll('[data-close]').forEach(function (b) {
-      b.addEventListener('click', function () { closeModal(b.getAttribute('data-close')); });
-    });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') document.querySelectorAll('.modal-backdrop.open').forEach(function (m) { m.classList.remove('open'); });
-    });
-
-    // ================================================================
-    // DASHBOARD
-    // ================================================================
-    function refreshDashboard() {
-      gas('getAutoFixTriggerStatus').then(function (r) {
-        var tile = $('tilePoller');
-        if (r.active) {
-          $('dPoller').textContent = 'Aktiv';
-          tile.className = 'dash-tile ok';
-          var o = r.owner || {};
-          $('dPollerSub').textContent = (o.interval ? 'alle ' + o.interval + ' Min.' : '') + (o.email ? ' · ' + o.email : '');
-          if (o.interval) $('pollerInterval').value = String(o.interval);
-        } else {
-          $('dPoller').textContent = 'Inaktiv';
-          tile.className = 'dash-tile idle';
-          $('dPollerSub').textContent = '';
-        }
-        var lockTile = $('tileLock');
-        if (r.running && r.running.ts) {
-          var mins = Math.round((Date.now() - r.running.ts) / 60000);
-          $('dLock').textContent = 'Läuft';
-          $('dLockSub').textContent = 'seit ' + mins + ' Min.';
-          lockTile.className = 'dash-tile' + (mins > 10 ? ' bad' : '');
-          $('lockCard').style.display = '';
-        } else {
-          $('dLock').textContent = 'Bereit';
-          $('dLockSub').textContent = '';
-          lockTile.className = 'dash-tile ok';
-          $('lockCard').style.display = 'none';
-        }
-      }).catch(function (e) { toast(errMsg(e), true); });
-
-      gas('getAutoFixProjects').then(function (r) {
-        if (!r || !r.success) { $('dProjects').textContent = '!'; return; }
-        $('dProjects').textContent = r.projects.length;
-        $('dJobs').textContent = r.projects.reduce(function (s, p) { return s + p.jobs.length; }, 0);
-      }).catch(function () { $('dProjects').textContent = '!'; });
+    function debugProjects() {
+      var div = document.getElementById('testResult');
+      div.style.display = 'block'; div.style.background = 'var(--surface2)'; div.style.border = '1px solid var(--amber-bdr)'; div.innerHTML = 'Analysiere?';
+      runGas('testProjectSearch', [], function(r) {
+        div.innerHTML = r.success
+          ? '<pre style="white-space:pre-wrap;font-family:var(--mono);font-size:11.5px;line-height:1.5;">' + esc(r.resultText) + '</pre>'
+          : '<span style="color:var(--red);">' + esc(r.error) + '</span>';
+      });
     }
-
-    $('btnStartPoller').addEventListener('click', function () {
-      var mins = parseInt($('pollerInterval').value, 10);
-      if (!confirm('Poller alle ' + mins + ' Minuten starten?\nJobs werden automatisch bearbeitet und in Phrase abgeschlossen.')) return;
-      var btn = this; setBusy(btn, true);
-      gas('setupAutoFixTrigger', mins).then(function (r) {
-        if (r.success) toast('Poller gestartet: alle ' + r.interval + ' Min.'); else toast(r.error, true);
-        refreshDashboard();
-      }).catch(function (e) { toast(errMsg(e), true); }).then(function () { setBusy(btn, false); });
-    });
-    $('btnStopPoller').addEventListener('click', function () {
-      if (!confirm('Poller wirklich stoppen?')) return;
-      var btn = this; setBusy(btn, true);
-      gas('removeAutoFixTrigger').then(function (r) {
-        if (!r.success) toast(r.error, true);
-        else if (!r.removed) toast('Kein eigener Poller gefunden. Ein Poller eines anderen Admins kann nur von diesem gestoppt werden.', true);
-        else toast('Poller gestoppt.');
-        refreshDashboard();
-      }).catch(function (e) { toast(errMsg(e), true); }).then(function () { setBusy(btn, false); });
-    });
-    $('btnUnlock').addEventListener('click', function () {
-      if (!confirm('Run-Lock wirklich freigeben?\nNur tun, wenn sicher kein Run mehr läuft.')) return;
-      gas('forceUnlock').then(function (r) { toast(r.message || 'Freigegeben.'); refreshDashboard(); })
-        .catch(function (e) { toast(errMsg(e), true); });
-    });
-    $('btnTest').addEventListener('click', function () {
-      var box = $('testResult'), btn = this;
-      box.innerHTML = loadingHtml('Verbindung wird getestet …'); setBusy(btn, true);
-      gas('testConnection').then(function (r) {
-        box.innerHTML = r.success
-          ? noticeHtml('success', 'check_circle', '<strong>Verbindung OK</strong> – Phrase: ' + esc(r.user) + ' · Gemini: ' + esc(r.model))
-          : noticeHtml('error', 'error', '<strong>Fehlgeschlagen:</strong> ' + esc(r.error));
-      }).catch(function (e) { box.innerHTML = noticeHtml('error', 'error', esc(errMsg(e))); })
-        .then(function () { setBusy(btn, false); });
-    });
-    $('btnDebug').addEventListener('click', function () {
-      var box = $('testResult'), btn = this;
-      box.innerHTML = loadingHtml('Analysiere die letzten Projekte …'); setBusy(btn, true);
-      gas('testProjectSearch').then(function (r) {
-        box.innerHTML = r.success ? '<pre>' + esc(r.resultText) + '</pre>' : noticeHtml('error', 'error', esc(r.error));
-      }).catch(function (e) { box.innerHTML = noticeHtml('error', 'error', esc(errMsg(e))); })
-        .then(function () { setBusy(btn, false); });
-    });
     function openSheet() {
-      // Fenster synchron öffnen (sonst blockt der Popup-Blocker), URL danach setzen
-      var w = window.open('', '_blank');
-      gas('getDatabaseUrl').then(function (r) {
-        if (r.success && w) { w.opener = null; w.location = r.url; }
-        else { if (w) w.close(); toast('Sheet-URL nicht gefunden.', true); }
-      }).catch(function (e) { if (w) w.close(); toast(errMsg(e), true); });
+      runGas('getDatabaseUrl', [], function(r) {
+        if (r.success) window.open(r.url, '_blank'); else toast('Sheet URL nicht gefunden.');
+      });
     }
-    $('btnSheet').addEventListener('click', openSheet);
-    $('btnLogSheet').addEventListener('click', openSheet);
 
-    // ================================================================
-    // LIVE RUN
-    // ================================================================
-    var lr = { running: false, logs: [], lastSeq: 0, timer: null, stats: null };
-    function lrTime() { return new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
-    function lrReset() {
-      lr.logs = []; lr.lastSeq = 0;
-      lr.stats = { projTotal: 0, jobs: 0, jobTotal: 0, segs: 0, errors: 0 };
-      lrStats(); lrSetStatus('', 'Bereit'); lrRender();
-    }
-    function lrLog(level, msg, sub) { lr.logs.push({ t: lrTime(), level: level, msg: msg, sub: sub || '' }); lrRender(); }
-    function lrRender() {
-      var el = $('lrEntries');
-      if (!lr.logs.length) {
-        el.innerHTML = '<div class="log-entry"><span class="le-time">–</span><span class="le-lvl lvl-INFO">INFO</span><span class="le-msg">Warte auf Start …</span></div>';
-        return;
-      }
-      // Werte werden hier (und nur hier) escaped – Aufrufer übergeben Rohtext.
-      el.innerHTML = lr.logs.map(function (e) {
-        var lvl = ['INFO', 'OK', 'WARN', 'ERR'].indexOf(e.level) !== -1 ? e.level : 'INFO';
-        return '<div class="log-entry"><span class="le-time">' + esc(e.t) + '</span><span class="le-lvl lvl-' + lvl + '">' + lvl + '</span>' +
-          '<span class="le-msg">' + esc(e.msg) + (e.sub ? ' <span class="le-sub">· ' + esc(e.sub) + '</span>' : '') + '</span></div>';
+    // ?? LIVE RUN ???????????????????????????????????????????????????????
+    var _lrRunning = false, _lrLogs = [], _pollInterval = null;
+    var _lrStats = { projects:0, projTotal:0, jobs:0, jobTotal:0, segs:0, errors:0 };
+    var _pollSeenCount = 0;
+    function lrTs() { return new Date().toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit', second:'2-digit' }); }
+    function lrAddLog(level, msg, sub) { _lrLogs.push({ t: lrTs(), level: level, msg: msg, sub: sub || '' }); lrRenderLogs_(); }
+    function lrRenderLogs_() {
+      var el = document.getElementById('lr-entries');
+      var lc = { INFO:'lvl-info', OK:'lvl-ok', WARN:'lvl-warn', ERR:'lvl-err' };
+      el.innerHTML = _lrLogs.map(function(e) {
+        return '<div class="log-entry"><span class="le-time">' + e.t + '</span><span class="le-lvl ' + (lc[e.level]||'lvl-info') + '">' + e.level + '</span><span class="le-msg">' + esc(e.msg) + (e.sub ? ' <span class="le-sub">? ' + esc(e.sub) + '</span>' : '') + '</span></div>';
       }).join('');
       el.scrollTop = el.scrollHeight;
     }
     function lrSetStatus(state, text) {
-      $('lrDot').className = 'run-dot' + (state ? ' ' + state : '');
-      $('lrStatus').textContent = text;
-      $('lrTs').textContent = lrTime();
+      document.getElementById('lr-dot').className = 'run-dot' + (state ? ' ' + state : '');
+      document.getElementById('lr-status').textContent = text;
+      document.getElementById('lr-ts').textContent = lrTs();
     }
-    function lrStats() {
-      var s = lr.stats;
-      $('lrProjects').textContent = s.projTotal || '–';
-      $('lrJobs').textContent = s.jobTotal ? s.jobs + '/' + s.jobTotal : '–';
-      $('lrSegs').textContent = s.segs || '–';
-      $('lrErrors').textContent = s.errors || '–';
-      $('lrErrors').style.color = s.errors ? 'var(--red)' : '';
-      $('lrJobsBar').style.width = (s.jobTotal ? Math.round(s.jobs / s.jobTotal * 100) : 0) + '%';
+    function _lrUpdateStats() {
+      document.getElementById('lr-projects').textContent = _lrStats.projTotal || '?';
+      document.getElementById('lr-jobs').textContent     = _lrStats.jobTotal > 0 ? _lrStats.jobs + '/' + _lrStats.jobTotal : '?';
+      document.getElementById('lr-segs').textContent     = _lrStats.segs || '?';
+      document.getElementById('lr-errors').textContent   = _lrStats.errors > 0 ? _lrStats.errors : '?';
+      document.getElementById('lr-pb-proj').style.width  = (_lrStats.projTotal > 0 ? Math.round((_lrStats.projects/_lrStats.projTotal)*100) : 0) + '%';
+      document.getElementById('lr-pb-jobs').style.width  = (_lrStats.jobTotal  > 0 ? Math.round((_lrStats.jobs/_lrStats.jobTotal)*100)      : 0) + '%';
     }
-    function lrPoll() {
-      return gas('getRunStatus', lr.lastSeq).then(function (r) {
-        if (!r || !r.entries || !r.entries.length) return;
-        r.entries.forEach(function (e) {
-          if (e.seq && e.seq <= lr.lastSeq) return;
-          if (e.seq) lr.lastSeq = e.seq;
-          lr.logs.push({ t: e.t || lrTime(), level: e.level || 'INFO', msg: e.msg || '' });
+    function lrClear() {
+      _lrLogs = []; _lrRunning = false; _pollSeenCount = 0;
+      _lrStats = { projects:0, projTotal:0, jobs:0, jobTotal:0, segs:0, errors:0 };
+      if (_pollInterval) { clearInterval(_pollInterval); _pollInterval = null; }
+      _lrUpdateStats(); lrSetStatus('', 'Ready');
+      document.getElementById('lr-errPanel').style.display = 'none';
+      document.getElementById('lr-runBtn').disabled = false;
+      document.getElementById('lr-pollIndicator').style.display = 'none';
+      document.getElementById('lr-entries').innerHTML = '<div class="log-entry"><span class="le-time">?</span><span class="le-lvl lvl-info">INFO</span><span class="le-msg">Waiting?</span></div>';
+    }
+    function startPolling_() {
+      _pollSeenCount = 0;
+      document.getElementById('lr-pollIndicator').style.display = 'inline-flex';
+      _pollInterval = setInterval(function() {
+        if (!_lrRunning) { stopPolling_(); return; }
+        runGas('getRunStatus', [], function(r) {
+          if (!r || !r.entries) return;
+          var newEntries = r.entries.slice(_pollSeenCount);
+          if (!newEntries.length) return;
+          _pollSeenCount = r.entries.length;
+          newEntries.forEach(function(e) { _lrLogs.push({ t: e.t || lrTs(), level: e.level || 'INFO', msg: e.msg || '', sub: '' }); });
+          lrRenderLogs_();
         });
-        lrRender();
-      }).catch(function () { /* nächster Tick */ });
+      }, 2000);
     }
-    function lrStopPolling() { if (lr.timer) { clearInterval(lr.timer); lr.timer = null; } }
-
-    function startRun() {
-      if (lr.running) return;
-      if (!confirm('AutoFix jetzt für ALLE Projekte der Queue ausführen?\n\nDie korrigierten Dateien werden nach Phrase hochgeladen und die Jobs abgeschlossen.')) return;
-      switchView('liverun');
-      lrReset();
-      lr.running = true;
-      $('btnRunNow').disabled = true; $('btnQueueRun').disabled = true;
-      lrSetStatus('active', 'Läuft …');
-      lr.timer = setInterval(lrPoll, 2500);
-
-      gas('runNow').then(function (r) {
-        lrStopPolling();
-        return lrPoll().then(function () { return r; });
-      }).then(function (r) {
-        if (!r.success) { lrLog('ERR', r.error); lrSetStatus('error', 'Fehlgeschlagen'); return; }
+    function stopPolling_() {
+      if (_pollInterval) { clearInterval(_pollInterval); _pollInterval = null; }
+      document.getElementById('lr-pollIndicator').style.display = 'none';
+    }
+    function lrStartRun() {
+      if (_lrRunning) return;
+      lrClear(); _lrRunning = true;
+      document.getElementById('lr-runBtn').disabled = true;
+      lrSetStatus('active', 'Running?');
+      lrAddLog('INFO', 'Starte AutoFix Run?');
+      runGas('clearRunStatus', [], function() { startPolling_(); });
+      runGas('runNow', [], function(r) {
+        stopPolling_(); _lrRunning = false;
+        document.getElementById('lr-runBtn').disabled = false;
+        if (!r.success) {
+          lrAddLog('ERR', r.error); lrSetStatus('error', 'Failed');
+          document.getElementById('lr-errPanel').style.display = 'block';
+          document.getElementById('lr-errMsg').textContent = r.error;
+          return;
+        }
         var projects = r.results || [];
-        lr.stats.projTotal = r.count || projects.length;
-        if (!lr.stats.projTotal) { lrSetStatus('done', 'Fertig – nichts zu tun'); lrStats(); return; }
+        _lrStats.projTotal = _lrStats.projects = r.count || projects.length;
+        if (!_lrStats.projTotal) { lrAddLog('WARN', 'Keine Projekte mit AutoFix-Flag.'); lrSetStatus('done', 'Done ? nothing to process'); return; }
         var hasErr = false;
-        lrLog('INFO', '── Zusammenfassung ──');
-        projects.forEach(function (proj) {
-          (proj.results || []).forEach(function (job) {
-            lr.stats.jobTotal++; lr.stats.jobs++;
-            if (job.skipped) lrLog('WARN', 'Übersprungen: ' + (job.filename || job.jobUid), job.reason);
-            else if (!job.success) { lr.stats.errors++; hasErr = true; lrLog('ERR', 'Job-Fehler: ' + (job.filename || job.jobUid), job.error || 'Unbekannter Fehler'); }
-            else {
-              lr.stats.segs += job.segmentsChanged || 0;
-              lrLog('OK', job.filename || job.jobUid, (job.targetLang || '') + ' [' + (TYPE_LABELS[job.autoFixType] || job.autoFixType || '') + '] · ' + (job.segmentsChanged || 0) + '/' + (job.segmentsTotal || 0) + ' Seg.');
+        projects.forEach(function(proj) {
+          if (!proj.success) { lrAddLog('ERR', 'Projekt Fehler: ' + (proj.projectUid||'?'), proj.error); _lrStats.errors++; hasErr = true; return; }
+          var results = proj.results || [];
+          _lrStats.jobTotal += results.length;
+          results.forEach(function(job) {
+            _lrStats.jobs++;
+            var typeLabel = job.autoFixType ? ' [' + job.autoFixType + ']' : '';
+            if (job.skipped) { lrAddLog('WARN', '?bersprungen: ' + esc(job.filename||job.jobUid), job.reason); }
+            else if (!job.success) {
+              _lrStats.errors++; hasErr = true;
+              lrAddLog('ERR', 'Job Fehler: ' + esc(job.filename||job.jobUid), job.targetLang);
+              document.getElementById('lr-errPanel').style.display = 'block';
+              document.getElementById('lr-errMsg').textContent = job.error || 'Unbekannter Fehler';
+            } else {
+              _lrStats.segs += job.segmentsChanged || 0;
+              lrAddLog('OK', esc(job.filename||job.jobUid), esc(job.targetLang) + typeLabel + ' | ' + (job.segmentsChanged||0) + '/' + (job.segmentsTotal||0) + ' Seg');
             }
+            _lrUpdateStats();
           });
-          if (!proj.success && !(proj.results || []).length) { lr.stats.errors++; hasErr = true; lrLog('ERR', 'Projekt-Fehler: ' + (proj.projectName || proj.projectUid), proj.error); }
         });
-        lrStats();
-        lrSetStatus(hasErr ? 'error' : 'done', hasErr ? 'Beendet mit Fehlern' : 'Erfolgreich beendet');
-        toast(hasErr ? 'Run beendet – es gab Fehler.' : 'AutoFix abgeschlossen.', hasErr);
-      }).catch(function (e) {
-        lrStopPolling(); lrPoll();
-        lrLog('ERR', 'Script-Fehler: ' + errMsg(e));
-        lrSetStatus('error', 'Script-Fehler');
-      }).then(function () {
-        lr.running = false;
-        $('btnRunNow').disabled = false; $('btnQueueRun').disabled = false;
+        _lrUpdateStats();
+        lrSetStatus(hasErr ? 'error' : 'done', hasErr ? 'Finished with errors' : 'Finished successfully');
+        toast(hasErr ? 'Run beendet ? Fehler vorhanden.' : 'AutoFix abgeschlossen.');
+        loadLogs();
+      }, function(e) {
+        stopPolling_(); _lrRunning = false;
+        document.getElementById('lr-runBtn').disabled = false;
+        lrAddLog('ERR', 'Script error: ' + e.message); lrSetStatus('error', 'Script error');
       });
     }
-    $('btnRunNow').addEventListener('click', startRun);
-    $('btnQueueRun').addEventListener('click', startRun);
-    $('btnLrClear').addEventListener('click', function () { if (!lr.running) lrReset(); });
 
-    // ================================================================
-    // QUEUE
-    // ================================================================
-    function loadQueue(force) {
-      var tbody = $('queueBody');
-      tbody.innerHTML = '<tr><td colspan="6">' + loadingHtml('Lade Projekte aus Phrase …') + '</td></tr>';
-      var p = force ? gas('clearProjectCache').then(function () { return gas('getAutoFixProjects'); }) : gas('getAutoFixProjects');
-      p.then(function (r) {
-        if (!r || !r.success) { tbody.innerHTML = tableMsg(6, r ? r.error : 'Fehler', 'notice-error'); return; }
-        $('queueMeta').textContent = r.fromCache ? 'Aus Cache (max. 15 Min. alt)' : 'Frisch aus Phrase geladen';
-        if (!r.projects.length) { tbody.innerHTML = tableMsg(6, 'Die Queue ist leer.'); return; }
-        tbody.innerHTML = r.projects.map(function (p) {
-          var words = p.jobs.reduce(function (s, j) { return s + (j.wordsCount || 0); }, 0);
+    // ?? QUEUE ??????????????????????????????????????????????????????????
+    function loadProjects() {
+      document.getElementById('queueBody').innerHTML = '<tr><td colspan="5" style="color:var(--t2);padding:20px;text-align:center;">Loading?</td></tr>';
+      runGas('getAutoFixProjects', [], function(r) {
+        var tbody = document.getElementById('queueBody');
+        if (!r || !r.success) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--red);padding:16px;">' + esc(r ? r.error : 'Fehler') + '</td></tr>'; return; }
+        if (!r.projects.length) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--t2);padding:20px;text-align:center;">Queue ist leer.</td></tr>'; return; }
+        tbody.innerHTML = r.projects.map(function(p) {
           return '<tr><td><strong>' + esc(p.name) + '</strong></td>' +
-            '<td class="mono muted">' + esc(p.uid) + '</td>' +
-            '<td>' + typePill(p.autoFixType) + '</td>' +
-            '<td>' + (p.targetLangs || []).map(langPill).join(' ') + '</td>' +
-            '<td class="num"><strong>' + p.jobs.length + '</strong></td>' +
-            '<td class="num">' + words.toLocaleString('de-DE') + '</td></tr>';
+            '<td style="font-family:var(--mono);font-size:11px;color:var(--t2);">' + esc(p.uid) + '</td>' +
+            '<td>' + typeBadge_(p.autoFixType) + '</td>' +
+            '<td>' + p.targetLangs.map(function(l) { return '<span class="badge badge-grey">' + esc(l) + '</span>'; }).join(' ') + '</td>' +
+            '<td><strong>' + p.jobs.length + '</strong></td></tr>';
         }).join('');
-      }).catch(function (e) { tbody.innerHTML = tableMsg(6, errMsg(e), 'notice-error'); });
-    }
-    $('btnQueueRefresh').addEventListener('click', function () { loadQueue(true); });
-
-    // ================================================================
-    // RUN LOG
-    // ================================================================
-    var logData = [];
-    function loadLogs() {
-      $('logBody').innerHTML = '<tr><td colspan="10">' + loadingHtml('Lade Run Log …') + '</td></tr>';
-      gas('getRunLogs').then(function (r) {
-        logData = (r && r.success) ? r.logs : [];
-        if (r && !r.success) { $('logBody').innerHTML = tableMsg(10, r.error, 'notice-error'); return; }
-        renderLogs();
-      }).catch(function (e) { $('logBody').innerHTML = tableMsg(10, errMsg(e), 'notice-error'); });
-    }
-    function renderLogs() {
-      var q = $('logFilter').value.trim().toLowerCase();
-      var rows = logData.map(function (l, idx) { return { l: l, idx: idx }; }).filter(function (x) {
-        if (!q) return true;
-        var l = x.l;
-        return [l.projectName, l.targetLang, l.autoFixType, l.message, l.jobUid].join(' ').toLowerCase().indexOf(q) !== -1;
       });
-      if (!rows.length) { $('logBody').innerHTML = tableMsg(10, logData.length ? 'Keine Treffer für den Filter.' : 'Keine Log-Einträge.'); return; }
-      $('logBody').innerHTML = rows.map(function (x) {
-        var l = x.l, idx = x.idx;
-        var hasChanges = l.changes && l.changes.length > 0;
-        var isReplay = l.projectName === 'Replay';
-        var toggle = hasChanges
-          ? '<button class="expand-btn" data-diff="' + idx + '"><i class="material-icons-outlined">expand_more</i>' + l.changes.length + ' Änderungen</button>'
-          : '<span class="muted">–</span>';
-        var action = (hasChanges && !isReplay)
-          ? '<button class="btn btn-secondary btn-sm" data-replay="' + idx + '"><i class="material-icons-outlined">upload</i>Re-Push</button>'
-          : '<span class="muted">–</span>';
-        var status = '<span class="status-badge ' + (l.success ? 'st-ok' : 'st-fail') + '">' + (l.success ? 'OK' : 'Fehler') + '</span>' +
-          (isReplay ? ' <span class="status-badge st-warn">Replay</span>' : '');
-        return '<tr>' +
-          '<td style="white-space:nowrap;">' + fmtDate(l.timestamp, true) + '</td>' +
-          '<td><div class="cell-clip" title="' + esc(l.projectName) + '">' + esc(l.projectName) + '</div></td>' +
-          '<td>' + typePill(l.autoFixType) + '</td>' +
-          '<td>' + langPill(l.targetLang) + '</td>' +
-          '<td>' + status + '</td>' +
-          '<td class="num">' + l.segmentsTotal + '</td>' +
-          '<td class="num"><strong>' + l.segmentsChanged + '</strong></td>' +
-          '<td>' + toggle + '</td>' +
-          '<td>' + action + '</td>' +
-          '<td><div class="cell-clip muted" title="' + esc(l.message) + '" style="max-width:200px;">' + esc(l.message) + '</div></td>' +
-          '</tr><tr class="detail-row" id="diff-' + idx + '" style="display:none;"><td colspan="10"></td></tr>';
-      }).join('');
     }
-    $('logFilter').addEventListener('input', renderLogs);
-    $('btnLogRefresh').addEventListener('click', loadLogs);
-    // Event-Delegation statt inline onclick mit Daten im Attribut
-    $('logBody').addEventListener('click', function (e) {
-      var t = e.target.closest('button');
-      if (!t) return;
-      if (t.hasAttribute('data-diff')) toggleDiff(parseInt(t.getAttribute('data-diff'), 10), t);
-      if (t.hasAttribute('data-replay')) openReplay(parseInt(t.getAttribute('data-replay'), 10));
-    });
-    function toggleDiff(idx, btn) {
-      var row = $('diff-' + idx);
-      if (!row) return;
-      var open = row.style.display === 'none';
-      if (open && !row.firstChild.innerHTML) {
-        var l = logData[idx];
-        row.firstChild.innerHTML = '<table class="diff-table"><thead><tr><th style="width:70px;">Seg</th><th>Source</th><th>Original</th><th>Korrigiert</th></tr></thead><tbody>' +
-          l.changes.map(function (c) {
-            return '<tr><td class="muted">' + esc(c.id) + '</td><td>' + esc(c.source) + '</td><td class="diff-old">' + esc(c.original) + '</td>' +
-              '<td class="diff-new">' + esc(c.corrected) + (c.reason ? '<div class="diff-reason">→ ' + esc(c.reason) + '</div>' : '') + '</td></tr>';
-          }).join('') + '</tbody></table>';
-      }
-      row.style.display = open ? '' : 'none';
-      btn.classList.toggle('open', open);
-      btn.querySelector('i').textContent = open ? 'expand_less' : 'expand_more';
+    function runManualFix() {
+      document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+      document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
+      document.getElementById('view-liverun').classList.add('active');
+      document.querySelectorAll('.nav-tab')[1].classList.add('active');
+      lrStartRun();
     }
 
-    // ================================================================
-    // RE-PUSH
-    // ================================================================
-    function openReplay(idx) {
-      var l = logData[idx] || {};
-      $('replayProjectUid').value = l.projectUid || '';
-      $('replayJobUid').value = l.jobUid || '';
-      $('replayChangesJson').value = l.changes ? JSON.stringify(l.changes, null, 2) : '';
-      $('replayResult').innerHTML = '';
-      $('btnReplay').disabled = false;
+    // ?? RUN LOG ????????????????????????????????????????????????????????
+    function loadLogs() {
+      var tbody = document.getElementById('logBody');
+      tbody.innerHTML = '<tr><td colspan="10" style="color:var(--t2);padding:20px;text-align:center;">Loading?</td></tr>';
+      runGas('getRunLogs', [], function(r) {
+        if (!r || !r.success || !r.logs.length) { tbody.innerHTML = '<tr><td colspan="10" style="color:var(--t2);padding:20px;text-align:center;">Keine Log-Eintr?ge.</td></tr>'; return; }
+        tbody.innerHTML = r.logs.map(function(l, idx) {
+          var diffId = 'diff-' + idx, hasChanges = l.changes && l.changes.length > 0, isReplay = l.projectName === 'Replay';
+          var diffHtml = '';
+          if (hasChanges) {
+            diffHtml = '<div class="diff-panel" id="' + diffId + '">' +
+              '<div class="diff-row"><div class="diff-cell diff-head">Seg ID</div><div class="diff-cell diff-head">Source</div><div class="diff-cell diff-head diff-original">Original</div><div class="diff-cell diff-head diff-corrected">Korrigiert</div></div>' +
+              l.changes.map(function(c) {
+                return '<div class="diff-row"><div class="diff-cell" style="color:var(--t3);font-size:10.5px;">' + esc(String(c.id)) + '</div><div class="diff-cell">' + esc(c.source) + '</div><div class="diff-cell diff-original">' + esc(c.original) + '</div><div class="diff-cell diff-corrected">' + esc(c.corrected) + (c.reason ? '<div style="color:var(--t2);font-size:10.5px;margin-top:3px;">? ' + esc(c.reason) + '</div>' : '') + '</div></div>';
+              }).join('') + '</div>';
+          }
+          var toggleHtml = hasChanges ? '<span class="diff-toggle" onclick="toggleDiff(\'' + diffId + '\',this)"><i class="material-icons-outlined" style="font-size:13px;">expand_more</i>' + l.changes.length + ' changes</span>' : '<span style="color:var(--t3);font-size:11px;">?</span>';
+          var repushHtml = (hasChanges && !isReplay) ? '<button class="btn btn-amber btn-sm" onclick="openReplay(\'' + esc(l.projectUid) + '\',\'' + esc(l.jobUid) + '\',' + idx + ')"><i class="material-icons-outlined">upload</i>Re-Push</button>' : '<span style="color:var(--t3);font-size:11px;">?</span>';
+          return '<tr><td style="white-space:nowrap;font-size:11.5px;">' + new Date(l.timestamp).toLocaleString('de-DE') + '</td><td>' + esc(l.projectName) + '</td><td>' + typeBadge_(l.autoFixType) + '</td><td><span class="badge badge-grey">' + esc(l.targetLang) + '</span></td><td><span class="badge ' + (l.success ? 'badge-green' : 'badge-red') + '">' + (l.success ? 'OK' : 'FAIL') + '</span>' + (isReplay ? ' <span class="badge badge-amber">replay</span>' : '') + '</td><td>' + l.segmentsTotal + '</td><td><strong>' + l.segmentsChanged + '</strong></td><td>' + toggleHtml + diffHtml + '</td><td>' + repushHtml + '</td><td style="font-size:11px;color:var(--t2);max-width:180px;word-break:break-all;">' + esc(l.message) + '</td></tr>';
+        }).join('');
+        window._logData = r.logs;
+      });
+    }
+    function toggleDiff(diffId, btn) {
+      var panel = document.getElementById(diffId);
+      if (!panel) return;
+      panel.classList.toggle('open');
+      var icon = btn.querySelector('.material-icons-outlined');
+      if (icon) icon.textContent = panel.classList.contains('open') ? 'expand_less' : 'expand_more';
+    }
+
+    // ?? RE-PUSH ????????????????????????????????????????????????????????
+    function openReplay(projectUid, jobUid, logIdx) {
+      document.getElementById('replayProjectUid').value = projectUid || '';
+      document.getElementById('replayJobUid').value     = jobUid || '';
+      document.getElementById('replayResult').style.display = 'none';
+      var changesJson = '';
+      if (window._logData && window._logData[logIdx] && window._logData[logIdx].changes) {
+        try { changesJson = JSON.stringify(window._logData[logIdx].changes, null, 2); } catch(e) {}
+      }
+      document.getElementById('replayChangesJson').value = changesJson;
+      document.getElementById('replayBtn').disabled = false;
       openModal('modalReplay');
     }
-    $('btnReplay').addEventListener('click', function () {
-      var projectUid = $('replayProjectUid').value.trim();
-      var jobUid = $('replayJobUid').value.trim();
-      var changesJson = $('replayChangesJson').value.trim();
-      if (!projectUid || !jobUid || !changesJson) { toast('Bitte alle Felder ausfüllen.', true); return; }
-      try { JSON.parse(changesJson); } catch (e) { toast('Changes JSON ist ungültig: ' + e.message, true); return; }
-      if (!confirm('Änderungen jetzt nach Phrase pushen?\nDer Job ' + jobUid + ' wird danach abgeschlossen.')) return;
-      var btn = this, box = $('replayResult');
-      setBusy(btn, true);
-      box.innerHTML = loadingHtml('Wird hochgeladen …');
-      gas('replayChangesForJob', projectUid, jobUid, changesJson).then(function (r) {
+    function executeReplay() {
+      var projectUid = document.getElementById('replayProjectUid').value.trim();
+      var jobUid     = document.getElementById('replayJobUid').value.trim();
+      var changesJson = document.getElementById('replayChangesJson').value.trim();
+      if (!projectUid || !jobUid || !changesJson) { toast('Bitte alle Felder ausf?llen.'); return; }
+      document.getElementById('replayBtn').disabled = true;
+      var resultDiv = document.getElementById('replayResult');
+      resultDiv.style.display = 'block'; resultDiv.style.background = 'var(--surface2)';
+      resultDiv.style.border = '1px solid var(--bdr)'; resultDiv.style.borderRadius = 'var(--radius)';
+      resultDiv.style.padding = '12px'; resultDiv.innerHTML = 'Uploading?';
+      runGas('replayChangesForJob', [projectUid, jobUid, changesJson], function(r) {
+        document.getElementById('replayBtn').disabled = false;
         if (r.success) {
-          box.innerHTML = noticeHtml('success', 'check_circle',
-            '<strong>Re-Push erfolgreich.</strong> Gematcht: ' + r.matched + ' / ' + r.totalChanges +
-            ' · Nicht gefunden: ' + r.notMatched + ' · Patches: ' + r.patchCount);
-          toast('Re-Push abgeschlossen: ' + r.matched + ' Segmente.');
-          loadLogs();
+          resultDiv.style.borderColor = 'var(--green)';
+          resultDiv.innerHTML = '<div style="color:var(--green);font-weight:700;margin-bottom:6px;">? Re-Push erfolgreich</div><div style="font-size:12px;line-height:1.7;">Gematchte Segmente: <strong>' + r.matched + ' / ' + r.totalChanges + '</strong><br>Nicht gefunden: <strong>' + r.notMatched + '</strong><br>Patches: <strong>' + r.patchCount + '</strong>' + (r.notMatched > 0 ? '<br><span style="color:var(--amber);">?? ' + r.notMatched + ' nicht gematcht.</span>' : '') + '</div>';
+          toast('Re-Push abgeschlossen: ' + r.matched + ' Segmente.'); loadLogs();
         } else {
-          box.innerHTML = noticeHtml('error', 'error', esc(r.error));
-          setBusy(btn, false);
+          resultDiv.style.borderColor = 'var(--red)';
+          resultDiv.innerHTML = '<div style="color:var(--red);font-weight:700;">? Fehler</div><div style="font-size:12px;margin-top:4px;">' + esc(r.error) + '</div>';
+          toast('Re-Push Fehler: ' + r.error, 5000);
         }
-      }).catch(function (e) { box.innerHTML = noticeHtml('error', 'error', esc(errMsg(e))); setBusy(btn, false); });
-    });
-
-    // ================================================================
-    // FILTER-HILFEN (MQM / Benchmark / Drift / Glossar)
-    // ================================================================
-    function initDates(fromId, toId, days) {
-      if (!$(fromId).value) { var d = new Date(); d.setDate(d.getDate() - days); $(fromId).value = isoDay(d); }
-      if (!$(toId).value) $(toId).value = isoDay(new Date());
-    }
-    function fillSelect(id, values, allValue, allLabel, labelFn) {
-      var sel = $(id), cur = sel.value;
-      sel.innerHTML = '';
-      var o = document.createElement('option'); o.value = allValue; o.textContent = allLabel; sel.appendChild(o);
-      values.forEach(function (v) {
-        var opt = document.createElement('option');
-        opt.value = v; opt.textContent = labelFn ? labelFn(v) : v;
-        sel.appendChild(opt);
+      }, function(e) {
+        document.getElementById('replayBtn').disabled = false;
+        resultDiv.style.borderColor = 'var(--red)';
+        resultDiv.innerHTML = '<div style="color:var(--red);">Script-Fehler: ' + esc(e.message) + '</div>';
       });
-      if (Array.prototype.some.call(sel.options, function (op) { return op.value === cur; })) sel.value = cur;
     }
-    var _filterOptsLoaded = false;
-    function loadFilterOptions(force) {
-      if (_filterOptsLoaded && !force) return;
-      gas('getRunLogFilterOptions').then(function (r) {
+
+    // ?? MQM REPORT ?????????????????????????????????????????????????????
+
+    function loadMqmFilterOptions() {
+      runGas('getRunLogFilterOptions', [], function(r) {
         if (!r.success) return;
-        _filterOptsLoaded = true;
-        var typeLabel = function (t) { return TYPE_LABELS[t] || t; };
-        fillSelect('mqmProject', r.projectNames, '', 'Alle Projekte');
-        fillSelect('mqmType', r.autoFixTypes, 'all', 'Alle Typen', typeLabel);
-        fillSelect('bmType', r.autoFixTypes, 'all', 'Alle Typen', typeLabel);
-        ['mqmLang', 'drLang', 'glLang'].forEach(function (id) { fillSelect(id, r.targetLangs, 'all', 'Alle Sprachen'); });
-      }).catch(function () {});
-    }
-    function validRange(fromId, toId) {
-      var f = $(fromId).value, t = $(toId).value;
-      if (f && t && f > t) { toast('„Von“ liegt nach „Bis“.', true); return false; }
-      return true;
+
+        var projSel = document.getElementById('mqm-project');
+        var curProj = projSel.value;
+        projSel.innerHTML = '<option value="">All Projects</option>';
+        r.projectNames.forEach(function(n) {
+          var opt = document.createElement('option');
+          opt.value = n; opt.textContent = n;
+          if (n === curProj) opt.selected = true;
+          projSel.appendChild(opt);
+        });
+
+        var typeSel = document.getElementById('mqm-type');
+        var curType = typeSel.value;
+        typeSel.innerHTML = '<option value="all">All Types</option>';
+        r.autoFixTypes.forEach(function(t) {
+          var opt = document.createElement('option');
+          opt.value = t; opt.textContent = t.charAt(0).toUpperCase() + t.slice(1);
+          if (t === curType) opt.selected = true;
+          typeSel.appendChild(opt);
+        });
+
+        var langSel = document.getElementById('mqm-lang');
+        var curLang = langSel.value;
+        langSel.innerHTML = '<option value="all">All Languages</option>';
+        r.targetLangs.forEach(function(l) {
+          var opt = document.createElement('option');
+          opt.value = l; opt.textContent = l;
+          if (l === curLang) opt.selected = true;
+          langSel.appendChild(opt);
+        });
+      });
+
+      // Default dates: last 30 days
+      if (!document.getElementById('mqm-dateFrom').value) {
+        var d = new Date(); d.setDate(d.getDate() - 30);
+        document.getElementById('mqm-dateFrom').value = d.toISOString().split('T')[0];
+      }
+      if (!document.getElementById('mqm-dateTo').value) {
+        document.getElementById('mqm-dateTo').value = new Date().toISOString().split('T')[0];
+      }
     }
 
-    // ================================================================
-    // MQM REPORT
-    // ================================================================
-    function initMqm() { initDates('mqmFrom', 'mqmTo', 30); loadFilterOptions(); }
-    function runMqm(doExport) {
-      if (!validRange('mqmFrom', 'mqmTo')) return;
+    function runMqmReport(doExport) {
       var filters = {
-        dateFrom: $('mqmFrom').value, dateTo: $('mqmTo').value,
-        projectName: $('mqmProject').value, autoFixType: $('mqmType').value, targetLang: $('mqmLang').value
+        dateFrom:    document.getElementById('mqm-dateFrom').value,
+        dateTo:      document.getElementById('mqm-dateTo').value,
+        projectName: document.getElementById('mqm-project').value,
+        autoFixType: document.getElementById('mqm-type').value,
+        targetLang:  document.getElementById('mqm-lang').value
       };
-      var box = $('mqmResults');
-      box.innerHTML = loadingHtml('Gemini klassifiziert die Korrekturen …');
-      $('btnMqm').disabled = $('btnMqmExport').disabled = true;
-      gas('generateMqmReportFull', filters, doExport).then(function (r) {
-        if (!r.success) { box.innerHTML = noticeHtml('error', 'error', esc(r.error)); return; }
-        if (r.empty) { box.innerHTML = emptyHtml('search_off', r.message); return; }
-        renderMqm(r, doExport);
-      }).catch(function (e) { box.innerHTML = noticeHtml('error', 'error', 'Script-Fehler: ' + esc(errMsg(e))); })
-        .then(function () { $('btnMqm').disabled = $('btnMqmExport').disabled = false; });
+
+      var resultsDiv = document.getElementById('mqm-results');
+      resultsDiv.innerHTML = '<div class="mqm-loading"><span class="mqm-loading-dot"></span><span class="mqm-loading-dot"></span><span class="mqm-loading-dot"></span><span>Gemini klassifiziert Korrekturen?</span></div>';
+
+      document.getElementById('mqm-runBtn').disabled    = true;
+      document.getElementById('mqm-exportBtn').disabled = true;
+
+      runGas('generateMqmReportFull', [filters, doExport], function(r) {
+        document.getElementById('mqm-runBtn').disabled    = false;
+        document.getElementById('mqm-exportBtn').disabled = false;
+
+        if (!r.success) {
+          resultsDiv.innerHTML = '<div class="notice notice-warn" style="margin:0;"><i class="material-icons-outlined">warning</i><span>' + esc(r.error) + '</span></div>';
+          return;
+        }
+        if (r.empty) {
+          resultsDiv.innerHTML = '<div class="mqm-empty"><i class="material-icons-outlined" style="font-size:40px;color:var(--t3);display:block;margin-bottom:8px;">search_off</i>' + esc(r.message) + '</div>';
+          return;
+        }
+
+        renderMqmReport_(r, doExport);
+      }, function(e) {
+        document.getElementById('mqm-runBtn').disabled    = false;
+        document.getElementById('mqm-exportBtn').disabled = false;
+        resultsDiv.innerHTML = '<div class="notice notice-warn" style="margin:0;"><i class="material-icons-outlined">error</i><span>Script-Fehler: ' + esc(e.message) + '</span></div>';
+      });
     }
-    $('btnMqm').addEventListener('click', function () { runMqm(false); });
-    $('btnMqmExport').addEventListener('click', function () { runMqm(true); });
 
-    function renderMqm(r, doExport) {
-      var total = r.totalSegments || 0;
-      var html = '<div class="dash-grid">' +
-        tile(r.totalLogs, 'Logs analysiert') + tile(total, 'Fehler gesamt') +
-        tile(r.critical || 0, 'Critical', 'bad') + tile(r.major || 0, 'Major') + tile(r.minor || 0, 'Minor', 'ok') + '</div>';
+    function renderMqmReport_(r, doExport) {
+      var resultsDiv = document.getElementById('mqm-results');
+      var totalErrors = r.totalSegments || 0;
 
+      // ?? Stats ??????????????????????????????????????????????????????
+      var statsHtml = '<div class="mqm-stats-grid">' +
+        mqmStat_(r.totalLogs,     'Logs analysed',   'var(--t1)') +
+        mqmStat_(totalErrors,     'Total errors',    'var(--t1)') +
+        mqmStat_(r.critical || 0, 'Critical',        'var(--red)') +
+        mqmStat_(r.major    || 0, 'Major',           'var(--amber)') +
+        mqmStat_(r.minor    || 0, 'Minor',           'var(--green)') +
+        '</div>';
+
+      // ?? Aggregat ???????????????????????????????????????????????????
+      var aggRows = r.aggregate || [];
+      var maxTotal = aggRows.length ? aggRows[0].total : 1;
+
+      var aggHtml = '<div style="margin-bottom:16px;">' +
+        '<div class="mqm-section-title"><i class="material-icons-outlined" style="font-size:16px;">bar_chart</i>Error Distribution</div>' +
+        '<div class="tbl-wrap"><table>' +
+        '<thead><tr><th>Category</th><th>Subcategory</th><th>Critical</th><th>Major</th><th>Minor</th><th>Total</th><th>%</th><th style="width:120px;">Bar</th></tr></thead><tbody>' +
+        aggRows.map(function(row) {
+          var pct     = totalErrors > 0 ? ((row.total / totalErrors) * 100).toFixed(1) : '0';
+          var barW    = maxTotal > 0 ? Math.round((row.total / maxTotal) * 100) : 0;
+          var catCls  = 'badge cat-' + (row.category || 'uncategorized').toLowerCase().replace(/\//g,'').replace(/\s/g,'');
+          return '<tr>' +
+            '<td><span class="badge ' + catCls + '">' + esc(row.category) + '</span></td>' +
+            '<td style="color:var(--t2);">' + esc(row.subcategory || '?') + '</td>' +
+            '<td>' + (row.critical > 0 ? '<span class="sev-critical">' + row.critical + '</span>' : '<span style="color:var(--t3);">0</span>') + '</td>' +
+            '<td>' + (row.major    > 0 ? '<span class="sev-major">'    + row.major    + '</span>' : '<span style="color:var(--t3);">0</span>') + '</td>' +
+            '<td>' + (row.minor    > 0 ? '<span class="sev-minor">'    + row.minor    + '</span>' : '<span style="color:var(--t3);">0</span>') + '</td>' +
+            '<td><strong>' + row.total + '</strong></td>' +
+            '<td style="color:var(--t2);">' + pct + '%</td>' +
+            '<td><span class="agg-bar" style="width:' + barW + 'px;"></span></td>' +
+            '</tr>';
+        }).join('') +
+        '</tbody></table></div></div>';
+
+      // ?? Detail ?????????????????????????????????????????????????????
+      var details = r.details || [];
+      var truncNote = (r.detailsTruncated)
+        ? '<div class="notice notice-info" style="margin-bottom:8px;"><i class="material-icons-outlined">info</i><span>Zeige 300 von ' + r.detailsTotal + ' Segmenten. Vollst?ndige Liste im exportierten Sheet.</span></div>'
+        : '';
+
+      var detHtml = '<div>' +
+        '<div class="mqm-section-title" style="justify-content:space-between;">' +
+          '<span><i class="material-icons-outlined" style="font-size:16px;">list</i>Segment Detail (' + (r.detailsTotal || details.length) + ' errors)</span>' +
+        '</div>' + truncNote +
+        '<div class="detail-tbl-wrap"><table>' +
+        '<thead><tr><th>Date</th><th>Project</th><th>Lang</th><th>Source</th><th>Original</th><th>Corrected</th><th>Category</th><th>Sub</th><th>Severity</th></tr></thead>' +
+        '<tbody>' +
+        details.map(function(d) {
+          var catCls = 'badge cat-' + (d.mqmCategory || 'uncategorized').toLowerCase().replace(/\//g,'').replace(/\s/g,'');
+          var sevHtml = d.mqmSeverity === 'critical' ? '<span class="sev-critical">critical</span>' :
+                        d.mqmSeverity === 'major'    ? '<span class="sev-major">major</span>' :
+                                                       '<span class="sev-minor">minor</span>';
+          return '<tr>' +
+            '<td style="white-space:nowrap;font-size:11px;">' + new Date(d.timestamp).toLocaleDateString('de-DE') + '</td>' +
+            '<td style="font-size:11.5px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + esc(d.projectName) + '">' + esc(d.projectName) + '</td>' +
+            '<td><span class="badge badge-grey">' + esc(d.targetLang) + '</span></td>' +
+            '<td style="font-size:11.5px;max-width:140px;font-family:var(--mono);">' + esc((d.source||'').substring(0,60)) + '</td>' +
+            '<td style="font-size:11.5px;max-width:140px;color:var(--red);font-family:var(--mono);">' + esc((d.original||'').substring(0,60)) + '</td>' +
+            '<td style="font-size:11.5px;max-width:140px;color:var(--green);font-family:var(--mono);">' + esc((d.corrected||'').substring(0,60)) + '</td>' +
+            '<td><span class="badge ' + catCls + '">' + esc(d.mqmCategory) + '</span></td>' +
+            '<td style="font-size:11px;color:var(--t2);">' + esc(d.mqmSubcategory || '?') + '</td>' +
+            '<td>' + sevHtml + '</td>' +
+            '</tr>';
+        }).join('') +
+        '</tbody></table></div></div>';
+
+      // ?? Export-Ergebnis ????????????????????????????????????????????
+      var exportHtml = '';
       if (doExport && r.exportResult) {
-        html += r.exportResult.success
-          ? noticeHtml('success', 'check_circle', 'Sheet erstellt: <strong>' + esc(r.exportResult.sheetName) + '</strong> – <a href="' + esc(r.exportResult.url) + '" target="_blank" rel="noopener">öffnen</a>')
-          : noticeHtml('error', 'error', 'Export-Fehler: ' + esc(r.exportResult.error));
+        if (r.exportResult.success) {
+          exportHtml = '<div class="export-success"><i class="material-icons-outlined">check_circle</i>' +
+            'Sheet erstellt: <strong>' + esc(r.exportResult.sheetName) + '</strong> ? ' +
+            '<a href="' + esc(r.exportResult.url) + '" target="_blank" style="color:var(--green);font-weight:600;">?ffnen</a>' +
+            '</div>';
+        } else {
+          exportHtml = '<div class="notice notice-warn" style="margin-top:10px;"><i class="material-icons-outlined">warning</i><span>Export-Fehler: ' + esc(r.exportResult.error) + '</span></div>';
+        }
       }
 
-      var agg = r.aggregate || [], max = agg.length ? agg[0].total : 1;
-      html += '<div class="card"><div class="section-title"><span><i class="material-icons-outlined">bar_chart</i>Fehlerverteilung</span></div>' +
-        '<div class="table-wrap"><table class="history-table"><thead><tr><th>Kategorie</th><th>Subkategorie</th><th class="num">Critical</th><th class="num">Major</th><th class="num">Minor</th><th class="num">Gesamt</th><th class="num">%</th><th style="width:140px;"></th></tr></thead><tbody>' +
-        agg.map(function (row) {
-          var pct = total ? (row.total / total * 100).toFixed(1) : '0';
-          return '<tr><td><span class="' + catClass(row.category) + '">' + esc(row.category) + '</span></td>' +
-            '<td class="muted">' + esc(row.subcategory || '–') + '</td>' +
-            '<td class="num">' + sevCount(row.critical, 'critical') + '</td><td class="num">' + sevCount(row.major, 'major') + '</td><td class="num">' + sevCount(row.minor, 'minor') + '</td>' +
-            '<td class="num"><strong>' + row.total + '</strong></td><td class="num muted">' + pct + '</td>' +
-            '<td><span class="bar" style="width:' + Math.round(row.total / max * 130) + 'px;"></span></td></tr>';
-        }).join('') + '</tbody></table></div></div>';
-
-      var det = r.details || [];
-      html += '<div class="card"><div class="section-title"><span><i class="material-icons-outlined">list</i>Segment-Details (' + (r.detailsTotal || det.length) + ')</span></div>' +
-        (r.detailsTruncated ? noticeHtml('info', 'info', 'Angezeigt werden 300 von ' + r.detailsTotal + ' Segmenten. Die vollständige Liste enthält der Sheet-Export.') : '') +
-        '<div class="table-wrap scroll-y"><table class="history-table"><thead><tr><th>Datum</th><th>Projekt</th><th>Sprache</th><th>Source</th><th>Original</th><th>Korrigiert</th><th>Kategorie</th><th>Sub</th><th>Severity</th></tr></thead><tbody>' +
-        det.map(function (d) {
-          return '<tr><td style="white-space:nowrap;">' + fmtDate(d.timestamp) + '</td>' +
-            '<td><div class="cell-clip" style="max-width:140px;" title="' + esc(d.projectName) + '">' + esc(d.projectName) + '</div></td>' +
-            '<td>' + langPill(d.targetLang) + '</td>' +
-            '<td class="mono">' + esc(d.source) + '</td>' +
-            '<td class="mono" style="color:var(--red);">' + esc(d.original) + '</td>' +
-            '<td class="mono" style="color:var(--green);">' + esc(d.corrected) + '</td>' +
-            '<td><span class="' + catClass(d.mqmCategory) + '">' + esc(d.mqmCategory) + '</span></td>' +
-            '<td class="muted">' + esc(d.mqmSubcategory || '–') + '</td>' +
-            '<td>' + sevHtml(d.mqmSeverity) + '</td></tr>';
-        }).join('') + '</tbody></table></div></div>';
-
-      $('mqmResults').innerHTML = html;
-    }
-    function tile(val, label, cls) {
-      return '<div class="dash-tile' + (cls ? ' ' + cls : '') + '"><div class="dash-num">' + esc(val) + '</div><div class="dash-label">' + esc(label) + '</div></div>';
+      resultsDiv.innerHTML = statsHtml + aggHtml + detHtml + exportHtml;
     }
 
-    // ================================================================
-    // BENCHMARK
-    // ================================================================
-    $('btnBm').addEventListener('click', function () {
-      if (!validRange('bmFrom', 'bmTo')) return;
-      var filters = { dateFrom: $('bmFrom').value, dateTo: $('bmTo').value, autoFixType: $('bmType').value };
-      var box = $('bmResults'), btn = this;
-      box.innerHTML = loadingHtml('Analysiere Sprachpaare (inkl. MQM-Klassifizierung) …'); setBusy(btn, true);
-      gas('getBenchmarkData', filters, null).then(function (r) {
-        if (!r.success) { box.innerHTML = noticeHtml('error', 'error', esc(r.error)); return; }
-        if (r.empty || !r.pairs || !r.pairs.length) { box.innerHTML = emptyHtml('search_off', r.message || 'Keine Sprachpaar-Daten.'); return; }
-        var max = Math.max.apply(null, r.pairs.map(function (p) { return p.errorRate; })) || 1;
-        box.innerHTML = '<div class="table-wrap"><table class="history-table"><thead><tr><th>Sprache</th><th class="num">Fehlerrate</th><th class="num">Fehler / Segmente / Jobs</th><th class="num">Critical</th><th class="num">Major</th><th class="num">Minor</th><th>Top-Kategorie</th><th style="width:140px;"></th></tr></thead><tbody>' +
-          r.pairs.map(function (p) {
-            var color = p.errorRate > 20 ? 'var(--red)' : p.errorRate > 10 ? 'var(--amber)' : 'var(--green)';
-            return '<tr><td>' + langPill(p.targetLang) + '</td>' +
-              '<td class="num"><strong style="color:' + color + ';font-size:15px;">' + esc(p.errorRate) + ' %</strong></td>' +
-              '<td class="num muted">' + p.totalErrors + ' / ' + p.totalSegs + ' / ' + p.totalJobs + '</td>' +
-              '<td class="num">' + sevCount(p.critical, 'critical') + '</td><td class="num">' + sevCount(p.major, 'major') + '</td><td class="num">' + sevCount(p.minor, 'minor') + '</td>' +
-              '<td><span class="' + catClass(p.topCategory) + '">' + esc(p.topCategory) + '</span> <span class="muted">×' + p.topCategoryCount + '</span></td>' +
-              '<td><span class="bar" style="width:' + Math.round(p.errorRate / max * 130) + 'px;background:' + color + ';"></span></td></tr>';
-          }).join('') + '</tbody></table></div>';
-      }).catch(function (e) { box.innerHTML = noticeHtml('error', 'error', esc(errMsg(e))); })
-        .then(function () { setBusy(btn, false); });
-    });
+    function mqmStat_(val, label, color) {
+      return '<div class="mqm-stat"><div class="mqm-stat-val" style="color:' + color + ';">' + val + '</div><div class="mqm-stat-label">' + label + '</div></div>';
+    }
 
-    // ================================================================
-    // TERM DRIFT
-    // ================================================================
-    $('btnDrift').addEventListener('click', function () {
-      if (!validRange('drFrom', 'drTo')) return;
-      var filters = { dateFrom: $('drFrom').value, dateTo: $('drTo').value, targetLang: $('drLang').value };
-      var box = $('drResults'), btn = this;
-      box.innerHTML = loadingHtml('Scanne Terminologie-Drift …'); setBusy(btn, true);
-      gas('getTerminologyDrift', filters, 0.3).then(function (r) {
-        if (!r.success) { box.innerHTML = noticeHtml('error', 'error', esc(r.error)); return; }
-        if (r.empty || !r.terms.length) { box.innerHTML = emptyHtml('check_circle', 'Kein signifikanter Terminologie-Drift gefunden.'); return; }
-        box.innerHTML = '<p class="hint">' + r.terms.length + ' Terme mit wiederholten Korrekturen (aus ' + r.totalLogs + ' Logs).</p>' +
-          '<div class="table-wrap"><table class="history-table"><thead><tr><th>Source-Term</th><th>Sprache</th><th>MT-Output (häufigste Form)</th><th>Empfohlene Übersetzung</th><th class="num">Korrekturen</th><th>Projekte</th><th>Zuletzt</th></tr></thead><tbody>' +
-          r.terms.map(function (t) {
-            var sev = t.driftScore >= 10 ? 'critical' : t.driftScore >= 5 ? 'major' : 'minor';
-            return '<tr><td class="mono">' + esc(t.sourceTerm) + '</td><td>' + langPill(t.targetLang) + '</td>' +
-              '<td class="mono" style="color:var(--red);">' + esc(t.topOriginal || '–') + '</td>' +
-              '<td class="mono" style="color:var(--green);">' + esc(t.topCorrected || '–') + '</td>' +
-              '<td class="num"><span class="sev sev-' + sev + '">' + t.driftScore + '×</span></td>' +
-              '<td class="muted" title="' + esc(t.projects.join(', ')) + '">' + t.projectCount + ' · ' + esc((t.projects[0] || '') + (t.projects.length > 1 ? ' +' + (t.projects.length - 1) : '')) + '</td>' +
-              '<td style="white-space:nowrap;" class="muted">' + (t.lastSeen ? fmtDate(t.lastSeen) : '–') + '</td></tr>';
-          }).join('') + '</tbody></table></div>';
-      }).catch(function (e) { box.innerHTML = noticeHtml('error', 'error', esc(errMsg(e))); })
-        .then(function () { setBusy(btn, false); });
-    });
-
-    // ================================================================
-    // GLOSSAR
-    // ================================================================
-    $('btnGloss').addEventListener('click', function () {
-      if (!validRange('glFrom', 'glTo')) return;
-      var filters = { dateFrom: $('glFrom').value, dateTo: $('glTo').value, targetLang: $('glLang').value };
-      var box = $('glResults'), btn = this;
-      box.innerHTML = loadingHtml('Gemini analysiert Termvorschläge …'); setBusy(btn, true);
-      gas('getGlossarySuggestions', filters).then(function (r) {
-        if (!r.success) { box.innerHTML = noticeHtml('error', 'error', esc(r.error)); return; }
-        if (r.empty || !r.suggestions.length) { box.innerHTML = emptyHtml('search_off', r.message || 'Keine Termvorschläge gefunden.'); return; }
-        box.innerHTML = noticeHtml('info', 'info', r.suggestions.length + ' Vorschläge für neue Termbase-Einträge. <strong>Nur zur manuellen Übernahme in Phrase.</strong>') +
-          '<div class="table-wrap"><table class="history-table"><thead><tr><th>Source (DE)</th><th>Zielsprache</th><th>Empfohlener Term</th><th class="num">Confidence</th><th>Begründung</th></tr></thead><tbody>' +
-          r.suggestions.map(function (s) {
-            var cls = s.confidence >= 80 ? 'sev-minor' : s.confidence >= 60 ? 'sev-major' : '';
-            return '<tr><td class="mono"><strong>' + esc(s.sourceDe) + '</strong></td><td>' + langPill(s.targetLang) + '</td>' +
-              '<td class="mono" style="color:var(--green);"><strong>' + esc(s.targetTerm) + '</strong></td>' +
-              '<td class="num"><span class="sev ' + cls + '">' + esc(s.confidence) + ' %</span></td>' +
-              '<td class="muted">' + esc(s.rationale) + '</td></tr>';
-          }).join('') + '</tbody></table></div>';
-      }).catch(function (e) { box.innerHTML = noticeHtml('error', 'error', esc(errMsg(e))); })
-        .then(function () { setBusy(btn, false); });
-    });
-
-    // ================================================================
-    // SETTINGS
-    // ================================================================
-    var MODELS = [];
+    // ?? SETTINGS ???????????????????????????????????????????????????????
     function loadSettings() {
-      gas('getAutoFixSettings').then(function (r) {
-        if (!r.success) { toast(r.error, true); return; }
+      runGas('getAutoFixSettings', [], function(r) {
+        if (!r.success) return;
         var s = r.settings;
-        var modelSel = $('primaryModel');
-        modelSel.innerHTML = MODELS.map(function (m) { return '<option value="' + esc(m) + '">' + esc(m) + '</option>'; }).join('');
-        modelSel.value = MODELS.indexOf(s.primaryModel) !== -1 ? s.primaryModel : (MODELS[0] || '');
-        $('cfFieldUid').value = s.cfFieldUid || '';
-        $('wfStepName').value = s.wfStepName || '';
-        $('tmThreshold').value = s.tmThreshold;
-        $('peTemperature').value = s.peTemperature;
-        $('pollerIntervalMinutes').value = String(s.pollerIntervalMinutes || 10);
-        $('markDoneAfterFix').value = s.markDoneAfterFix ? 'true' : 'false';
-      }).catch(function (e) { toast(errMsg(e), true); });
+        document.getElementById('cfFieldUid').value            = s.cfFieldUid            || '';
+        document.getElementById('wfStepName').value            = s.wfStepName             || '';
+        document.getElementById('primaryModel').value          = s.primaryModel           || 'gemini-3.6-flash';
+        document.getElementById('tmThreshold').value           = s.tmThreshold            || 0.7;
+        document.getElementById('pollerIntervalMinutes').value = s.pollerIntervalMinutes  || 10;
+        document.getElementById('peTemperature').value         = s.peTemperature          || 0.1;
+        document.getElementById('markDoneAfterFix').value      = s.markDoneAfterFix ? 'true' : 'false';
+      });
       loadPromptCards();
     }
-    $('btnSaveSettings').addEventListener('click', function () {
-      var t = parseFloat($('peTemperature').value), tm = parseFloat($('tmThreshold').value);
-      if (isNaN(t) || t < 0 || t > 2) { toast('PE Temperature muss zwischen 0 und 2 liegen.', true); return; }
-      if (isNaN(tm) || tm < 0 || tm > 1) { toast('TM Threshold muss zwischen 0 und 1 liegen.', true); return; }
-      if (!$('cfFieldUid').value.trim() || !$('wfStepName').value.trim()) { toast('Custom Field UID und Workflow Step dürfen nicht leer sein.', true); return; }
+    function saveSettings() {
       var s = {
-        cfFieldUid: $('cfFieldUid').value.trim(), wfStepName: $('wfStepName').value.trim(),
-        primaryModel: $('primaryModel').value, tmThreshold: $('tmThreshold').value,
-        pollerIntervalMinutes: $('pollerIntervalMinutes').value, peTemperature: $('peTemperature').value,
-        markDoneAfterFix: $('markDoneAfterFix').value
+        cfFieldUid:            document.getElementById('cfFieldUid').value,
+        wfStepName:            document.getElementById('wfStepName').value,
+        primaryModel:          document.getElementById('primaryModel').value,
+        tmThreshold:           document.getElementById('tmThreshold').value,
+        pollerIntervalMinutes: document.getElementById('pollerIntervalMinutes').value,
+        peTemperature:         document.getElementById('peTemperature').value,
+        markDoneAfterFix:      document.getElementById('markDoneAfterFix').value
       };
-      var btn = this; setBusy(btn, true);
-      gas('saveAutoFixSettings', s).then(function (r) {
-        if (r.success) { $('settingsMsg').textContent = '✓ Gespeichert'; setTimeout(function () { $('settingsMsg').textContent = ''; }, 3000); toast('Settings gespeichert.'); }
-        else toast('Fehler: ' + r.error, true);
-      }).catch(function (e) { toast(errMsg(e), true); }).then(function () { setBusy(btn, false); });
-    });
-
-    var promptList = [];
-    function loadPromptCards() {
-      var c = $('promptCards');
-      c.innerHTML = loadingHtml('Lade Prompts …');
-      gas('getAllPrompts').then(function (r) {
-        if (!r.success || !r.prompts.length) { c.innerHTML = noticeHtml('error', 'error', 'Fehler beim Laden der Prompts.'); return; }
-        promptList = r.prompts;
-        r.prompts.forEach(function (p) { TYPE_LABELS[p.type] = p.label; });
-        c.innerHTML = r.prompts.map(function (p, i) {
-          return '<details class="prompt-card"' + (i === 0 ? ' open' : '') + '><summary><span>' + typePill(p.type) +
-            ' <span class="muted mono" style="font-weight:400;margin-left:8px;">peInstructions_' + esc(p.type) + '</span></span></summary>' +
-            '<div class="body"><textarea class="textarea" rows="16" data-prompt="' + i + '">' + esc(p.instructions) + '</textarea>' +
-            '<div class="actions"><button class="btn btn-primary btn-sm" data-save="' + i + '"><i class="material-icons-outlined">save</i>Speichern</button>' +
-            '<button class="btn btn-secondary btn-sm" data-reset="' + i + '"><i class="material-icons-outlined">restart_alt</i>Auf Default</button>' +
-            '<span class="save-msg" data-msg="' + i + '"></span></div></div></details>';
-        }).join('');
-      }).catch(function (e) { c.innerHTML = noticeHtml('error', 'error', esc(errMsg(e))); });
+      runGas('saveAutoFixSettings', [s], function(r) {
+        if (r.success) toast('Settings gespeichert.'); else toast('Fehler: ' + r.error);
+      });
     }
-    $('promptCards').addEventListener('click', function (e) {
-      var b = e.target.closest('button');
-      if (!b) return;
-      var i = parseInt(b.getAttribute('data-save') || b.getAttribute('data-reset'), 10);
-      var p = promptList[i];
-      if (!p) return;
-      var ta = document.querySelector('[data-prompt="' + i + '"]');
-      var msg = document.querySelector('[data-msg="' + i + '"]');
-      if (b.hasAttribute('data-save')) {
-        if (!ta.value.trim()) { toast('Der Prompt darf nicht leer sein.', true); return; }
-        setBusy(b, true);
-        gas('saveSinglePrompt', p.type, ta.value).then(function (r) {
-          if (r.success) { msg.textContent = '✓ Gespeichert'; setTimeout(function () { msg.textContent = ''; }, 3000); }
-          else toast('Fehler beim Speichern: ' + r.error, true);
-        }).catch(function (err) { toast(errMsg(err), true); }).then(function () { setBusy(b, false); });
-      } else {
-        if (!confirm('Prompt „' + p.label + '“ auf den Kärcher-Default zurücksetzen?\nEigene Änderungen gehen verloren.')) return;
-        setBusy(b, true);
-        gas('resetPromptForType', p.type).then(function (r) {
-          if (r.success) { ta.value = r.prompt; toast('Prompt zurückgesetzt.'); } else toast('Fehler: ' + r.error, true);
-        }).catch(function (err) { toast(errMsg(err), true); }).then(function () { setBusy(b, false); });
-      }
-    });
+    function loadPromptCards() {
+      var container = document.getElementById('promptCards');
+      container.innerHTML = '<div style="color:var(--t2);font-size:12px;padding:20px;text-align:center;">Loading prompts?</div>';
+      runGas('getAllPrompts', [], function(r) {
+        if (!r.success || !r.prompts.length) { container.innerHTML = '<div style="color:var(--red);font-size:12px;padding:12px;">Fehler beim Laden der Prompts.</div>'; return; }
+        container.innerHTML = r.prompts.map(function(p) { return renderPromptCard_(p.type, p.label, p.instructions); }).join('');
+      });
+    }
+    function renderPromptCard_(type, label, instructions) {
+      var textareaId = 'prompt-textarea-' + type, msgId = 'prompt-msg-' + type;
+      return '<div class="prompt-card" id="prompt-card-' + type + '">' +
+        '<div class="prompt-card-header"><div class="prompt-card-title"><span class="prompt-type-badge type-' + type + '">' + esc(label) + '</span><span style="font-size:11px;color:var(--t2);">Key: peInstructions_' + esc(type) + '</span></div>' +
+        '<button class="btn btn-sm" onclick="resetPromptCard(\'' + type + '\')"><i class="material-icons-outlined">restart_alt</i>Reset</button></div>' +
+        '<div class="prompt-card-body"><textarea class="textarea" id="' + textareaId + '" rows="16">' + esc(instructions) + '</textarea>' +
+        '<div class="prompt-save-row"><button class="btn btn-primary btn-sm" onclick="savePromptCard(\'' + type + '\')"><i class="material-icons-outlined">save</i>Save Prompt</button>' +
+        '<span class="prompt-save-msg" id="' + msgId + '">? Gespeichert</span></div></div></div>';
+    }
+    function savePromptCard(type) {
+      var textarea = document.getElementById('prompt-textarea-' + type), msgEl = document.getElementById('prompt-msg-' + type);
+      if (!textarea) return;
+      runGas('saveSinglePrompt', [type, textarea.value], function(r) {
+        if (r.success) { msgEl.classList.add('show'); setTimeout(function() { msgEl.classList.remove('show'); }, 3000); toast('Prompt "' + type + '" gespeichert.'); }
+        else toast('Fehler beim Speichern: ' + r.error, 5000);
+      });
+    }
+    function resetPromptCard(type) {
+      runGas('resetPromptForType', [type], function(r) {
+        if (r.success) { var ta = document.getElementById('prompt-textarea-' + type); if (ta) ta.value = r.prompt; toast('Prompt "' + type + '" zur?ckgesetzt.'); }
+        else toast('Fehler: ' + r.error, 5000);
+      });
+    }
 
-    // ================================================================
-    // START
-    // ================================================================
-    lrReset();
-    gas('apiHubGetAccess').then(function (a) {
-      if (!a.authorized) {
-        $('deniedEmail').textContent = a.email || 'unbekannt';
-        $('deniedTicket').href = a.ticketUrl;
-        $('bootOverlay').style.display = 'none';
-        $('deniedOverlay').style.display = 'flex';
-        return;
+
+    // ?? SHARED FILTER INIT ?????????????????????????????????????????????
+    function initTabFilters_(dateFromId, dateToId) {
+      if (!document.getElementById(dateFromId).value) {
+        var d = new Date(); d.setDate(d.getDate() - 90);
+        document.getElementById(dateFromId).value = d.toISOString().split('T')[0];
       }
-      MODELS = a.models || [];
-      $('userEmail').textContent = a.email;
-      if (a.appUrl) { $('promptEditorLink').href = a.appUrl + '?page=prompts'; $('promptEditorLink2').href = a.appUrl + '?page=prompts'; }
-      else { $('promptEditorLink').style.display = 'none'; $('promptEditorLink2').style.display = 'none'; }
-      $('bootOverlay').style.display = 'none';
-      // Typ-Labels früh laden, damit Badges überall lesbare Namen zeigen
-      gas('getAllPrompts').then(function (r) { (r.prompts || []).forEach(function (p) { TYPE_LABELS[p.type] = p.label; }); }).catch(function () {});
-      refreshDashboard();
-    }).catch(function (e) {
-      $('bootOverlay').innerHTML = '<span class="material-icons-outlined" style="color:var(--red);font-size:60px;">error</span><h1>Fehler</h1><p>' + esc(errMsg(e)) + '</p>';
-    });
+      if (!document.getElementById(dateToId).value) {
+        document.getElementById(dateToId).value = new Date().toISOString().split('T')[0];
+      }
+    }
+
+    function populateSelect_(selId, values, allLabel) {
+      var sel = document.getElementById(selId);
+      if (!sel) return;
+      var cur = sel.value;
+      sel.innerHTML = '<option value="all">' + allLabel + '</option>';
+      values.forEach(function(v) {
+        var opt = document.createElement('option');
+        opt.value = v; opt.textContent = v;
+        if (v === cur) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+
+    // ?? BENCHMARKING ???????????????????????????????????????????????????
+    function initBenchmarkTab_() {
+      initTabFilters_('bm-dateFrom', 'bm-dateTo');
+      runGas('getRunLogFilterOptions', [], function(r) {
+        if (r.success) populateSelect_('bm-type', r.autoFixTypes, 'All Types');
+      });
+    }
+
+    function runBenchmark() {
+      var filters = {
+        dateFrom:    document.getElementById('bm-dateFrom').value,
+        dateTo:      document.getElementById('bm-dateTo').value,
+        autoFixType: document.getElementById('bm-type').value
+      };
+      var res = document.getElementById('bm-results');
+      res.innerHTML = '<div class="mqm-loading"><span class="mqm-loading-dot"></span><span class="mqm-loading-dot"></span><span class="mqm-loading-dot"></span><span>Analysiere Sprachpaare?</span></div>';
+      document.getElementById('bm-runBtn').disabled = true;
+
+      runGas('getBenchmarkData', [filters, null], function(r) {
+        document.getElementById('bm-runBtn').disabled = false;
+        if (!r.success) { res.innerHTML = '<div class="notice notice-warn" style="margin:0;"><i class="material-icons-outlined">warning</i><span>' + esc(r.error) + '</span></div>'; return; }
+        if (r.empty)    { res.innerHTML = '<div class="mqm-empty">' + esc(r.message || 'Keine Daten.') + '</div>'; return; }
+        renderBenchmark_(r.pairs);
+      }, function(e) {
+        document.getElementById('bm-runBtn').disabled = false;
+        res.innerHTML = '<div class="notice notice-warn" style="margin:0;"><i class="material-icons-outlined">error</i><span>' + esc(e.message) + '</span></div>';
+      });
+    }
+
+    function renderBenchmark_(pairs) {
+      if (!pairs || !pairs.length) { document.getElementById('bm-results').innerHTML = '<div class="mqm-empty">Keine Sprachpaar-Daten.</div>'; return; }
+      var maxRate = pairs[0].errorRate || 1;
+
+      var html = '<div class="tbl-wrap"><table>' +
+        '<thead><tr><th>Language</th><th>Error Rate</th><th>Errors/Segs/Jobs</th><th>Critical</th><th>Major</th><th>Minor</th><th>Top Category</th><th style="width:120px;">Bar</th></tr></thead><tbody>' +
+        pairs.map(function(p) {
+          var barW   = maxRate > 0 ? Math.round((p.errorRate / maxRate) * 110) : 0;
+          var rateColor = p.errorRate > 20 ? 'var(--red)' : p.errorRate > 10 ? 'var(--amber)' : 'var(--green)';
+          var catCls = 'badge cat-' + (p.topCategory||'').toLowerCase().replace(/\//g,'').replace(/\s/g,'');
+          return '<tr>' +
+            '<td><span class="badge badge-grey">' + esc(p.targetLang) + '</span></td>' +
+            '<td><strong style="color:' + rateColor + ';font-size:15px;">' + p.errorRate + '%</strong></td>' +
+            '<td style="color:var(--t2);font-size:12px;">' + p.totalErrors + ' / ' + p.totalSegs + ' / ' + p.totalJobs + ' jobs</td>' +
+            '<td>' + (p.critical > 0 ? '<span class="sev-critical">' + p.critical + '</span>' : '<span style="color:var(--t3);">0</span>') + '</td>' +
+            '<td>' + (p.major    > 0 ? '<span class="sev-major">'    + p.major    + '</span>' : '<span style="color:var(--t3);">0</span>') + '</td>' +
+            '<td>' + (p.minor    > 0 ? '<span class="sev-minor">'    + p.minor    + '</span>' : '<span style="color:var(--t3);">0</span>') + '</td>' +
+            '<td><span class="badge ' + catCls + '">' + esc(p.topCategory) + '</span> <span style="color:var(--t2);font-size:11px;">?' + p.topCategoryCount + '</span></td>' +
+            '<td><span class="agg-bar" style="width:' + barW + 'px;background:' + rateColor + ';"></span></td>' +
+            '</tr>';
+        }).join('') +
+        '</tbody></table></div>';
+
+      document.getElementById('bm-results').innerHTML = html;
+    }
+
+    // ?? TERMINOLOGY DRIFT ??????????????????????????????????????????????
+    function initDriftTab_() {
+      initTabFilters_('dr-dateFrom', 'dr-dateTo');
+      runGas('getRunLogFilterOptions', [], function(r) {
+        if (r.success) populateSelect_('dr-lang', r.targetLangs, 'All Languages');
+      });
+    }
+
+    function runDrift() {
+      var filters = {
+        dateFrom:   document.getElementById('dr-dateFrom').value,
+        dateTo:     document.getElementById('dr-dateTo').value,
+        targetLang: document.getElementById('dr-lang').value
+      };
+      var res = document.getElementById('dr-results');
+      res.innerHTML = '<div class="mqm-loading"><span class="mqm-loading-dot"></span><span class="mqm-loading-dot"></span><span class="mqm-loading-dot"></span><span>Scanne Terminologie-Drift?</span></div>';
+      document.getElementById('dr-runBtn').disabled = true;
+
+      runGas('getTerminologyDrift', [filters, 0.3], function(r) {
+        document.getElementById('dr-runBtn').disabled = false;
+        if (!r.success) { res.innerHTML = '<div class="notice notice-warn" style="margin:0;"><i class="material-icons-outlined">warning</i><span>' + esc(r.error) + '</span></div>'; return; }
+        if (r.empty || !r.terms.length) { res.innerHTML = '<div class="mqm-empty">Kein signifikanter Terminologie-Drift gefunden.</div>'; return; }
+        renderDrift_(r.terms, r.totalLogs);
+      }, function(e) {
+        document.getElementById('dr-runBtn').disabled = false;
+        res.innerHTML = '<div class="notice notice-warn" style="margin:0;"><i class="material-icons-outlined">error</i><span>' + esc(e.message) + '</span></div>';
+      });
+    }
+
+    function renderDrift_(terms, totalLogs) {
+      var html = '<div style="margin-bottom:10px;font-size:12px;color:var(--t2);">' + terms.length + ' Terme mit wiederholten Korrekturen gefunden (aus ' + totalLogs + ' Logs).</div>' +
+        '<div class="tbl-wrap"><table>' +
+        '<thead><tr><th>Source Term (DE)</th><th>Language</th><th>MT Output (h?ufigste Form)</th><th>Empfohlene ?bersetzung</th><th>Korrekturen</th><th>Projekte</th><th>Zuletzt</th></tr></thead><tbody>' +
+        terms.map(function(t) {
+          var urgency = t.driftScore >= 10 ? 'sev-critical' : t.driftScore >= 5 ? 'sev-major' : 'sev-minor';
+          return '<tr>' +
+            '<td style="font-family:var(--mono);font-size:12px;max-width:160px;word-break:break-word;">' + esc(t.sourceTerm) + '</td>' +
+            '<td><span class="badge badge-grey">' + esc(t.targetLang) + '</span></td>' +
+            '<td style="color:var(--red);font-family:var(--mono);font-size:12px;max-width:150px;word-break:break-word;">' + esc(t.topOriginal || '?') + '</td>' +
+            '<td style="color:var(--green);font-family:var(--mono);font-size:12px;max-width:150px;word-break:break-word;">' + esc(t.topCorrected || '?') + '</td>' +
+            '<td><span class="' + urgency + '">' + t.driftScore + '?</span></td>' +
+            '<td style="font-size:11px;color:var(--t2);">' + t.projectCount + ' Projekt(e)<br><span title="' + esc(t.projects.join(', ')) + '" style="cursor:help;">' + esc((t.projects[0] || '') + (t.projects.length > 1 ? ' +' + (t.projects.length-1) : '')) + '</span></td>' +
+            '<td style="font-size:11px;color:var(--t2);white-space:nowrap;">' + (t.lastSeen ? new Date(t.lastSeen).toLocaleDateString('de-DE') : '?') + '</td>' +
+            '</tr>';
+        }).join('') +
+        '</tbody></table></div>';
+      document.getElementById('dr-results').innerHTML = html;
+    }
+
+    // ?? GLOSSARY SUGGESTIONS ???????????????????????????????????????????
+    function initGlossaryTab_() {
+      initTabFilters_('gl-dateFrom', 'gl-dateTo');
+      runGas('getRunLogFilterOptions', [], function(r) {
+        if (r.success) populateSelect_('gl-lang', r.targetLangs, 'All Languages');
+      });
+    }
+
+    function runGlossary() {
+      var filters = {
+        dateFrom:   document.getElementById('gl-dateFrom').value,
+        dateTo:     document.getElementById('gl-dateTo').value,
+        targetLang: document.getElementById('gl-lang').value
+      };
+      var res = document.getElementById('gl-results');
+      res.innerHTML = '<div class="mqm-loading"><span class="mqm-loading-dot"></span><span class="mqm-loading-dot"></span><span class="mqm-loading-dot"></span><span>Gemini analysiert Termvorschl?ge?</span></div>';
+      document.getElementById('gl-runBtn').disabled = true;
+
+      runGas('getGlossarySuggestions', [filters], function(r) {
+        document.getElementById('gl-runBtn').disabled = false;
+        if (!r.success) { res.innerHTML = '<div class="notice notice-warn" style="margin:0;"><i class="material-icons-outlined">warning</i><span>' + esc(r.error) + '</span></div>'; return; }
+        if (r.empty || !r.suggestions.length) { res.innerHTML = '<div class="mqm-empty">' + esc(r.message || 'Keine Termvorschl?ge gefunden.') + '</div>'; return; }
+        renderGlossary_(r.suggestions);
+      }, function(e) {
+        document.getElementById('gl-runBtn').disabled = false;
+        res.innerHTML = '<div class="notice notice-warn" style="margin:0;"><i class="material-icons-outlined">error</i><span>' + esc(e.message) + '</span></div>';
+      });
+    }
+
+    function renderGlossary_(suggestions) {
+      var html = '<div style="margin-bottom:10px;font-size:12px;color:var(--t2);">' +
+        suggestions.length + ' Vorschl?ge f?r neue Termbase-Eintr?ge. <strong>Nur zur manuellen ?bernahme in Phrase.</strong></div>' +
+        '<div class="tbl-wrap"><table>' +
+        '<thead><tr><th>Source (DE)</th><th>Zielsprache</th><th>Empfohlener Term</th><th>Confidence</th><th>Begr?ndung</th></tr></thead><tbody>' +
+        suggestions.map(function(s) {
+          var confColor = s.confidence >= 80 ? 'var(--green)' : s.confidence >= 60 ? 'var(--amber)' : 'var(--t2)';
+          var confBadge = s.confidence >= 80 ? 'sev-minor' : s.confidence >= 60 ? 'sev-major' : 'badge badge-grey';
+          return '<tr>' +
+            '<td style="font-family:var(--mono);font-size:12px;font-weight:600;">' + esc(s.sourceDe) + '</td>' +
+            '<td><span class="badge badge-grey">' + esc(s.targetLang) + '</span></td>' +
+            '<td style="font-family:var(--mono);font-size:12px;color:var(--green);font-weight:600;">' + esc(s.targetTerm) + '</td>' +
+            '<td><span class="' + confBadge + '">' + s.confidence + '%</span></td>' +
+            '<td style="font-size:11.5px;color:var(--t2);">' + esc(s.rationale) + '</td>' +
+            '</tr>';
+        }).join('') +
+        '</tbody></table></div>';
+      document.getElementById('gl-results').innerHTML = html;
+    }
+
+    // ?? INIT ??????????????????????????????????????????????????????????
+    window.onload = function() { checkTrigger(); };
   </script>
 </body>
 </html>
