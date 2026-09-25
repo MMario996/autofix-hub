@@ -263,7 +263,7 @@ function getAutoFixProjects() {
 
     Logger.log('[AutoFix] Cache-Miss ? lade Projekte von Phrase (ASSIGNED + NEW)?');
     var url  = 'https://cloud.memsource.com/web/api2/v1/projects' +
-               '?pageSize=50&status=ASSIGNED&status=NEW&sort=DATE_CREATED&order=DESC';
+               '?pageSize=50&statuses=ASSIGNED&statuses=NEW&sort=DATE_CREATED&order=DESC';
     var data = phraseFetch_(url);
     var content = data.content || [];
     Logger.log('[AutoFix] Projekte gesamt (ASSIGNED+NEW): ' + content.length);
