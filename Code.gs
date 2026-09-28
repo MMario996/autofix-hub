@@ -364,10 +364,16 @@ function extractFilename_(cd, jobUid) {
 
 function extractSegmentsFromMxliff_(xmlString) {
   var segments = [];
-  var tuRegex  = /<trans-unit\s[^>]*id="([^"]+)"[^>]*>([\s\S]*?)<\/trans-unit>/g;
+  // FIX 17: Nur das echte id-Attribut lesen. Das alte "[^>]*id=" war gierig und
+  // traf das LETZTE "id=" im Tag, also m:para-id (Absatz-ID). Alle Segmente eines
+  // Absatzes bekamen dadurch dieselbe id, und Korrekturen landeten im falschen Segment.
+  var tuRegex  = /<trans-unit\s(?:[^>]*?\s)?id="([^"]+)"[^>]*>([\s\S]*?)<\/trans-unit>/g;
+  var seenIds  = {};
   var match;
   while ((match = tuRegex.exec(xmlString)) !== null) {
     var id     = match[1];
+    if (seenIds[id]) throw new Error('MXLIFF enthält doppelte trans-unit id "' + id + '" – Job abgebrochen, um Fehlzuordnungen zu vermeiden.');
+    seenIds[id] = true;
     var tuBody = match[2];
     var tuTag  = match[0].substring(0, match[0].indexOf('>') + 1);
     if (/translate\s*=\s*"no"/i.test(tuTag)) continue;
@@ -397,7 +403,7 @@ function patchMxliffString_(xmlString, corrections, segments) {
     var corrected = corrections[seg.id];
     if (!corrected || corrected.trim() === seg.target.trim()) continue;
     var idPattern = new RegExp(
-      '(<trans-unit\\s[^>]*id="' + escapeRegex_(seg.id) + '"[^>]*>)([\\s\\S]*?)(<\\/trans-unit>)'
+      '(<trans-unit\\s(?:[^>]*?\\s)?id="' + escapeRegex_(seg.id) + '"[^>]*>)([\\s\\S]*?)(<\\/trans-unit>)'
     );
     var tuMatch = idPattern.exec(patched);
     if (!tuMatch) continue;
@@ -649,28 +655,41 @@ function parseBatchResponse_(body, batchNum) {
 // von Segment N+2 oder N-3 zur?ckgegeben ? die Korrektur landet dann auf
 // dem falschen Segment, ohne dass irgendwo ein Fehler auftaucht.
 //
-// isAnchorMatch_ pr?ft nur das erste Wort des Source-Texts gegen den
-// mitgelieferten Anker (bewusst locker, um keine legitimen Korrekturen wegen
-// kleiner Tokenisierungs-Unterschiede zu verwerfen) ? bei einer echten
-// Verschiebung ist das erste Wort so gut wie nie identisch, bei korrekter
-// Zuordnung so gut wie immer.
+// isAnchorMatch_ vergleicht bis zu 3 Wörter des Source-Texts (ohne Tags)
+// mit dem mitgelieferten Anker (siehe FIX 17b).
 // =====================================================================
 function isAnchorMatch_(sourceText, anchorText) {
-  var firstWord_ = function(s) {
-    var m = String(s || '').trim().match(/[\p{L}\p{N}]+/u);
-    return m ? m[0].toLowerCase() : '';
+  // FIX 17b: Nur das erste Wort zu vergleichen reichte nicht ("The ...", "Il ...",
+  // "In the ..." beginnen viele Segmente). Jetzt werden bis zu 3 Wörter verglichen;
+  // Phrase-Tags wie {1>, <1}, {2}, <3/> werden vorher entfernt.
+  var words_ = function(s) {
+    var clean = String(s || '').replace(/\{\d+>|<\d+\}|\{\d+\}|<\d+\/>/g, ' ');
+    return (clean.match(/[\p{L}\p{N}]+/gu) || []).slice(0, 3).map(function(w) { return w.toLowerCase(); });
   };
-  var srcFirst    = firstWord_(sourceText);
-  var anchorFirst = firstWord_(anchorText);
-  if (!srcFirst || !anchorFirst) return true; // nichts zum Pr?fen da ? nicht blockieren
-  return srcFirst === anchorFirst;
+  var srcWords    = words_(sourceText);
+  var anchorWords = words_(anchorText);
+  if (!srcWords.length || !anchorWords.length) return true; // nichts zum Prüfen da – nicht blockieren
+  var n = Math.min(srcWords.length, anchorWords.length);
+  for (var i = 0; i < n; i++) {
+    if (srcWords[i] !== anchorWords[i]) return false;
+  }
+  return true;
 }
 
 function applyBatchResults_(results, batchSegments, allCorrections, allChanges) {
   var changed = 0;
+  // FIX 17c: Liefert Gemini dieselbe id mehrfach, ist die Zuordnung nicht eindeutig –
+  // alle Einträge dieser id werden verworfen statt still überschrieben.
+  var idCount = {};
+  results.forEach(function(r) { if (r && r.id) idCount[String(r.id)] = (idCount[String(r.id)] || 0) + 1; });
   results.forEach(function(r) {
     if (!r.id || !r.changed || !r.corrected) return;
     var segId = String(r.id);
+    if (idCount[segId] > 1) {
+      Logger.log('[PE parallel] Segment-id "' + segId + '" mehrfach in der Antwort – Korrekturen verworfen.');
+      try { writeRunStatus_('Segment ' + segId + ' mehrfach von Gemini geliefert – Korrektur sicherheitshalber verworfen', 'WARN'); } catch(e) {}
+      return;
+    }
     // FIX 16a: id muss zu einem Segment IN DIESEM BATCH geh?ren. Eine id, die
     // im Batch gar nicht vorkommt, ist per Definition eine Fehlzuordnung.
     var orig = batchSegments.find(function(s) { return String(s.id) === segId; });
