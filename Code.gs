@@ -24,6 +24,9 @@ function doGet(e) {
 var AUTOFIX_CF_FIELD_UID_DEFAULT_ = '1uw8kvE6WNhT6Gw0XeX4Z4';
 var AUTOFIX_WF_STEP_NAME_DEFAULT_ = 'PE Gemini';
 var AUTOFIX_BATCH_SIZE_           = 25;
+// FIX 18: Jobs bis zu dieser Größe laufen in EINEM Batch, damit Gemini alle Segmente
+// sieht und Begriffe/Sprachvariante im ganzen Dokument einheitlich wählt.
+var AUTOFIX_SINGLE_BATCH_MAX_     = 60;
 
 function writeRunStatus_(msg, level) {
   try {
@@ -495,7 +498,7 @@ function filterTbHitsForSegment_(globalTbHits, sourceText) {
   return globalTbHits.filter(function(h) { return lower.indexOf(h.src.toLowerCase()) !== -1; });
 }
 
-function buildPePrompt_(settings, sourceLang, targetLang, segments, batchInfo, autoFixType) {
+function buildPePrompt_(settings, sourceLang, targetLang, segments, batchInfo, autoFixType, consistency) {
   var batchBlock = batchInfo
     ? '\n=== BATCH ' + batchInfo.current + '/' + batchInfo.total +
       ' (Seg ' + batchInfo.from + '?' + batchInfo.to + ') ===\n'
@@ -503,6 +506,7 @@ function buildPePrompt_(settings, sourceLang, targetLang, segments, batchInfo, a
   var allIds = segments.map(function(s) { return '"' + s.id + '"'; }).join(', ');
 
   var peInstructions = getPeInstructions_(settings, autoFixType);
+  var consistencyBlock = buildConsistencyBlock_(consistency);
 
   return 'Du bist ein professioneller Post-Editor f?r Alfred K?rcher SE & Co. KG.\n' +
     'Quellsprache: ' + sourceLang + ' | Zielsprache: ' + targetLang + '\n' +
@@ -512,6 +516,7 @@ function buildPePrompt_(settings, sourceLang, targetLang, segments, batchInfo, a
     peInstructions + '\n\n' +
     '=== TERMBASE (verbindlich) ===\n' +
     'Jedes Segment enth?lt "tbHits". Wenn tbHit.src im Source vorkommt: IMMER tbHit.tgt im Target verwenden.\n\n' +
+    consistencyBlock +
     '=== SEGMENTE ===\n' +
     JSON.stringify(segments, null, 2) + '\n\n' +
     '=== AUSGABE ===\n' +
@@ -523,29 +528,69 @@ function buildPePrompt_(settings, sourceLang, targetLang, segments, batchInfo, a
     'VOLLST?NDIGKEIT: Du MUSST f?r JEDES der ' + segments.length + ' Segmente exakt einen Eintrag liefern.\n' +
     'Erwartete IDs: [' + allIds + ']\n\n' +
     'FORMAT (nur valides JSON, kein Markdown):\n' +
-    '{\n  "results": [\n    {\n      "id": "<id>",\n      "source_reference": "<erste 3 W?rter des Source-Texts>",\n      "corrected": "<text>",\n      "changed": true/false,\n      "reason": "<max 80 Zeichen Begr?ndung>"\n    }\n  ]\n}\n' +
+    '{\n  "language_variant": "<verwendete Sprachvariante, z. B. pt-BR>",\n' +
+    '  "term_decisions": [\n    { "source": "<Source-Begriff>", "target": "<gewählte Wiedergabe im Target>" }\n  ],\n' +
+    '  "results": [\n    {\n      "id": "<id>",\n      "source_reference": "<erste 3 W?rter des Source-Texts>",\n      "corrected": "<text>",\n      "changed": true/false,\n      "reason": "<max 80 Zeichen Begr?ndung>"\n    }\n  ]\n}\n' +
+    '- language_variant: die Sprachvariante, in der du ALLE Segmente einheitlich schreibst (nie mischen)\n' +
+    '- term_decisions: für jeden Nomenklatur-/Fachbegriff in diesen Segmenten die gewählte Wiedergabe (max. 40 Einträge)\n' +
     '- bei changed=false: corrected identisch mit target lassen\n' +
     '- Zahlen, Produktnamen, Ma?einheiten NICHT ?ndern';
 }
 
+// =====================================================================
+// FIX 18: EINHEITLICHE BEGRIFFE ÜBER BATCH-GRENZEN
+//
+// Früher liefen alle Batches (je 25 Segmente) gleichzeitig. Kein Batch wusste,
+// wofür sich die anderen entschieden hatten – ab Segment 26 wechselten Begriffe
+// ("Drivers" vs. "Impulsionadores") und sogar die Sprachvariante (pt-BR vs. pt-PT).
+// Jetzt:
+//  - Jobs bis AUTOFIX_SINGLE_BATCH_MAX_ Segmente laufen in einem einzigen Batch.
+//  - Größere Jobs: Batch 1 läuft zuerst und liefert "term_decisions" und
+//    "language_variant". Diese werden allen weiteren Batches als verbindliche
+//    Vorgabe mitgegeben; die weiteren Batches laufen danach parallel.
+// =====================================================================
+function planBatches_(total) {
+  if (total <= AUTOFIX_SINGLE_BATCH_MAX_) return [{ start: 0, end: total }];
+  var ranges = [];
+  for (var start = 0; start < total; start += AUTOFIX_BATCH_SIZE_) {
+    ranges.push({ start: start, end: Math.min(start + AUTOFIX_BATCH_SIZE_, total) });
+  }
+  return ranges;
+}
+
+function buildConsistencyBlock_(consistency) {
+  if (!consistency || (!consistency.variant && !consistency.terms.length)) return '';
+  var lines = ['=== FESTGELEGTE BEGRIFFE AUS DEN VORHERIGEN SEGMENTEN (verbindlich) ===',
+    'Diese Entscheidungen wurden für dasselbe Dokument bereits getroffen. Verwende exakt',
+    'dieselben Wiedergaben, damit das Dokument einheitlich bleibt. Die Nomenklatur hat Vorrang.'];
+  if (consistency.variant) lines.push('Sprachvariante: ' + consistency.variant + ' (nicht wechseln)');
+  consistency.terms.forEach(function(t) { lines.push('- ' + t.source + ' => ' + t.target); });
+  return lines.join('\n') + '\n\n';
+}
+
+function extractConsistency_(parsed) {
+  var terms = (Array.isArray(parsed.term_decisions) ? parsed.term_decisions : [])
+    .filter(function(t) { return t && t.source && t.target; })
+    .slice(0, 40)
+    .map(function(t) { return { source: String(t.source), target: String(t.target) }; });
+  return { variant: String(parsed.language_variant || '').trim(), terms: terms };
+}
+
 function runGeminiPeBatchesParallel_(settings, sourceLang, targetLang, enrichedSegments, autoFixType) {
-  var totalBatches = Math.ceil(enrichedSegments.length / AUTOFIX_BATCH_SIZE_);
+  var ranges       = planBatches_(enrichedSegments.length);
+  var totalBatches = ranges.length;
   var key          = getGeminiKey_();
   var primaryModel = settings.primaryModel || 'gemini-3.6-flash';
   var geminiUrl    = 'https://34-111-99-134.nip.io/gemini/v1beta/models/' + primaryModel + ':generateContent';
 
-  var batches = [];
-  for (var b = 0; b < totalBatches; b++) {
-    var bStart = b * AUTOFIX_BATCH_SIZE_;
-    var bEnd   = Math.min(bStart + AUTOFIX_BATCH_SIZE_, enrichedSegments.length);
-    var slice  = enrichedSegments.slice(bStart, bEnd);
-
+  var makeBatch = function(b, consistency) {
+    var r     = ranges[b];
+    var slice = enrichedSegments.slice(r.start, r.end);
     var prompt = buildPePrompt_(settings, sourceLang, targetLang, slice, {
-      current: b + 1, total: totalBatches, from: bStart + 1, to: bEnd
-    }, autoFixType);
-
-    batches.push({
-      index: b, from: bStart + 1, to: bEnd, segments: slice,
+      current: b + 1, total: totalBatches, from: r.start + 1, to: r.end
+    }, autoFixType, consistency);
+    return {
+      index: b, from: r.start + 1, to: r.end, segments: slice,
       request: {
         url: geminiUrl, method: 'post', contentType: 'application/json',
         muteHttpExceptions: true,
@@ -559,75 +604,92 @@ function runGeminiPeBatchesParallel_(settings, sourceLang, targetLang, enrichedS
           }
         })
       }
-    });
-  }
-
-  writeRunStatus_(enrichedSegments.length + ' Segmente ? ' + totalBatches +
-    ' Batch(es) parallel [' + typeToLabel_(autoFixType) + ']', 'INFO');
-  Logger.log('[PE parallel] Feuere ' + totalBatches + ' Batches f?r Typ "' + autoFixType + '"?');
-
-  var requests  = batches.map(function(b) { return b.request; });
-  var responses = UrlFetchApp.fetchAll(requests);
+    };
+  };
 
   var allCorrections = {}, allChanges = [], usedModel = primaryModel;
   var retryBatches   = [];
+  var consistency    = null;
 
-  for (var i = 0; i < responses.length; i++) {
-    var batch = batches[i];
-    var res   = responses[i];
-    var code  = res.getResponseCode();
-    var body  = res.getContentText();
-
-    if (code === 429) {
-      Logger.log('[PE parallel] Batch ' + (batch.index + 1) + ' Rate Limit ? Retry geplant.');
-      writeRunStatus_('Batch ' + (batch.index + 1) + ' Rate Limit ? Retry?', 'WARN');
-      retryBatches.push(batch);
-      continue;
-    }
-    if (code >= 400) {
-      Logger.log('[PE parallel] Batch ' + (batch.index + 1) + ' Fehler ' + code);
-      writeRunStatus_('Batch ' + (batch.index + 1) + ' Fehler ' + code, 'ERR');
-      continue;
-    }
-
+  var handleBody = function(batch, body, label) {
     var parsed = parseBatchResponse_(body, batch.index + 1);
-    if (!parsed) continue;
-    var batchChanged = applyBatchResults_(parsed, batch.segments, allCorrections, allChanges);
-    writeRunStatus_('Batch ' + (batch.index + 1) + '/' + totalBatches + ' fertig: ' + batchChanged + ' ?nderungen', 'OK');
+    if (!parsed) return;
+    if (batch.index === 0 && totalBatches > 1) {
+      consistency = extractConsistency_(parsed);
+      writeRunStatus_('Batch 1 legt ' + consistency.terms.length + ' Begriff(e) fest' +
+        (consistency.variant ? ' | Variante: ' + consistency.variant : ''), 'INFO');
+    }
+    var changed = applyBatchResults_(parsed.results, batch.segments, allCorrections, allChanges);
+    writeRunStatus_(label + ' ' + (batch.index + 1) + '/' + totalBatches + ' fertig: ' + changed + ' ?nderungen', 'OK');
+  };
+
+  var fireBatches = function(batchList) {
+    var responses = UrlFetchApp.fetchAll(batchList.map(function(b) { return b.request; }));
+    for (var i = 0; i < responses.length; i++) {
+      var batch = batchList[i];
+      var code  = responses[i].getResponseCode();
+      if (code === 429) {
+        Logger.log('[PE parallel] Batch ' + (batch.index + 1) + ' Rate Limit ? Retry geplant.');
+        writeRunStatus_('Batch ' + (batch.index + 1) + ' Rate Limit ? Retry?', 'WARN');
+        retryBatches.push(batch);
+        continue;
+      }
+      if (code >= 400) {
+        Logger.log('[PE parallel] Batch ' + (batch.index + 1) + ' Fehler ' + code);
+        writeRunStatus_('Batch ' + (batch.index + 1) + ' Fehler ' + code, 'ERR');
+        continue;
+      }
+      handleBody(batch, responses[i].getContentText(), 'Batch');
+    }
+  };
+
+  var retryBatch = function(batch) {
+    writeRunStatus_('Retry Batch ' + (batch.index + 1) + '?', 'INFO');
+    try {
+      // FIX 14: nur noch Modelle, die f?r unseren Key tats?chlich verf?gbar
+      // sind. "gemini-2.5-pro" wurde entfernt (f?hrte zu 404 "no longer
+      // available to new users").
+      var fallbackModels = [primaryModel, 'gemini-3.6-flash'];
+      var retryBody = null;
+      for (var m = 0; m < fallbackModels.length; m++) {
+        var fallbackUrl = 'https://34-111-99-134.nip.io/gemini/v1beta/models/' + fallbackModels[m] + ':generateContent';
+        var retryRes = UrlFetchApp.fetch(fallbackUrl, Object.assign({}, batch.request, { url: fallbackUrl }));
+        if (retryRes.getResponseCode() < 400) { retryBody = retryRes.getContentText(); usedModel = fallbackModels[m]; break; }
+        if (m < fallbackModels.length - 1) Utilities.sleep(2000);
+      }
+      if (!retryBody) { writeRunStatus_('Retry Batch ' + (batch.index + 1) + ' endg?ltig fehlgeschlagen.', 'ERR'); return; }
+      handleBody(batch, retryBody, 'Retry Batch');
+    } catch(e) {
+      writeRunStatus_('Retry Batch ' + (batch.index + 1) + ' Exception: ' + e.message, 'ERR');
+    }
+  };
+
+  writeRunStatus_(enrichedSegments.length + ' Segmente ? ' + totalBatches +
+    ' Batch(es) [' + typeToLabel_(autoFixType) + ']', 'INFO');
+  Logger.log('[PE] ' + totalBatches + ' Batch(es) f?r Typ "' + autoFixType + '"?');
+
+  // Batch 1 zuerst (legt bei mehreren Batches Begriffe und Sprachvariante fest)
+  fireBatches([makeBatch(0, null)]);
+  if (retryBatches.length) { Utilities.sleep(3000); retryBatch(retryBatches.shift()); }
+
+  // Restliche Batches parallel, mit den Festlegungen aus Batch 1
+  if (totalBatches > 1) {
+    var rest = [];
+    for (var b = 1; b < totalBatches; b++) rest.push(makeBatch(b, consistency));
+    fireBatches(rest);
   }
 
   if (retryBatches.length > 0) {
     Logger.log('[PE parallel] Retry ' + retryBatches.length + ' Batch(es) sequenziell?');
     Utilities.sleep(3000);
     for (var r = 0; r < retryBatches.length; r++) {
-      var retryBatch = retryBatches[r];
-      writeRunStatus_('Retry Batch ' + (retryBatch.index + 1) + '?', 'INFO');
-      try {
-        // FIX 14: nur noch Modelle, die f?r unseren Key tats?chlich verf?gbar
-        // sind. "gemini-2.5-pro" wurde entfernt (f?hrte zu 404 "no longer
-        // available to new users").
-        var fallbackModels = [primaryModel, 'gemini-3.6-flash'];
-        var retryBody = null;
-        for (var m = 0; m < fallbackModels.length; m++) {
-          var fallbackUrl = 'https://34-111-99-134.nip.io/gemini/v1beta/models/' + fallbackModels[m] + ':generateContent';
-          var retryRes = UrlFetchApp.fetch(fallbackUrl, Object.assign({}, retryBatch.request, { url: fallbackUrl }));
-          if (retryRes.getResponseCode() < 400) { retryBody = retryRes.getContentText(); usedModel = fallbackModels[m]; break; }
-          if (m < fallbackModels.length - 1) Utilities.sleep(2000);
-        }
-        if (!retryBody) { writeRunStatus_('Retry Batch ' + (retryBatch.index + 1) + ' endg?ltig fehlgeschlagen.', 'ERR'); continue; }
-        var retryParsed  = parseBatchResponse_(retryBody, retryBatch.index + 1);
-        if (!retryParsed) continue;
-        var retryChanged = applyBatchResults_(retryParsed, retryBatch.segments, allCorrections, allChanges);
-        writeRunStatus_('Retry Batch ' + (retryBatch.index + 1) + ' fertig: ' + retryChanged + ' ?nderungen', 'OK');
-      } catch(e) {
-        writeRunStatus_('Retry Batch ' + (retryBatch.index + 1) + ' Exception: ' + e.message, 'ERR');
-      }
+      retryBatch(retryBatches[r]);
       if (r < retryBatches.length - 1) Utilities.sleep(1500);
     }
   }
 
   Logger.log('[PE parallel] Gesamt: ' + allChanges.length + '/' + enrichedSegments.length + ' | Model: ' + usedModel);
-  return { corrections: allCorrections, changes: allChanges, usedModel: usedModel };
+  return { corrections: allCorrections, changes: allChanges, usedModel: usedModel, batchCount: totalBatches };
 }
 
 function parseBatchResponse_(body, batchNum) {
@@ -635,7 +697,12 @@ function parseBatchResponse_(body, batchNum) {
     var json    = JSON.parse(body);
     var rawText = json.candidates[0].content.parts[0].text;
     rawText     = rawText.replace(/^```(json)?\s*/gi, '').replace(/```\s*$/gi, '').trim();
-    return JSON.parse(rawText).results || [];
+    var parsed  = JSON.parse(rawText);
+    return {
+      results:          parsed.results || [],
+      term_decisions:   parsed.term_decisions || [],
+      language_variant: parsed.language_variant || ''
+    };
   } catch(e) {
     Logger.log('[PE parallel] Batch ' + batchNum + ' Parse-Fehler: ' + e.message);
     return null;
@@ -799,7 +866,7 @@ function applyFixAndCompleteJob_(projectUid, job, settings) {
     sourceLang: sourceLang,
     autoFixType: autoFixType,
     segmentsTotal: enriched.length, segmentsChanged: peResult.changes.length,
-    batchCount: Math.ceil(enriched.length / AUTOFIX_BATCH_SIZE_),
+    batchCount: peResult.batchCount,
     model: peResult.usedModel, changes: peResult.changes
   };
 }
