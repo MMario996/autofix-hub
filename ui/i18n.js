@@ -1,6 +1,5 @@
 // Oberflaechentexte DE/EN (gleiches Muster wie im Prompt Hub). Fehlende EN-Texte fallen auf DE zurueck.
 var I18N = {
-  brand_sub: ['Automatisches Post-Editing mit Gemini für Phrase', 'Automatic post-editing with Gemini for Phrase'],
   tab_dashboard: ['Dashboard', 'Dashboard'], tab_liverun: ['Live-Run', 'Live run'], tab_queue: ['Warteschlange', 'Queue'],
   tab_runlog: ['Run Log', 'Run log'], tab_analysis: ['Analysen', 'Analytics'], tab_prompts: ['Prompts', 'Prompts'],
   tab_admin: ['Admin', 'Admin'], tab_help: ['Hilfe', 'Help'],
