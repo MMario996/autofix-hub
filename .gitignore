@@ -1,0 +1,5 @@
+node_modules/
+preview/
+.clasp.json
+.clasprc.json
+test-results/

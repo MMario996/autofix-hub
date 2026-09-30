@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Oeffentliche IDs, keine Geheimnisse"
+regexes = ['''1LFoBCuz7h1xdi58djRPedAXgtj4RZ_T5EnvJbTKtkp8''']

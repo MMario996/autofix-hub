@@ -1,0 +1,60 @@
+name: clasp deploy
+description: Schiebt die App-Dateien per clasp in ein Apps-Script-Projekt und aktualisiert die Web-App-Bereitstellung.
+inputs:
+  clasprc:
+    description: Inhalt von ~/.clasprc.json
+    required: false
+  script-id:
+    description: Apps-Script-Projekt-ID
+    required: false
+  deployment-id:
+    description: ID der Web-App-Bereitstellung (optional; ohne wird nur der Code hochgeladen)
+    required: false
+  description:
+    description: Beschreibung der Version
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Secrets vorhanden?
+      id: gate
+      shell: bash
+      env:
+        CLASPRC: ${{ inputs.clasprc }}
+        SCRIPT_ID: ${{ inputs.script-id }}
+      run: |
+        if [ -z "$CLASPRC" ] || [ -z "$SCRIPT_ID" ]; then
+          echo "::notice::Deploy uebersprungen - clasp-Secrets fuer diese Umgebung nicht gesetzt."
+          echo "run=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "run=true" >> "$GITHUB_OUTPUT"
+        fi
+    - uses: actions/setup-node@v4
+      if: steps.gate.outputs.run == 'true'
+      with:
+        node-version: 22
+    - name: clasp einrichten
+      if: steps.gate.outputs.run == 'true'
+      shell: bash
+      env:
+        CLASPRC: ${{ inputs.clasprc }}
+        SCRIPT_ID: ${{ inputs.script-id }}
+      run: |
+        npm install -g @google/clasp@2
+        printf '%s' "$CLASPRC" > ~/.clasprc.json
+        printf '{"scriptId":"%s","rootDir":"."}' "$SCRIPT_ID" > .clasp.json
+    - name: Code hochladen
+      if: steps.gate.outputs.run == 'true'
+      shell: bash
+      run: clasp push --force
+    - name: Web-App-Bereitstellung aktualisieren
+      if: steps.gate.outputs.run == 'true' && inputs.deployment-id != ''
+      shell: bash
+      env:
+        DEPLOYMENT_ID: ${{ inputs.deployment-id }}
+        DESCRIPTION: ${{ inputs.description }}
+      run: clasp deploy --deploymentId "$DEPLOYMENT_ID" --description "${DESCRIPTION:0:90}"
+    - name: Zugangsdaten entfernen
+      if: always()
+      shell: bash
+      run: rm -f ~/.clasprc.json .clasp.json

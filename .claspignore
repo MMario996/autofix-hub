@@ -1,0 +1,7 @@
+# Nur App-Dateien hochladen. "Doget patch.gs" ist eine Kopiervorlage mit einem
+# zweiten doGet() und darf nicht ins Projekt.
+**/**
+!*.gs
+!*.html
+!appsscript.json
+Doget patch.gs
