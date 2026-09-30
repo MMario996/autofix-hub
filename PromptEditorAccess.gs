@@ -134,10 +134,62 @@ function getPromptTypesConfig_() {
     });
     savePromptTypesConfig_(list);
   }
-  return list;
+  return mergePromptHubSpaces_(list);
 }
 function savePromptTypesConfig_(list) {
-  PropertiesService.getScriptProperties().setProperty(PROMPT_TYPES_CONFIG_PROP_, JSON.stringify(list));
+  // Spaces aus dem Prompt Hub nicht in die Script Properties uebernehmen,
+  // sonst wuerden sie dort weiterleben, nachdem der Hub sie archiviert hat.
+  var own = (list || []).filter(function (t) { return !t.fromPromptHub; });
+  PropertiesService.getScriptProperties().setProperty(PROMPT_TYPES_CONFIG_PROP_, JSON.stringify(own));
+}
+
+// ?????????????????????????????????????????????????????????????????????
+// PROMPT HUB: Der Prompt Hub (eigenes Apps-Script-Projekt) pflegt seine
+// Spaces im Tab "Prompt Spaces" dieses Sheets (type | label | example |
+// active). Aktive Spaces kommen hier dazu, damit resolveAutoFixType_ und
+// typeToLabel_ sie kennen; archivierte fallen heraus. Die fest eingebauten
+// Typen (technical, marketing) behalten ihr Label. Die Prompts selbst
+// schreibt der Hub wie bisher als peInstructions_<type> in "Settings" -
+// an der Post-Editing-Logik aendert sich nichts.
+// ?????????????????????????????????????????????????????????????????????
+var PROMPT_HUB_SPACES_CACHE_ = null;
+function readPromptHubSpaces_() {
+  if (PROMPT_HUB_SPACES_CACHE_) return PROMPT_HUB_SPACES_CACHE_;
+  var out = [];
+  try {
+    var sheet = getDbSheet_().getSheetByName('Prompt Spaces');
+    if (sheet) {
+      var rows = sheet.getDataRange().getValues();
+      for (var i = 1; i < rows.length; i++) {
+        var type = String(rows[i][0] || '').trim();
+        if (!type) continue;
+        out.push({ type: type, label: String(rows[i][1] || type), example: String(rows[i][2] || ''), active: String(rows[i][3]) !== 'false' });
+      }
+    }
+  } catch (e) {
+    Logger.log('[Prompt Hub] Tab "Prompt Spaces" nicht lesbar: ' + e.message);
+  }
+  PROMPT_HUB_SPACES_CACHE_ = out;
+  return out;
+}
+function mergePromptHubSpaces_(list) {
+  var hub = readPromptHubSpaces_();
+  if (!hub.length) return list;
+  var merged = list.slice();
+  hub.forEach(function (h) {
+    var idx = -1;
+    for (var i = 0; i < merged.length; i++) if (merged[i].type === h.type) { idx = i; break; }
+    if (!h.active) {
+      if (idx !== -1 && !merged[idx].builtIn) merged.splice(idx, 1);
+      return;
+    }
+    if (idx === -1) {
+      merged.push({ type: h.type, label: h.label, example: h.example, builtIn: false, fromPromptHub: true });
+    } else if (!merged[idx].builtIn) {
+      merged[idx] = Object.assign({}, merged[idx], { label: h.label, example: h.example || merged[idx].example });
+    }
+  });
+  return merged;
 }
 function sanitizeTypeKey_(label) {
   return String(label || '')
