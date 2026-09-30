@@ -380,6 +380,12 @@ function apiHubAdminForceUnlock() {
 function apiHubAdminClearCache() {
   return hubApi_('admin', function (email) { hubAudit_(email, 'Projekt-Cache geleert', ''); return clearProjectCache(); });
 }
+function apiHubAdminExportToPromptHub() {
+  return hubApi_('admin', function (email) {
+    hubAudit_(email, 'An Prompt Hub übergeben', '');
+    return exportPromptEditorToPromptHub();
+  });
+}
 function apiHubAdminPreviewAs(target) {
   return hubApi_('admin', function () {
     var e = String(target || '').trim().toLowerCase();

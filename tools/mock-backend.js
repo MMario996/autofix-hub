@@ -142,6 +142,7 @@
     },
     apiHubAdminForceUnlock: function () { db.running = false; return ok({}); },
     apiHubAdminClearCache: function () { return ok({}); },
+    apiHubAdminExportToPromptHub: function () { return ok({ types: 5, users: 9, admins: 1 }); },
     apiHubAdminPreviewAs: function (e) { return ok({ email: e, role: 'viewer' }); }
   };
 

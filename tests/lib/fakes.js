@@ -19,6 +19,7 @@ class FakeRange {
     return this;
   }
   setValue(v) { this.sheet.set(this.row, this.col, v); return this; }
+  setNumberFormat(f) { this.sheet.textFormat = f === '@'; return this; }
   setFontWeight() { return this; }
 }
 
@@ -31,7 +32,7 @@ class FakeSheet {
     const line = this.rows[row - 1];
     while (line.length < col) line.push('');
     if (typeof v === 'string' && v.startsWith("'")) v = v.substring(1);
-    else if (typeof v === 'string' && /^[=+\-@]/.test(v)) throw new Error('Formel-Injektion: ' + v.substring(0, 20));
+    else if (typeof v === 'string' && /^[=+\-@]/.test(v) && !this.textFormat) throw new Error('Formel-Injektion: ' + v.substring(0, 20));
     line[col - 1] = v;
   }
   width() { return this.rows.reduce((m, r) => Math.max(m, r.length), 0); }

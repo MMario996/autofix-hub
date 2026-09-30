@@ -180,3 +180,30 @@ test('Dashboard-Kennzahlen aus dem Run Log', () => {
   assert.equal(d.week.changeRate, 6.7);
   assert.equal(d.recent.length, 3);
 });
+
+test('Uebergabe an den Prompt Hub schreibt Spaces, Nutzer und Admins in den Tab', () => {
+  const { G, state } = setup({ legacyAdmins: [ADMIN] });
+  state.scriptProps.AUTOFIX_PROMPT_TYPES_CONFIG = JSON.stringify([
+    { type: 'technical', label: 'Technical Documentation', builtIn: true, example: '=Beispiel' },
+    { type: 'p_d_project', label: 'P&D Project', example: 'Source: …', builtIn: false }
+  ]);
+  state.scriptProps.PROMPT_EDITOR_USERS = JSON.stringify([{ email: 'Ken.Knauer@karcher.com', types: ['p_d_project'], canManageSettings: false }, { email: 'reiner@karcher.com', types: ['*'], canManageSettings: true }]);
+  const r = ok(G.apiHubAdminExportToPromptHub());
+  assert.equal(r.types, 2); assert.equal(r.users, 2); assert.equal(r.admins, 1);
+  const rows = state.spreadsheets[DB].getSheetByName('Prompt Hub Import').rows;
+  assert.deepEqual(plain(rows[0]), ['kind', 'key', 'json']);
+  const pnd = rows.find((x) => x[1] === 'p_d_project');
+  assert.equal(JSON.parse(pnd[2]).label, 'P&D Project');
+  assert.equal(JSON.parse(rows.find((x) => x[1] === 'technical')[2]).example, '=Beispiel', 'Beispiel mit "=" bleibt Text');
+  assert.ok(rows.some((x) => x[0] === 'user' && x[1] === 'ken.knauer@karcher.com'));
+  assert.ok(rows.some((x) => x[0] === 'admin' && x[1] === ADMIN));
+  as_viewer_denied(G);
+});
+
+function as_viewer_denied(G) {
+  // Nicht-Admins duerfen die Uebergabe nicht ausloesen
+  const setupNo = setup({ legacyAdmins: [ADMIN] });
+  setupNo.as('view@karcher.com');
+  assert.match(setupNo.G.apiHubAdminExportToPromptHub().error, /Berechtigung/);
+  return G;
+}

@@ -623,11 +623,19 @@ var App = (function () {
       '<div class="btn-row"><button class="btn btn-sm btn-secondary" onclick="App.forceUnlock()">' + icon('lock_open') + 'Run-Sperre lösen</button>' +
       '<button class="btn btn-sm btn-secondary" onclick="App.clearCache()">' + icon('cached') + 'Projekt-Cache leeren</button>' +
       '<button class="btn btn-sm btn-secondary" onclick="App.debugProjects()">' + icon('bug_report') + 'Projektsuche testen</button>' +
-      '<button class="btn btn-sm btn-secondary" onclick="App.openSheet()">' + icon('table_view') + t('open_sheet') + '</button></div><div id="mtResult" style="margin-top:12px"></div></div>';
+      '<button class="btn btn-sm btn-secondary" onclick="App.openSheet()">' + icon('table_view') + t('open_sheet') + '</button>' +
+      '<button class="btn btn-sm btn-secondary" onclick="App.exportToPromptHub()">' + icon('move_up') + 'An Prompt Hub übergeben</button></div>' +
+      '<p class="hint" style="margin-top:10px">„An Prompt Hub übergeben“ schreibt Spaces, Nutzer und Admins des alten Prompt Editors in den Tab „Prompt Hub Import“. Der Prompt Hub übernimmt sie daraus.</p><div id="mtResult" style="margin-top:12px"></div></div>';
   }
   function forceUnlock() {
     confirmDialog('Run-Sperre lösen', 'Nur lösen, wenn sicher kein Lauf mehr aktiv ist. Sonst können zwei Läufe dieselben Jobs bearbeiten.', 'Lösen').then(function (ok) {
       if (ok) call('apiHubAdminForceUnlock').then(function (r) { if (!r.success) return toast(r.error, true); reloadAdmin('Run-Sperre gelöst'); });
+    });
+  }
+  function exportToPromptHub() {
+    call('apiHubAdminExportToPromptHub').then(function (r) {
+      if (!r.success) return toast(r.error, true);
+      toast('Übergeben: ' + r.types + ' Space(s), ' + r.users + ' Nutzer, ' + r.admins + ' Admin(s). Jetzt im Prompt Hub unter Admin → Spaces übernehmen.');
     });
   }
   function clearCache() { call('apiHubAdminClearCache').then(function (r) { toast(r.success ? 'Cache geleert' : r.error, !r.success); }); }
@@ -685,7 +693,7 @@ var App = (function () {
     reloadLogs: reloadLogs, setLogFilter: setLogFilter, toggleDiff: toggleDiff, openReplay: openReplay,
     setSub: setSub, runAnalysis: runAnalysis,
     decide: decide, saveUser: saveUser, addUser: addUser, removeUser: removeUser, setAdmin: setAdmin,
-    saveSettings: saveSettings, saveConfig: saveConfig, forceUnlock: forceUnlock, clearCache: clearCache, debugProjects: debugProjects,
+    saveSettings: saveSettings, saveConfig: saveConfig, forceUnlock: forceUnlock, clearCache: clearCache, exportToPromptHub: exportToPromptHub, debugProjects: debugProjects,
     requestAccess: requestAccess, _state: S
   };
 })();
