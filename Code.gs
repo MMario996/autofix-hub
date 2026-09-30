@@ -152,6 +152,8 @@ function clearRunning_() {
 }
 
 function forceUnlock() {
+  var hubDenied = hubDenied_('admin'); // Rollenpruefung der Oberflaeche (HubAccess.gs)
+  if (hubDenied) return hubDenied;
   clearRunning_();
   return { success: true, message: 'RunLock manuell freigegeben.' };
 }
@@ -782,6 +784,8 @@ function applyBatchResults_(results, batchSegments, allCorrections, allChanges) 
 }
 
 function replayChangesForJob(projectUid, jobUid, changesJson) {
+  var hubDenied = hubDenied_('operator'); // Rollenpruefung der Oberflaeche (HubAccess.gs)
+  if (hubDenied) return hubDenied;
   try {
     var changes = changesJson;
     if (typeof changes === 'string') {
@@ -972,6 +976,8 @@ function markProjectAutofixDone_(projectUid, settings) {
 }
 
 function runAutoFixForProject(projectUid) {
+  var hubDenied = hubDenied_('operator'); // Rollenpruefung der Oberflaeche (HubAccess.gs)
+  if (hubDenied) return hubDenied;
   try {
     var settings    = getSettings_();
     var jobs        = getAutoFixJobsForProject_(projectUid, settings);
@@ -1017,6 +1023,8 @@ function autoFixPoller() {
 }
 
 function setupAutoFixTrigger(intervalMinutes) {
+  var hubDenied = hubDenied_('operator'); // Rollenpruefung der Oberflaeche (HubAccess.gs)
+  if (hubDenied) return hubDenied;
   try {
     removeAutoFixTrigger();
     var mins = parseInt(intervalMinutes) || 10;
@@ -1031,6 +1039,8 @@ function setupAutoFixTrigger10Min() { return setupAutoFixTrigger(10); }
 function setupAutoFixTrigger30Min() { return setupAutoFixTrigger(30); }
 
 function removeAutoFixTrigger() {
+  var hubDenied = hubDenied_('operator'); // Rollenpruefung der Oberflaeche (HubAccess.gs)
+  if (hubDenied) return hubDenied;
   try {
     var removed = 0;
     ScriptApp.getProjectTriggers().forEach(function(t) {
@@ -1049,6 +1059,8 @@ function getAutoFixTriggerStatus() {
 }
 
 function runNow() {
+  var hubDenied = hubDenied_('operator'); // Rollenpruefung der Oberflaeche (HubAccess.gs)
+  if (hubDenied) return hubDenied;
   try {
     if (isRunning_()) {
       var msg = 'Ein Run ist bereits aktiv ? bitte warten oder forceUnlock() aufrufen.';

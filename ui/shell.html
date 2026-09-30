@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoFix Hub</title>
+  <base target="_top">
+  <!-- GENERIERT aus ui/shell.html, ui/app.css, ui/i18n.js, ui/app.js mit tools/build-index.js - nicht von Hand aendern -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+  <style>
+/*%%CSS%%*/
+  </style>
+  <script>
+    // Darstellung so frueh wie moeglich setzen, sonst blitzt hell kurz auf
+    (function () {
+      try {
+        var t = localStorage.getItem('afh_theme') || 'auto';
+        var dark = t === 'dark' || (t === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <header class="top-bar">
+    <div class="brand">
+      <div class="brand-mark">A</div>
+      <div>
+        <div class="brand-title">AutoFix Hub</div>
+        <div class="brand-sub" data-i18n="brand_sub">Automatisches Post-Editing mit Gemini für Phrase</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="user-chip" id="userChip"></span>
+      <button class="lang-btn" data-lang="de" onclick="App.setLang('de')">DE</button>
+      <button class="lang-btn" data-lang="en" onclick="App.setLang('en')">EN</button>
+      <button class="icon-btn" id="themeBtn" onclick="App.toggleTheme()" title="Hell / Dunkel"><span class="material-icons-outlined">dark_mode</span></button>
+    </div>
+  </header>
+
+  <nav class="tab-nav hidden" id="tabNav">
+    <button class="tab-btn active" data-tab="dashboard" id="tabbtn-dashboard" onclick="App.showTab('dashboard')" data-i18n="tab_dashboard">Dashboard</button>
+    <button class="tab-btn" data-tab="liverun" id="tabbtn-liverun" onclick="App.showTab('liverun')" data-i18n="tab_liverun">Live-Run</button>
+    <button class="tab-btn" data-tab="queue" id="tabbtn-queue" onclick="App.showTab('queue')" data-i18n="tab_queue">Warteschlange</button>
+    <button class="tab-btn" data-tab="runlog" id="tabbtn-runlog" onclick="App.showTab('runlog')" data-i18n="tab_runlog">Run Log</button>
+    <button class="tab-btn" data-tab="analysis" id="tabbtn-analysis" onclick="App.showTab('analysis')" data-i18n="tab_analysis">Analysen</button>
+    <button class="tab-btn" data-tab="prompts" id="tabbtn-prompts" onclick="App.showTab('prompts')" data-i18n="tab_prompts">Prompts</button>
+    <button class="tab-btn hidden" data-tab="admin" id="tabbtn-admin" onclick="App.showTab('admin')"><span data-i18n="tab_admin">Admin</span><span class="tab-count hidden" id="adminCount"></span></button>
+    <button class="tab-btn" data-tab="help" id="tabbtn-help" onclick="App.showTab('help')" data-i18n="tab_help">Hilfe</button>
+  </nav>
+
+  <main class="container">
+    <div id="boot"><div class="loader"></div></div>
+    <div id="openModeBanner" class="notice warn hidden"></div>
+    <section class="tab-content" id="tab-denied"></section>
+    <section class="tab-content" id="tab-dashboard"></section>
+    <section class="tab-content" id="tab-liverun"></section>
+    <section class="tab-content" id="tab-queue"></section>
+    <section class="tab-content" id="tab-runlog"></section>
+    <section class="tab-content" id="tab-analysis"></section>
+    <section class="tab-content" id="tab-prompts"></section>
+    <section class="tab-content" id="tab-admin"></section>
+    <section class="tab-content" id="tab-help"></section>
+  </main>
+
+  <div class="overlay" id="dialog"><div class="dialog" id="dialogBody"></div></div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+/*%%I18N%%*/
+  </script>
+  <script>
+/*%%APP%%*/
+  </script>
+</body>
+</html>

@@ -354,6 +354,8 @@ function getDatabaseUrl() {
 }
 
 function recreateDatabase() {
+  var hubDenied = hubDenied_('admin'); // Rollenpruefung der Oberflaeche (HubAccess.gs)
+  if (hubDenied) return hubDenied;
   try {
     PropertiesService.getScriptProperties().deleteProperty('AUTOFIX_DB_SHEET_ID');
     var ss = getDbSheet_();

@@ -1,0 +1,24 @@
+{
+  "name": "autofix-hub",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Kärcher AutoFix Hub – automatisches Post-Editing mit Gemini für Phrase (Google Apps Script).",
+  "scripts": {
+    "build": "node tools/build-index.js",
+    "test": "node tests/run-all.js",
+    "test:ui": "node --test --test-concurrency=1 tests-ui/render.test.js",
+    "lint": "eslint .",
+    "check": "node tools/build-index.js --check",
+    "preview": "node tools/build-preview.js --scenario=admin --out=preview/admin.html",
+    "mockups": "node tools/screenshots.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0",
+    "playwright": "1.56.1"
+  }
+}
