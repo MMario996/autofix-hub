@@ -4,6 +4,8 @@ Automatisches Post-Editing mit Gemini für Phrase (Google Apps Script).
 AutoFix findet Projekte mit gesetztem AutoFix-Custom-Field, post-editiert die Jobs im Workflow-Schritt „PE Gemini“ mit dem Prompt des jeweiligen Dokumenttyps und schreibt die Korrekturen zurück nach Phrase.
 Oberfläche und Bedienung entsprechen dem [Prompt Hub](https://github.com/MMario996/Prompt-hub) bzw. Kärcher Translation Services.
 
+> 📚 **Dokumentation:** Datenbanken, Script Properties, Abläufe und Diagramme in [`docs/DOKUMENTATION.md`](docs/DOKUMENTATION.md). Gesamtdokumentation aller acht Kärcher-Translation-Repositories (Systemlandkarte, alle Datenbanken, FAQ, Paket für Gemini Gem / NotebookLM): [`kaerchertranslationservices/wissensbasis`](https://github.com/MMario996/kaerchertranslationservices/tree/main/wissensbasis).
+
 ![Dashboard](docs/mockups/01-dashboard.png)
 
 ## Oberfläche
