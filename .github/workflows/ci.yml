@@ -1,16 +1,27 @@
 name: CI
 
-# Jede Aenderung (Pull Request, Aufruf aus dem Deploy-Workflow) durchlaeuft:
-#   1. Lint + Index.html aus ui/ aktuell
-#   2. Logik-Tests (Node 20 + 22): Rollen, Schutz der AutoFix-Funktionen, Settings, Antraege
+# Jede Aenderung (Pull Request, Aufruf aus dem Deploy-Workflow, naechtlich) durchlaeuft:
+#   1. Statische Pruefungen: ESLint, Index.html aus ui/ aktuell, Zeichenkodierung
+#      (keine neuen kaputten Umlaute), Design (keine Icons/Logos, gemeinsame Tokens)
+#   2. Logik-Tests (Node 20 + 22): nur Admins, Schutz der AutoFix-Funktionen,
+#      Settings zeilengenau, Antraege auf Admin-Zugang, Konsistenz Oberflaeche <-> Server
 #   3. Browser-Tests der echten Oberflaeche (Chromium)
-#   4. Mockups als Artefakt
+#   4. Mockups und klickbare Vorschau als Artefakt, damit jede UI-Aenderung im PR sichtbar ist
 #   5. Sicherheit: Secret-Scan (gitleaks) und npm audit
+#   6. Abgleich mit dem Prompt Hub: gleiches Basis-Design
+#      (braucht PROMPT_HUB_REPO_TOKEN, sonst Hinweis statt Fehler)
+#   7. Zusammenfassung im Job-Summary
 
+# main wird ueber deploy.yml geprueft (ruft diesen Workflow vor jedem Deploy auf)
 on:
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: '23 4 * * *'   # naechtlich: faengt neue Browser-/Abhaengigkeits-Probleme ab
   workflow_call:
+    secrets:
+      PROMPT_HUB_REPO_TOKEN:
+        required: false
 
 permissions:
   contents: read
@@ -21,8 +32,9 @@ concurrency:
 
 jobs:
   static:
-    name: Lint & generierte Dateien
+    name: Lint & Qualitaet
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,12 +44,19 @@ jobs:
       - run: npm ci
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
-      - run: npm run lint
-      - run: npm run check
+      - name: ESLint
+        run: npm run lint
+      - name: Index.html aus ui/ aktuell
+        run: node tools/build-index.js --check
+      - name: Zeichenkodierung
+        run: npm run check:encoding
+      - name: Design (keine Icons/Logos, gemeinsame Tokens)
+        run: npm run check:design
 
   unit:
     name: Logik-Tests (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -47,11 +66,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+      # Die Logik-Tests brauchen keine Abhaengigkeiten
       - run: npm test
 
   ui:
     name: Oberflaeche (Chromium)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -65,14 +86,15 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ui-preview
+          name: ui-preview-fehler
           path: preview/
           retention-days: 7
 
   mockups:
-    name: Mockups
+    name: Mockups & Vorschau
     needs: [ui]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -82,15 +104,25 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run mockups
+      - name: Klickbare Vorschau (Admin, kein Zugriff, offener Modus)
+        run: |
+          mkdir -p preview
+          for s in admin denied open; do node tools/build-preview.js --scenario=$s --out=preview/vorschau-$s.html; done
       - uses: actions/upload-artifact@v4
         with:
           name: mockups
           path: docs/mockups/
           retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vorschau
+          path: preview/vorschau-*.html
+          retention-days: 14
 
   security:
     name: Sicherheit
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
       pull-requests: read   # gitleaks liest bei PRs die Commit-Liste des PRs
@@ -110,3 +142,68 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
       - run: npm audit --audit-level=high
+
+  prompthub:
+    name: Abgleich mit Prompt Hub
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PROMPT_HUB_REPO_TOKEN: ${{ secrets.PROMPT_HUB_REPO_TOKEN }}
+    steps:
+      - name: Token vorhanden?
+        id: gate
+        run: |
+          if [ -z "$PROMPT_HUB_REPO_TOKEN" ]; then
+            echo "::notice::Design-Abgleich uebersprungen - Secret PROMPT_HUB_REPO_TOKEN (Lesezugriff auf MMario996/Prompt-hub) nicht gesetzt."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          repository: MMario996/Prompt-hub
+          token: ${{ secrets.PROMPT_HUB_REPO_TOKEN }}
+          path: .prompt-hub
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version: 22
+      - name: Gleiches Basis-Design wie Prompt Hub?
+        if: steps.gate.outputs.run == 'true'
+        run: node tools/check-design.js --other=.prompt-hub
+
+  summary:
+    name: Zusammenfassung
+    if: always()
+    needs: [static, unit, ui, mockups, security, prompthub]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ergebnis
+        env:
+          R_STATIC: ${{ needs.static.result }}
+          R_UNIT: ${{ needs.unit.result }}
+          R_UI: ${{ needs.ui.result }}
+          R_MOCKUPS: ${{ needs.mockups.result }}
+          R_SECURITY: ${{ needs.security.result }}
+          R_PROMPTHUB: ${{ needs.prompthub.result }}
+        run: |
+          icon() { case "$1" in success) echo "OK";; skipped) echo "übersprungen";; cancelled) echo "abgebrochen";; *) echo "FEHLER";; esac; }
+          {
+            echo "## AutoFix Hub – CI"
+            echo ""
+            echo "| Prüfung | Ergebnis |"
+            echo "|---|---|"
+            echo "| Lint, Index.html, Kodierung, Design | $(icon "$R_STATIC") |"
+            echo "| Logik-Tests (Node 20/22) | $(icon "$R_UNIT") |"
+            echo "| Oberfläche (Chromium) | $(icon "$R_UI") |"
+            echo "| Mockups & klickbare Vorschau (Artefakte) | $(icon "$R_MOCKUPS") |"
+            echo "| Sicherheit (gitleaks, npm audit) | $(icon "$R_SECURITY") |"
+            echo "| Abgleich mit Prompt Hub (Design) | $(icon "$R_PROMPTHUB") |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for r in "$R_STATIC" "$R_UNIT" "$R_UI" "$R_MOCKUPS" "$R_SECURITY" "$R_PROMPTHUB"; do
+            case "$r" in success|skipped) ;; *) exit 1;; esac
+          done
