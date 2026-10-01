@@ -45,7 +45,7 @@ test('alle i18n-Schluessel existieren in DE und EN', () => {
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'ui', 'i18n.js'), 'utf8'), ctx);
   const keys = new Set([...(app + shell).matchAll(/(?:data-i18n="|(?<![\w.])t\(')(\w+)/g)].map((m) => m[1]));
-  ['admin', 'operator', 'viewer'].forEach((r) => keys.add('role_' + r));
+  keys.add('role_admin');
   ['pending', 'approved', 'rejected', 'mqm', 'benchmark', 'drift', 'glossary'].forEach((k) => keys.add(k));
   keys.forEach((k) => {
     if (k.endsWith('_')) return;

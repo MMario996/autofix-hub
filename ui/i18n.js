@@ -3,7 +3,7 @@ var I18N = {
   tab_dashboard: ['Dashboard', 'Dashboard'], tab_liverun: ['Live-Run', 'Live run'], tab_queue: ['Warteschlange', 'Queue'],
   tab_runlog: ['Run Log', 'Run log'], tab_analysis: ['Analysen', 'Analytics'], tab_prompts: ['Prompts', 'Prompts'],
   tab_admin: ['Admin', 'Admin'], tab_help: ['Hilfe', 'Help'],
-  role_admin: ['Admin', 'Admin'], role_operator: ['Ausführen', 'Operator'], role_viewer: ['Ansehen', 'Viewer'],
+  role_admin: ['Admin', 'Admin'], theme_dark: ['Dunkel', 'Dark'], theme_light: ['Hell', 'Light'],
   poller: ['Hintergrund-Poller', 'Background poller'], active: ['Aktiv', 'Active'], inactive: ['Inaktiv', 'Inactive'],
   run_state: ['Laufstatus', 'Run state'], running: ['Läuft', 'Running'], ready: ['Bereit', 'Ready'],
   jobs_7d: ['Jobs (7 Tage)', 'Jobs (7 days)'], changed_7d: ['Segmente geändert (7 Tage)', 'Segments changed (7 days)'], errors_7d: ['Fehler (7 Tage)', 'Errors (7 days)'],
@@ -19,11 +19,11 @@ var I18N = {
   date_from: ['Von', 'From'], date_to: ['Bis', 'To'], generate: ['Erzeugen', 'Generate'], export_sheet: ['Erzeugen & ins Sheet exportieren', 'Generate & export to sheet'],
   prompt_readonly: ['Prompts werden im Prompt Hub gepflegt: strukturiert, geprüft, versioniert und live getestet. Hier siehst du, was AutoFix gerade verwendet.', 'Prompts are maintained in Prompt Hub. This shows what AutoFix currently uses.'],
   edit_in_hub: ['Im Prompt Hub bearbeiten', 'Edit in Prompt Hub'],
-  cancel: ['Abbrechen', 'Cancel'], confirm: ['Bestätigen', 'Confirm'], close: ['Schließen', 'Close'], save: ['Speichern', 'Save'], send: ['Absenden', 'Submit'],
+  remove: ['Entfernen', 'Remove'], cancel: ['Abbrechen', 'Cancel'], confirm: ['Bestätigen', 'Confirm'], close: ['Schließen', 'Close'], save: ['Speichern', 'Save'], send: ['Absenden', 'Submit'],
   approve: ['Freigeben', 'Approve'], reject: ['Ablehnen', 'Reject'], pending: ['Offen', 'Pending'], approved: ['Freigegeben', 'Approved'], rejected: ['Abgelehnt', 'Rejected'],
   denied_title: ['Kein Zugriff', 'Access denied'],
-  denied_text: ['Du bist für AutoFix Hub noch nicht freigeschaltet. Beantrage hier den Zugriff, ein Admin gibt ihn frei.', 'You are not yet authorized for AutoFix Hub. Request access below; an admin will approve it.'],
-  reason: ['Begründung', 'Reason'], my_requests: ['Meine Anträge', 'My requests'], request_access: ['Zugriff beantragen', 'Request access']
+  denied_text: ['AutoFix Hub ist den Admins vorbehalten. Prompts, Styleguides und Kontext-Dateien pflegst du im Prompt Hub.', 'AutoFix Hub is for admins only. Maintain prompts, style guides and context files in Prompt Hub.'],
+  reason: ['Begründung', 'Reason'], my_requests: ['Meine Anträge', 'My requests'], request_access: ['Admin-Zugang beantragen', 'Request admin access']
 };
 var LANG = 'de';
 function t(key) {

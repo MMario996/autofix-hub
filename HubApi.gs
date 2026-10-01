@@ -28,7 +28,7 @@ function apiHubBootstrap() {
     var lang = 'de';
     try { lang = PropertiesService.getUserProperties().getProperty(HUB_LANG_PROP_) === 'en' ? 'en' : 'de'; } catch (e) {}
     var cfg = hubConfig_();
-    var out = { success: true, email: email, role: role, authorized: !!role, openMode: hubOpenMode_(st), lang: lang, promptHubUrl: cfg.promptHubUrl };
+    var out = { success: true, email: email, role: role, authorized: !!role, openMode: hubOpenMode_(st), lang: lang, promptHubUrl: cfg.promptHubUrl, version: hubAppVersion_() };
     if (!role) out.myRequests = st.requests.filter(function (r) { return r.email === email; }).slice(-10).reverse();
     if (role === 'admin') out.pendingRequests = st.requests.filter(function (r) { return r.status === 'pending'; }).length;
     return out;
@@ -186,23 +186,24 @@ function apiHubDatabaseUrl() { return hubApi_('viewer', function () { return get
 // ---------------------------------------------------------------------
 // Zugriff beantragen
 // ---------------------------------------------------------------------
-function apiHubRequestAccess(role, reason) {
+// Admin-Zugang beantragen (andere Rollen gibt es nicht mehr)
+function apiHubRequestAccess(reason) {
   try {
     var email = hubEmail_();
     if (!email) throw new Error('Deine E-Mail-Adresse ist nicht lesbar. Bist du mit dem Firmenkonto angemeldet?');
-    if (!HUB_ROLE_RANK_[role] || role === 'admin') throw new Error('Bitte „Ansehen“ oder „Ausführen“ wählen.');
     reason = String(reason || '').trim().substring(0, 1000);
-    if (!reason) throw new Error('Bitte kurz begründen, wofür du den Zugriff brauchst.');
+    if (!reason) throw new Error('Bitte kurz begründen, wofür du den Admin-Zugang brauchst.');
     var lock = LockService.getScriptLock();
     lock.waitLock(20000);
     try {
       var st = hubAccess_();
+      if (st.admins.indexOf(email) !== -1) throw new Error('Du bist bereits Admin.');
       if (st.requests.some(function (r) { return r.email === email && r.status === 'pending'; })) throw new Error('Du hast bereits einen offenen Antrag.');
-      st.requests.push({ id: Utilities.getUuid().substring(0, 12), email: email, role: role, reason: reason, status: 'pending', createdAt: new Date().toISOString() });
+      st.requests.push({ id: Utilities.getUuid().substring(0, 12), email: email, role: 'admin', reason: reason, status: 'pending', createdAt: new Date().toISOString() });
       hubSaveAccess_(st);
     } finally { lock.releaseLock(); }
-    hubAudit_(email, 'Zugriff beantragt', role);
-    hubNotifyAdmins_('Neuer Zugriffsantrag', email + ' beantragt die Rolle „' + role + '“.\nBegründung: ' + reason);
+    hubAudit_(email, 'Admin-Zugang beantragt', reason);
+    hubNotifyAdmins_('Neuer Antrag auf Admin-Zugang', email + ' beantragt Admin-Zugang zu AutoFix Hub.\nBegründung: ' + reason);
     return { success: true, myRequests: hubAccess_().requests.filter(function (r) { return r.email === email; }).slice(-10).reverse() };
   } catch (e) {
     return { success: false, error: e.message };
@@ -231,7 +232,7 @@ function apiHubAdminState() {
     } catch (e) {}
     return {
       settings: picked, effective: hubEffectiveGemini_(s), config: hubConfig_(),
-      admins: st.admins, users: st.users, requests: st.requests.slice().reverse(),
+      admins: st.admins, requests: st.requests.slice().reverse(),
       openMode: hubOpenMode_(st), audit: audit,
       running: !!PropertiesService.getScriptProperties().getProperty('AUTOFIX_RUNNING'),
       settingsError: res.success ? '' : res.error
@@ -307,31 +308,6 @@ function apiHubAdminSaveConfig(patch) {
   });
 }
 
-function apiHubAdminSaveUser(entry) {
-  return hubApi_('admin', function (email) {
-    var e = String(entry && entry.email || '').trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) throw new Error('Ungültige E-Mail.');
-    if (entry.role !== 'viewer' && entry.role !== 'operator') throw new Error('Rolle muss „viewer“ oder „operator“ sein.');
-    var st = hubAccess_();
-    st.users = st.users.filter(function (u) { return u.email !== e; });
-    st.users.push({ email: e, role: entry.role, active: entry.active !== false, addedBy: email, addedAt: new Date().toISOString() });
-    hubSaveAccess_(st);
-    hubAudit_(email, 'Nutzer gespeichert', e + ' = ' + entry.role);
-    return { users: st.users };
-  });
-}
-
-function apiHubAdminRemoveUser(target) {
-  return hubApi_('admin', function (email) {
-    var e = String(target || '').toLowerCase();
-    var st = hubAccess_();
-    st.users = st.users.filter(function (u) { return u.email !== e; });
-    hubSaveAccess_(st);
-    hubAudit_(email, 'Nutzer entfernt', e);
-    return { users: st.users };
-  });
-}
-
 function apiHubAdminSetAdmin(target, makeAdmin) {
   return hubApi_('admin', function (email) {
     var e = String(target || '').trim().toLowerCase();
@@ -351,26 +327,22 @@ function apiHubAdminSetAdmin(target, makeAdmin) {
   });
 }
 
-function apiHubAdminDecide(id, approve, role, comment) {
+// Freigabe macht den Antragsteller zum Admin
+function apiHubAdminDecide(id, approve, comment) {
   return hubApi_('admin', function (email) {
     var st = hubAccess_();
     var r = st.requests.filter(function (x) { return x.id === id; })[0];
     if (!r) throw new Error('Antrag nicht gefunden.');
     if (r.status !== 'pending') throw new Error('Dieser Antrag wurde bereits entschieden.');
-    var finalRole = role || r.role;
-    if (approve) {
-      if (finalRole !== 'viewer' && finalRole !== 'operator') throw new Error('Ungültige Rolle.');
-      st.users = st.users.filter(function (u) { return u.email !== r.email; });
-      st.users.push({ email: r.email, role: finalRole, active: true, addedBy: email, addedAt: new Date().toISOString() });
-    }
+    if (approve && st.admins.indexOf(r.email) === -1) st.admins.push(r.email);
     r.status = approve ? 'approved' : 'rejected';
+    r.role = 'admin';
     r.decidedBy = email; r.decidedAt = new Date().toISOString(); r.comment = String(comment || '').substring(0, 500);
-    if (approve) r.role = finalRole;
     hubSaveAccess_(st);
-    hubAudit_(email, approve ? 'Antrag freigegeben' : 'Antrag abgelehnt', r.email + ' (' + finalRole + ')');
-    hubMail_(r.email, approve ? 'Zugriff freigegeben' : 'Antrag abgelehnt',
-      'Dein Antrag auf Zugriff auf AutoFix Hub wurde ' + (approve ? 'freigegeben (Rolle: ' + finalRole + ').' : 'abgelehnt.') + (comment ? '\nKommentar: ' + comment : ''));
-    return { requests: st.requests.slice().reverse() };
+    hubAudit_(email, approve ? 'Admin-Antrag freigegeben' : 'Admin-Antrag abgelehnt', r.email);
+    hubMail_(r.email, approve ? 'Admin-Zugang freigegeben' : 'Antrag abgelehnt',
+      'Dein Antrag auf Admin-Zugang zu AutoFix Hub wurde ' + (approve ? 'freigegeben.' : 'abgelehnt.') + (comment ? '\nKommentar: ' + comment : ''));
+    return { requests: st.requests.slice().reverse(), admins: st.admins };
   });
 }
 
@@ -384,11 +356,5 @@ function apiHubAdminExportToPromptHub() {
   return hubApi_('admin', function (email) {
     hubAudit_(email, 'An Prompt Hub übergeben', '');
     return exportPromptEditorToPromptHub();
-  });
-}
-function apiHubAdminPreviewAs(target) {
-  return hubApi_('admin', function () {
-    var e = String(target || '').trim().toLowerCase();
-    return { email: e, role: hubRole_(e) };
   });
 }

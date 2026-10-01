@@ -1,13 +1,14 @@
 // =====================================================================
 // AUTOFIX HUB - ZUGRIFF & KONFIGURATION DER OBERFLAECHE (HubAccess.gs)
 //
-// Rollen (wie im Prompt Hub):
-//   admin    - alles, inkl. Einstellungen, Nutzer, Freigaben
-//   operator - AutoFix starten, Poller steuern, Re-Push, Analysen (Gemini)
-//   viewer   - Dashboard, Warteschlange, Run Log, Prompts ansehen
+// AutoFix Hub ist das Werkzeug der Admins: Laeufe, Poller, Run Log,
+// Analysen und AutoFix-Einstellungen. Alle anderen pflegen ihre Prompts,
+// Styleguides und Kontext-Dateien im Prompt Hub.
 //
-// Neue Zugriffe laufen ueber Antraege, die ein Admin freigibt.
-// Gespeichert in der Script Property AUTOFIX_HUB_ACCESS.
+// Zugriff hat deshalb nur, wer in AUTOFIX_HUB_ACCESS als Admin steht.
+// Wer Admin werden moechte, stellt in der App einen Antrag; ein Admin
+// gibt ihn frei. Die frueheren Rollen "viewer" und "operator" gelten
+// nicht mehr (alte Eintraege bleiben gespeichert, werden aber ignoriert).
 //
 // Solange noch kein Admin eingerichtet ist, laeuft die App im offenen
 // Modus (wie bisher: jeder in der Domain darf alles) und zeigt einen
@@ -62,16 +63,14 @@ function hubSaveAccess_(st) {
 
 function hubOpenMode_(st) { return !(st || hubAccess_()).admins.length; }
 
+// Nur Admins (oder jeder im offenen Modus). Die Rangfolge in
+// HUB_ROLE_RANK_ bleibt, damit die bestehenden Pruefungen ('viewer',
+// 'operator', 'admin') unveraendert funktionieren: ein Admin erfuellt alle.
 function hubRole_(email, st) {
   st = st || hubAccess_();
   if (hubOpenMode_(st)) return 'admin';
   if (!email) return '';
-  if (st.admins.indexOf(email) !== -1) return 'admin';
-  for (var i = 0; i < st.users.length; i++) {
-    var u = st.users[i];
-    if (u.email === email && u.active !== false) return HUB_ROLE_RANK_[u.role] ? u.role : '';
-  }
-  return '';
+  return st.admins.indexOf(email) !== -1 ? 'admin' : '';
 }
 
 function hubHasRole_(email, needed) {

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 // Vorschau der echten Oberflaeche (Index.html) mit Beispieldaten statt google.script.run.
-//   node tools/build-preview.js [--scenario=admin|operator|viewer|denied|open] [--out=datei]
+//   node tools/build-preview.js [--scenario=admin|denied|open] [--out=datei]
 const fs = require('fs');
 const path = require('path');
 

@@ -5,310 +5,354 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AutoFix Hub</title>
   <base target="_top">
-  <!-- GENERIERT aus ui/shell.html, ui/app.css, ui/i18n.js, ui/app.js mit tools/build-index.js - nicht von Hand aendern -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+  <!-- GENERIERT aus ui/shell.html, ui/base.css, ui/app.css, ui/i18n.js, ui/app.js mit tools/build-index.js - nicht von Hand aendern -->
+  <!-- ui/base.css ist das gemeinsame Design mit dem Prompt Hub (src/Styles.html dort); CI prueft, dass beide gleich sind -->
   <style>
-/* Design-System aus Prompt Hub / Kaercher Translation Services. Quelle fuer Index.html (tools/build-index.js). */
-
-  /* Basis: Design-System von Kärcher Translation Services (Styles.html) */
+  /* =====================================================================
+     Kärcher Hub – gemeinsames Design (Prompt Hub, AutoFix Hub)
+     Tokens wie Terminologie-Hub und Translation Services: helle, warme
+     Fläche, weiße Karten mit runden Ecken, Gelb nur als Akzent.
+     Die Apps sind in Google Sites eingebettet: kein Logo, keine eigene
+     Kopfzeile, keine Icon-Schrift. Status zeigen Text und Farbe.
+     ===================================================================== */
   :root {
-    --primary-yellow: #FFED00;
-    --primary-black: #000000;
-    --bg-gray: #F5F5F5;
-    --text-main: #333333;
-    --text-sub: #666666;
-    --border-light: #e0e0e0;
-    --surface: #ffffff;
-    --surface-2: #fafafa;
-    --hover-row: #fffbe6;
-    --red: #d93025;
-    --green: #0d652d;
-    --ins-bg: #e6f4ea; --ins-fg: #0d652d;
-    --del-bg: #fce8e6; --del-fg: #a50e0e;
-    --warn-bg: #fff3cd; --warn-fg: #856404;
-    --info-bg: #e8f0fe; --info-fg: #174ea6;
+    --yellow: #FFED00; --yellow-2: #FFD500; --yellow-dim: #8a7400;
+    --fill: linear-gradient(135deg, #FFED00 0%, #FFD500 100%);
+    --ink-fill: linear-gradient(135deg, #1c1c1c 0%, #3b3b3b 100%);
+    --tint: 0 6px 18px -6px rgba(204,170,0,.55);
+    --tint-hi: 0 10px 26px -8px rgba(204,170,0,.7);
+    --elev: 0 1px 2px rgba(40,36,10,.05), 0 8px 28px rgba(40,36,10,.07);
+    --elev-hi: 0 2px 4px rgba(40,36,10,.06), 0 16px 40px rgba(40,36,10,.12);
+    --ring: 0 0 0 3px rgba(255,221,0,.6);
+    --r: 12px; --r-lg: 18px; --ease: cubic-bezier(.16,.9,.3,1);
+    --wash: #f4f4f0; --surface: #fff; --surface-2: #f7f7f5; --surface-3: #efefea; --surface-4: #dcdcd5;
+    --ink: #1a1a1a; --ink-2: #6b6b6b; --ink-3: #767672;
+    --line: #e8e8e4; --line-h: #cfcfc8;
+    --ok: #1e8e3e; --ok-bg: #e6f4ea; --bad: #c5221f; --bad-bg: #fce8e6; --warn: #6d5b00; --warn-bg: #fff6bf;
+    --info: #1a73e8; --info-bg: #e8f0fe; --violet: #6b3fd1; --violet-bg: #efe9fd; --orange: #b06000;
+    --ins-bg: #e6f4ea; --ins-fg: #0d652d; --del-bg: #fce8e6; --del-fg: #a50e0e;
+    --ff: "Helvetica Neue", Helvetica, Arial, sans-serif; --ff-mono: ui-monospace, Menlo, Consolas, monospace;
+    /* Aliase fuer bestehende Inline-Styles */
+    --red: var(--bad); --text-sub: var(--ink-2); --text-main: var(--ink); --border-light: var(--line); --primary-yellow: var(--yellow);
   }
   html[data-theme="dark"] {
-    --bg-gray: #1f1f1f; --text-main: #c9c9c9; --text-sub: #a6a6a6; --border-light: #414141;
-    --surface: #1a1a1a; --surface-2: #1c1c1c; --hover-row: #2f2a12;
+    --elev: 0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+    --elev-hi: 0 2px 4px rgba(0,0,0,.45), 0 16px 40px rgba(0,0,0,.5);
+    --wash: #141414; --surface: #1d1d1d; --surface-2: #242424; --surface-3: #2b2b2b; --surface-4: #3a3a3a;
+    --ink: #ededed; --ink-2: #a6a6a6; --ink-3: #8f8f8f; --line: #333; --line-h: #4a4a4a; --yellow-dim: #ffe36b;
+    --ok: #81c995; --ok-bg: rgba(129,201,149,.13); --bad: #ff8a80; --bad-bg: rgba(255,138,128,.13); --warn: #ffe36b; --warn-bg: rgba(255,227,107,.12);
+    --info: #8ab4f8; --info-bg: rgba(138,180,248,.13); --violet: #c3a6ff; --violet-bg: rgba(195,166,255,.13); --orange: #ffb74d;
     --ins-bg: #1e3326; --ins-fg: #9fd5ae; --del-bg: #3a1d1d; --del-fg: #f2a3a3;
-    --warn-bg: #3a3212; --warn-fg: #ecd98f; --info-bg: #1b2638; --info-fg: #a8c7fa;
   }
   * { box-sizing: border-box; }
-  /* Icons: feste Breite, damit der Ligatur-Text nie Layout zerschiesst, falls die Schrift nicht laedt */
-  .material-icons-outlined { display: inline-block; width: 1em; height: 1em; line-height: 1; overflow: hidden; white-space: nowrap; flex-shrink: 0; font-size: 24px; }
-  body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; background: var(--surface); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
-  .container { width: 100%; padding: 15px 25px 40px; flex: 1; }
-  @media (max-width: 900px) { .container { padding: 10px 16px 30px; } }
+  html, body { margin: 0; }
+  body { font-family: var(--ff); background: var(--wash); color: var(--ink); min-height: 100vh; overflow-x: hidden; font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  .container { width: 100%; max-width: 1480px; margin: 0 auto; padding: 18px 26px 48px; }
+  @media (max-width: 900px) { .container { padding: 12px 14px 32px; } }
 
-  /* Kopfzeile */
-  .top-bar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 10px 25px 0; flex-wrap: wrap; }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .brand-mark { width: 36px; height: 36px; background: var(--primary-yellow); color: #000; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-  .brand-title { font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: .5px; color: var(--text-main); }
-  .brand-sub { font-size: 12px; color: var(--text-sub); }
-  .top-actions { display: flex; align-items: center; gap: 6px; }
-  .user-chip { font-size: 12px; color: var(--text-sub); margin-right: 8px; }
-  .lang-btn { background: #f0f0f0; border: none; padding: 4px 12px; cursor: pointer; font-weight: 700; color: #666; font-size: 12px; border-radius: 2px; }
-  .lang-btn.active { background: var(--primary-black); color: var(--primary-yellow); }
-  html[data-theme="dark"] .lang-btn { background: #222; color: #a6a6a6; }
-  html[data-theme="dark"] .lang-btn.active { background: #000; color: var(--primary-yellow); }
-  .icon-btn { background: none; border: 1px solid var(--border-light); color: var(--text-sub); height: 28px; width: 32px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
-  .icon-btn:hover { color: var(--text-main); border-color: #999; }
-  .icon-btn .material-icons-outlined { font-size: 18px; }
+  /* Kopf: Reiter links, Nutzer/Sprache/Darstellung rechts (eine Zeile, kein Logo) */
+  .app-bar { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 12px 26px 0; max-width: 1480px; margin: 0 auto; border-bottom: 1px solid var(--line); flex-wrap: wrap-reverse; }
+  @media (max-width: 900px) { .app-bar { padding: 8px 14px 0; } }
+  .top-actions { display: flex; align-items: center; gap: 6px; padding-bottom: 10px; margin-left: auto; }
+  .user-chip { font-size: 12px; color: var(--ink-2); margin-right: 6px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lang-btn, .theme-btn { height: 28px; padding: 0 11px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font: 700 11.5px var(--ff); letter-spacing: .04em; border-radius: 999px; cursor: pointer; }
+  .lang-btn.active { background: var(--ink); border-color: var(--ink); color: var(--yellow); }
+  html[data-theme="dark"] .lang-btn.active { background: var(--yellow); border-color: var(--yellow); color: #111; }
+  .lang-btn:hover, .theme-btn:hover { border-color: var(--line-h); color: var(--ink); }
 
-  .tab-nav { display: flex; justify-content: center; border-bottom: 2px solid #eee; margin: 10px 0 20px; width: 100%; overflow-x: auto; }
-  html[data-theme="dark"] .tab-nav { border-bottom-color: #3b3b3b; }
-  .tab-btn { padding: 12px 30px; background: none; border: none; font-size: 15px; font-weight: 700; color: var(--text-sub); cursor: pointer; text-transform: uppercase; border-bottom: 4px solid transparent; transition: all .2s; margin: 0 5px; white-space: nowrap; position: relative; }
-  .tab-btn.active { color: var(--primary-black); border-bottom-color: var(--primary-yellow); }
-  html[data-theme="dark"] .tab-btn.active { color: #f0f0f0; }
-  .tab-btn:hover { background: var(--surface-2); color: var(--text-main); }
-  #tabbtn-admin { color: var(--red); }
-  #tabbtn-admin.active { border-bottom-color: var(--red); }
-  .tab-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 6px; background: var(--red); color: #fff; border-radius: 9px; font-size: 11px; line-height: 18px; }
-  .tab-content { display: none; animation: fadeIn .3s ease-in-out; }
+  .tab-nav { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+  .tab-nav::-webkit-scrollbar { display: none; }
+  .tab-btn { position: relative; padding: 12px 16px 13px; background: none; border: none; font: 700 12.5px var(--ff); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); cursor: pointer; white-space: nowrap; border-radius: 10px 10px 0 0; transition: color .2s var(--ease), background .2s var(--ease); }
+  .tab-btn::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: transparent; transition: background .2s var(--ease); }
+  .tab-btn:hover { color: var(--ink); background: var(--surface-3); }
+  .tab-btn.active { color: var(--ink); }
+  .tab-btn.active::after { background: var(--yellow); }
+  .tab-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 6px; background: var(--bad); color: #fff; border-radius: 9px; font-size: 10.5px; line-height: 18px; letter-spacing: 0; text-align: center; }
+  html[data-theme="dark"] .tab-count { color: #111; }
+  .tab-content { display: none; animation: fadeIn .25s var(--ease); }
   .tab-content.active { display: block; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
-  @media (max-width: 900px) { .tab-nav { justify-content: flex-start; } .tab-btn { padding: 12px 15px; font-size: 14px; } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
   /* Karten */
-  .card { background: var(--surface); border: 1px solid var(--border-light); border-top: 5px solid var(--text-sub); padding: 22px 25px; box-shadow: 0 4px 15px rgba(0,0,0,.05); margin-bottom: 22px; }
-  .card.yellow { border-top-color: var(--primary-yellow); }
-  .card.red { border-top-color: var(--red); }
-  .card.black { border-top-color: var(--primary-black); }
-  html[data-theme="dark"] .card.black { border-top-color: #777; }
-  .section-title { font-size: 16px; font-weight: 800; margin: 0 0 16px; text-transform: uppercase; border-bottom: 2px solid #eee; padding-bottom: 10px; display: flex; align-items: center; gap: 8px; justify-content: space-between; }
-  html[data-theme="dark"] .section-title { border-bottom-color: #3b3b3b; }
-  .section-title .material-icons-outlined { font-size: 20px; }
-  .hint { font-size: 13px; color: var(--text-sub); line-height: 1.5; margin: -6px 0 12px; }
-  .muted { color: var(--text-sub); font-size: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--elev); padding: 22px 24px; margin-bottom: 18px; min-width: 0; }
+  @media (max-width: 600px) { .card { padding: 16px; border-radius: 14px; } }
+  .section-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; font-size: 12.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink); }
+  .section-title .sub { text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--ink-2); font-size: 13px; }
+  .page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin: 6px 0 18px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 6px; }
+  .eyebrow::before { content: ""; width: 18px; height: 4px; border-radius: 2px; background: var(--yellow); }
+  .page-title { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.01em; line-height: 1.15; }
+  .page-sub { margin: 6px 0 0; color: var(--ink-2); font-size: 14px; max-width: 760px; }
+  .hint { font-size: 13px; color: var(--ink-2); line-height: 1.5; margin: 0 0 12px; }
+  .muted { color: var(--ink-2); font-size: 12px; }
+  .mono, textarea.mono { font-family: var(--ff-mono); font-size: 12.5px; }
 
-  .space-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 22px; }
-  .space-tile { background: var(--surface); border: 1px solid var(--border-light); border-top: 6px solid var(--primary-yellow); padding: 20px; cursor: pointer; transition: transform .2s, box-shadow .2s; display: flex; flex-direction: column; gap: 10px; min-height: 180px; text-align: left; font: inherit; color: inherit; }
-  .space-tile:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0,0,0,.1); background: var(--surface-2); }
-  .space-tile h3 { margin: 0; font-size: 17px; font-weight: 800; text-transform: uppercase; }
-  .space-tile p { margin: 0; font-size: 13px; color: var(--text-sub); line-height: 1.5; flex: 1; }
-  .space-tile.request { border: 2px dashed #bbb; border-top: 6px dashed #bbb; align-items: center; justify-content: center; text-align: center; color: var(--text-sub); }
-  .space-tile.request .material-icons-outlined { font-size: 44px; }
-  .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+  /* Spaces */
+  .space-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .space-tile { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--elev); padding: 20px 20px 18px; cursor: pointer; display: flex; flex-direction: column; gap: 10px; min-height: 170px; text-align: left; font: inherit; color: inherit; transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease); }
+  .space-tile::before { content: ""; position: absolute; left: 20px; top: 0; width: 34px; height: 4px; border-radius: 0 0 3px 3px; background: var(--yellow); }
+  .space-tile:hover { transform: translateY(-3px); box-shadow: var(--elev-hi); border-color: var(--line-h); }
+  .space-tile:focus-visible { outline: none; box-shadow: var(--ring), var(--elev); }
+  .space-tile h3 { margin: 4px 0 0; font-size: 17px; font-weight: 800; }
+  .space-tile p { margin: 0; font-size: 13px; color: var(--ink-2); line-height: 1.5; flex: 1; }
+  .space-tile .meta { font-size: 12px; color: var(--ink-3); }
+  .space-tile.request { background: transparent; box-shadow: none; border: 1.5px dashed var(--line-h); align-items: flex-start; justify-content: center; }
+  .space-tile.request::before { display: none; }
+  .space-tile.request h3 { font-size: 15px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 
-  .status-badge { display: inline-block; padding: 4px 8px; border-radius: 3px; font-size: 10px; font-weight: 700; text-transform: uppercase; text-align: center; letter-spacing: .5px; border: 1px solid transparent; white-space: nowrap; }
-  .b-gray { background: #F5F5F5; color: #555; border-color: #E0E0E0; }
-  .b-yellow { background: #FFFCDB; color: #5D4037; border-color: #FFED00; }
-  .b-green { background: #F1F8E9; color: #33691E; border-color: #C5E1A5; }
-  .b-red { background: #FFEBEE; color: #C62828; border-color: #FFCDD2; }
-  .b-blue { background: #e8f0fe; color: #174ea6; border-color: #c6dafc; }
-  html[data-theme="dark"] .b-gray { background: #1f1f1f; color: #b2b2b2; border-color: #414141; }
-  html[data-theme="dark"] .b-yellow { background: #333113; color: #e8d98a; border-color: #6b6420; }
-  html[data-theme="dark"] .b-green { background: #22291a; color: #c0e8b0; border-color: #4f5e3e; }
-  html[data-theme="dark"] .b-red { background: #2d1115; color: #e78888; border-color: #57252a; }
-  html[data-theme="dark"] .b-blue { background: #1b2638; color: #a8c7fa; border-color: #2d4063; }
+  .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .02em; white-space: nowrap; line-height: 1.4; }
+  .status-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .8; }
+  .status-badge.plain::before { display: none; }
+  .b-gray { background: var(--surface-3); color: var(--ink-2); }
+  .b-yellow { background: var(--warn-bg); color: var(--warn); }
+  .b-green { background: var(--ok-bg); color: var(--ok); }
+  .b-red { background: var(--bad-bg); color: var(--bad); }
+  .b-blue { background: var(--info-bg); color: var(--info); }
+  .b-violet { background: var(--violet-bg); color: var(--violet); }
 
   /* Formulare */
-  label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 6px; }
-  .form-row { margin-bottom: 15px; }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+  label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .form-row { margin-bottom: 14px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
   @media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } }
-  input, select, textarea { width: 100%; padding: 10px 12px; font-size: 15px; border: 1px solid #ccc; border-radius: 0; background: var(--surface); color: var(--text-main); font-family: inherit; transition: border-color .2s; }
-  html[data-theme="dark"] input, html[data-theme="dark"] select, html[data-theme="dark"] textarea { border-color: #4a4a4a; }
-  input[type="checkbox"], input[type="radio"] { width: 16px; height: 16px; padding: 0; accent-color: var(--primary-black); }
-  html[data-theme="dark"] input[type="checkbox"] { accent-color: var(--primary-yellow); }
-  input:focus, select:focus, textarea:focus { border-color: var(--primary-black); outline: none; background: var(--surface-2); }
-  html[data-theme="dark"] input:focus, html[data-theme="dark"] select:focus, html[data-theme="dark"] textarea:focus { border-color: var(--primary-yellow); }
-  textarea { resize: vertical; line-height: 1.5; }
-  textarea.mono, .mono { font-family: "SFMono-Regular", Menlo, Consolas, monospace; font-size: 13px; }
-  select { height: 42px; }
-  input:disabled, textarea:disabled, select:disabled { opacity: .6; cursor: not-allowed; }
-  .check-row { display: flex; gap: 8px; align-items: center; font-weight: 400; font-size: 14px; margin: 0; }
+  input, select, textarea { width: 100%; padding: 9px 12px; font: 14px var(--ff); color: var(--ink); background: var(--surface); border: 1px solid var(--line-h); border-radius: 10px; transition: border-color .15s, box-shadow .15s; }
+  input[type="checkbox"], input[type="radio"] { width: 16px; height: 16px; padding: 0; accent-color: var(--ink); }
+  html[data-theme="dark"] input[type="checkbox"] { accent-color: var(--yellow); }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--ink); box-shadow: var(--ring); }
+  html[data-theme="dark"] input:focus, html[data-theme="dark"] select:focus, html[data-theme="dark"] textarea:focus { border-color: var(--yellow); }
+  textarea { resize: vertical; line-height: 1.55; }
+  select { height: 40px; }
+  input:disabled, textarea:disabled, select:disabled { background: var(--surface-2); color: var(--ink-2); cursor: not-allowed; }
+  .check-row { display: flex; gap: 8px; align-items: center; font-weight: 400; font-size: 13.5px; margin: 0; }
+  input[type="file"] { padding: 7px; font-size: 13px; }
 
-  .btn { border: none; padding: 0 22px; font-size: 14px; font-weight: 800; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; height: 42px; border-radius: 0; letter-spacing: .5px; text-decoration: none; white-space: nowrap; gap: 8px; }
-  .btn .material-icons-outlined { font-size: 19px; }
-  .btn-primary { background: var(--primary-yellow); color: #000; }
-  .btn-primary:hover { background: #e6d500; }
-  .btn-secondary { background: var(--bg-gray); color: var(--text-main); border: 1px solid #ccc; }
-  html[data-theme="dark"] .btn-secondary { border-color: #4a4a4a; }
-  .btn-secondary:hover { background: #e0e0e0; border-color: #999; }
-  html[data-theme="dark"] .btn-secondary:hover { background: #2b2b2b; }
-  .btn-black { background: #000; color: var(--primary-yellow); }
-  .btn-black:hover { opacity: .9; }
-  .btn-red { background: #ffcdd2; color: #b71c1c; }
-  html[data-theme="dark"] .btn-red { background: #391619; color: #ee9191; }
-  .btn-sm { height: 32px; padding: 0 12px; font-size: 12px; }
-  .btn-link { background: none; border: none; color: var(--text-sub); cursor: pointer; font-size: 13px; text-decoration: underline; padding: 0; }
-  .btn:disabled { opacity: .45; cursor: not-allowed; }
-  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 18px; border: 1px solid transparent; border-radius: var(--r); font: 800 12.5px var(--ff); letter-spacing: .05em; text-transform: uppercase; cursor: pointer; white-space: nowrap; text-decoration: none; transition: transform .15s var(--ease), box-shadow .2s var(--ease), background .2s; }
+  .btn:focus-visible { outline: none; box-shadow: var(--ring); }
+  .btn-primary { background: var(--fill); color: #111; box-shadow: var(--tint); }
+  .btn-primary:hover { box-shadow: var(--tint-hi); transform: translateY(-1px); }
+  .btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--line-h); }
+  .btn-secondary:hover { background: var(--surface-2); border-color: var(--ink-3); }
+  .btn-black { background: var(--ink-fill); color: var(--yellow); }
+  html[data-theme="dark"] .btn-black { background: var(--surface-4); }
+  .btn-black:hover { transform: translateY(-1px); }
+  .btn-red { background: var(--bad-bg); color: var(--bad); }
+  .btn-ghost { background: none; color: var(--ink-2); padding: 0 10px; }
+  .btn-ghost:hover { color: var(--ink); background: var(--surface-3); }
+  .btn-sm { height: 32px; padding: 0 12px; font-size: 11.5px; border-radius: 10px; }
+  .btn-link { background: none; border: none; color: var(--ink-2); cursor: pointer; font: 13px var(--ff); text-decoration: underline; text-underline-offset: 3px; padding: 0; }
+  .btn-link:hover { color: var(--ink); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
   /* Tabellen */
-  .table-wrap { overflow-x: auto; }
-  .history-table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--surface); border: 1px solid #ddd; }
-  html[data-theme="dark"] .history-table { border-color: #424242; }
-  .history-table th { background: #f2f2f2; text-align: left; padding: 10px 12px; font-weight: 800; border-bottom: 2px solid #ddd; text-transform: uppercase; font-size: 11px; color: #444; }
-  html[data-theme="dark"] .history-table th { background: #212121; border-bottom-color: #424242; color: #bebebe; }
-  .history-table td { padding: 8px 12px; border-bottom: 1px solid #eee; vertical-align: top; }
-  html[data-theme="dark"] .history-table td { border-bottom-color: #3b3b3b; }
-  .history-table tr:hover td { background: var(--hover-row); }
-  .history-table td input, .history-table td select, .history-table td textarea { padding: 6px 8px; font-size: 13px; height: auto; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); }
+  .history-table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--surface); }
+  .history-table th { background: var(--surface-2); text-align: left; padding: 10px 12px; font-weight: 800; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .history-table td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .history-table tr:last-child td { border-bottom: none; }
+  .history-table tbody tr:hover td { background: var(--surface-2); }
+  .history-table td input, .history-table td select, .history-table td textarea { padding: 6px 8px; font-size: 13px; height: auto; border-radius: 8px; }
 
-  /* Editor-Layout (split-wrapper aus Translation Services) */
-  .editor-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
-  .crumbs { font-size: 13px; color: var(--text-sub); margin-bottom: 4px; }
-  .crumbs a { color: var(--text-sub); cursor: pointer; text-decoration: underline; }
-  .editor-title { font-size: 22px; font-weight: 900; text-transform: uppercase; margin: 0 0 6px; }
-  .save-state { font-size: 12px; color: var(--text-sub); min-height: 16px; }
-  .split-wrapper { display: flex; align-items: flex-start; gap: 26px; }
-  .split-main { flex: 1; min-width: 0; }
-  .split-sidebar { width: 480px; flex-shrink: 0; background: var(--surface); border: 1px solid #ddd; border-top: 5px solid var(--primary-yellow); box-shadow: 0 4px 15px rgba(0,0,0,.05); position: sticky; top: 8px; max-height: calc(100vh - 20px); overflow-y: auto; }
-  html[data-theme="dark"] .split-sidebar { border-color: #424242; border-top-color: var(--primary-yellow); }
-  @media (max-width: 600px) { .card { padding: 16px; } .split-sidebar .side-pane { padding: 12px; } .compare { grid-template-columns: 1fr; } .editor-head .btn-row .btn { flex: 1; } }
-  @media (max-width: 1200px) { .split-wrapper { flex-direction: column; align-items: stretch; } .split-sidebar { width: 100%; position: static; max-height: none; } }
-  .side-tabs { display: flex; border-bottom: 2px solid #eee; position: sticky; top: 0; background: var(--surface); z-index: 2; overflow-x: auto; }
-  html[data-theme="dark"] .side-tabs { border-bottom-color: #3b3b3b; }
-  .side-tab { flex: 1; padding: 12px 8px; background: none; border: none; border-bottom: 3px solid transparent; font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-sub); cursor: pointer; white-space: nowrap; }
-  .side-tab.active { color: var(--text-main); border-bottom-color: var(--primary-yellow); }
-  .side-pane { display: none; padding: 18px; }
-  .side-pane.active { display: block; }
+  /* Space-Seite */
+  .editor-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin: 4px 0 16px; }
+  .back-link { display: inline-block; font-size: 12.5px; color: var(--ink-2); cursor: pointer; margin-bottom: 8px; text-decoration: none; }
+  .back-link:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+  .editor-title { margin: 0 0 8px; font-size: 26px; font-weight: 800; letter-spacing: -.01em; }
+  .save-state { font-size: 12px; color: var(--ink-2); min-height: 16px; text-align: right; margin-top: 6px; }
+  .head-actions { display: flex; flex-direction: column; align-items: flex-end; }
+  @media (max-width: 600px) { .head-actions { width: 100%; align-items: stretch; } .head-actions .btn-row .btn { flex: 1; } .save-state { text-align: left; } }
 
-  .section-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-  .section-chip { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 5px 9px; border: 1px solid var(--border-light); background: var(--surface); color: var(--text-sub); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
-  .section-chip:hover { border-color: #999; color: var(--text-main); }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: #c5e1a5; display: inline-block; }
-  .dot.warn { background: #f9ab00; }
-  .dot.err { background: var(--red); }
-  .dot.none { background: #ddd; }
+  .seg-tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface-3); border-radius: 14px; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
+  .seg-tabs::-webkit-scrollbar { display: none; }
+  .seg-tab { flex: 1; min-width: max-content; padding: 9px 14px; border: none; background: none; border-radius: 10px; font: 700 13px var(--ff); color: var(--ink-2); cursor: pointer; white-space: nowrap; }
+  .seg-tab:hover { color: var(--ink); }
+  .seg-tab.active { background: var(--surface); color: var(--ink); box-shadow: var(--elev); }
+  .seg-tab .n { display: inline-block; min-width: 18px; margin-left: 6px; padding: 0 6px; border-radius: 9px; background: var(--surface-4); color: var(--ink); font-size: 11px; line-height: 18px; }
+  html[data-theme="dark"] .seg-tab .n { background: var(--surface-4); }
+  .seg-tab.active .n { background: var(--yellow); color: #111; }
 
-  .sec-card { border-left: 4px solid var(--primary-yellow); }
-  .sec-card.locked { border-left-color: #999; }
-  .sec-card.has-error { border-left-color: var(--red); }
-  .sec-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-  .sec-head h4 { flex-wrap: wrap; min-width: 0; }
-  .sec-head h4 { margin: 0; font-size: 14px; font-weight: 800; text-transform: uppercase; display: flex; gap: 8px; align-items: center; }
-  .sec-tag { font-size: 10px; font-weight: 700; padding: 2px 6px; background: var(--bg-gray); color: var(--text-sub); text-transform: uppercase; }
-  .sec-tag .material-icons-outlined { font-size: 13px; vertical-align: -2px; }
+  .check-strip { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-radius: var(--r); margin-bottom: 14px; font-size: 13.5px; }
+  .check-strip.ok { background: var(--ok-bg); color: var(--ok); }
+  .check-strip.warn { background: var(--warn-bg); color: var(--warn); }
+  .check-strip.err { background: var(--bad-bg); color: var(--bad); }
+  .check-strip b { font-weight: 800; }
+  .check-strip .spacer { flex: 1; }
+  .check-strip .btn-link { color: inherit; }
+
+  .mode-toggle { display: inline-flex; padding: 3px; background: var(--surface-3); border-radius: 10px; }
+  .mode-toggle button { border: none; background: none; padding: 6px 12px; border-radius: 8px; font: 700 12px var(--ff); color: var(--ink-2); cursor: pointer; }
+  .mode-toggle button.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+
+  /* Abschnitte als ruhige Liste zum Aufklappen */
+  .sec { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 8px; transition: border-color .2s, box-shadow .2s; }
+  .sec[open] { box-shadow: var(--elev); border-color: var(--line-h); }
+  .sec.has-error { border-color: var(--bad); }
+  .sec > summary { list-style: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; cursor: pointer; user-select: none; }
+  .sec > summary::-webkit-details-marker { display: none; }
+  .sec > summary::after { content: "+"; margin-left: 6px; width: 22px; text-align: center; font-size: 18px; font-weight: 300; color: var(--ink-3); }
+  .sec[open] > summary::after { content: "–"; }
+  .sec-name { font-weight: 800; font-size: 14.5px; min-width: 0; }
+  .sec-preview { flex: 1; min-width: 0; color: var(--ink-3); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sec-state { font-size: 11.5px; color: var(--ink-2); white-space: nowrap; }
+  .sec-body { padding: 0 18px 18px; }
+  .sec-group { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin: 18px 4px 8px; }
+  .sec-group:first-child { margin-top: 4px; }
+  .sec-issues { margin: 8px 0 0; padding: 0; list-style: none; font-size: 12.5px; }
+  .sec-issues li { padding: 3px 0; }
+  .sec-issues li.error { color: var(--bad); }
+  .sec-issues li.warning { color: var(--orange); }
+  .sec-issues li::before { content: "Fehler: "; font-weight: 700; }
+  .sec-issues li.warning::before { content: "Hinweis: "; }
+  .lock-note { font-size: 12px; color: var(--ink-2); background: var(--surface-2); border-radius: 8px; padding: 6px 10px; margin-bottom: 10px; }
   .lock-box { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px 12px; font-size: 12px; min-width: 260px; }
   .lock-box .check-row { font-size: 12px; }
-  .sec-tag.req { background: #000; color: var(--primary-yellow); }
-  .sec-issues { margin: 8px 0 0; padding: 0; list-style: none; font-size: 12px; }
-  .sec-issues li { padding: 3px 0; display: flex; gap: 6px; }
-  .sec-issues li.error { color: var(--red); }
-  .sec-issues li.warning { color: #b06000; }
-  html[data-theme="dark"] .sec-issues li.warning { color: #f9c46b; }
 
-  .gl-group { border: 1px solid var(--border-light); margin-bottom: 14px; }
-  .gl-group-head { display: flex; gap: 10px; align-items: center; padding: 10px; background: var(--bg-gray); flex-wrap: wrap; }
+  .gl-group { border: 1px solid var(--line); border-radius: var(--r); margin-bottom: 12px; overflow: hidden; }
+  .gl-group .table-wrap { border: none; border-radius: 0; }
+  .gl-group-head { display: flex; gap: 10px; align-items: center; padding: 10px; background: var(--surface-2); flex-wrap: wrap; border-bottom: 1px solid var(--line); }
   .gl-group-head select { width: auto; min-width: min(280px, 100%); max-width: 100%; height: 34px; padding: 4px 8px; font-size: 13px; }
   .gl-group-head input { flex: 1; min-width: 160px; padding: 6px 8px; font-size: 13px; }
   .gl-table td { padding: 4px 6px; }
-  .gl-table td:last-child { width: 36px; text-align: center; }
-  .row-del { background: none; border: none; color: #aaa; cursor: pointer; }
-  .row-del:hover { color: var(--red); }
+  .gl-table td:last-child { width: 40px; text-align: center; }
+  .row-del { background: none; border: none; color: var(--ink-3); cursor: pointer; font: 700 12px var(--ff); padding: 4px 6px; border-radius: 6px; }
+  .row-del:hover { color: var(--bad); background: var(--bad-bg); }
+
+  /* Styleguides & Dateien */
+  .item-list { display: flex; flex-direction: column; gap: 8px; }
+  .item { border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; background: var(--surface); }
+  .item-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .item-name { font-weight: 800; font-size: 14px; }
+  .item-meta { font-size: 12px; color: var(--ink-2); }
+  .item-actions { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+  .item details > summary { cursor: pointer; font-size: 12.5px; color: var(--ink-2); margin-top: 8px; }
+  .add-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+  .add-row select { flex: 1; min-width: 200px; }
+  .drop-zone { border: 1.5px dashed var(--line-h); border-radius: var(--r); padding: 16px; text-align: center; color: var(--ink-2); font-size: 13px; margin-top: 12px; transition: background .2s, border-color .2s; }
+  .drop-zone.over { background: var(--warn-bg); border-color: var(--yellow-dim); }
+  .two-col { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+  @media (max-width: 1100px) { .two-col { grid-template-columns: 1fr; } }
+  .sg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .sg-card { display: flex; flex-direction: column; gap: 10px; margin: 0; }
+  .sg-card h3 { margin: 0; font-size: 16px; font-weight: 800; }
+  .sg-card .excerpt { font-family: var(--ff-mono); font-size: 12px; color: var(--ink-2); background: var(--surface-2); border-radius: 10px; padding: 10px 12px; max-height: 120px; overflow: hidden; white-space: pre-wrap; word-break: break-word; }
 
   /* Pruefung, Test, Diff */
-  .issue { display: flex; gap: 10px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; line-height: 1.45; border-left: 4px solid; background: var(--surface-2); }
-  .issue.error { border-left-color: var(--red); }
+  .issue { display: flex; gap: 10px; padding: 9px 12px; margin-bottom: 6px; font-size: 13px; line-height: 1.45; border-radius: 10px; background: var(--surface-2); border-left: 4px solid var(--line-h); }
+  .issue.error { border-left-color: var(--bad); }
   .issue.warning { border-left-color: #f9ab00; }
-  .issue.info { border-left-color: #1a73e8; }
-  .issue.ok { border-left-color: #34a853; }
-  .issue .material-icons-outlined { font-size: 18px; }
-  .meter { height: 8px; background: var(--bg-gray); position: relative; margin: 6px 0 2px; }
-  .meter > span { position: absolute; left: 0; top: 0; bottom: 0; background: #34a853; }
+  .issue.info { border-left-color: var(--info); }
+  .issue.ok { border-left-color: var(--ok); }
+  .issue.clickable { cursor: pointer; }
+  .issue.clickable:hover { background: var(--surface-3); }
+  .meter { height: 8px; background: var(--surface-3); border-radius: 4px; overflow: hidden; margin: 6px 0 4px; }
+  .meter > span { display: block; height: 100%; background: var(--ok); border-radius: 4px; }
   .meter.warn > span { background: #f9ab00; }
-  .meter.err > span { background: var(--red); }
+  .meter.err > span { background: var(--bad); }
   .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 13px; }
   .kv b { font-weight: 700; }
-  .notice { padding: 12px 14px; font-size: 13px; line-height: 1.5; margin-bottom: 14px; display: flex; gap: 10px; align-items: flex-start; }
-  .notice .material-icons-outlined { font-size: 20px; }
-  .notice.warn { background: var(--warn-bg); color: var(--warn-fg); }
-  .notice.info { background: var(--info-bg); color: var(--info-fg); }
-  .notice.err { background: var(--del-bg); color: var(--del-fg); }
-  .notice.ok { background: var(--ins-bg); color: var(--ins-fg); }
+  .notice { padding: 12px 14px; font-size: 13px; line-height: 1.5; margin-bottom: 14px; border-radius: var(--r); }
+  .notice.warn { background: var(--warn-bg); color: var(--warn); }
+  .notice.info { background: var(--info-bg); color: var(--info); }
+  .notice.err { background: var(--bad-bg); color: var(--bad); }
+  .notice.ok { background: var(--ok-bg); color: var(--ok); }
+  .notice .btn-link { color: inherit; }
 
-  .seg { border: 1px solid var(--border-light); padding: 12px; margin-bottom: 10px; background: var(--surface); }
-  .seg-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-sub); }
-  .seg textarea { font-size: 13px; padding: 8px; margin-bottom: 6px; }
-  .seg .mini-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-sub); margin: 4px 0 3px; }
-  .result-text { font-size: 14px; line-height: 1.6; padding: 10px; background: var(--surface-2); border: 1px solid var(--border-light); white-space: pre-wrap; word-break: break-word; }
-  .diff-ins { background: var(--ins-bg); color: var(--ins-fg); text-decoration: none; }
-  .diff-del { background: var(--del-bg); color: var(--del-fg); text-decoration: line-through; }
-  .checks { list-style: none; padding: 0; margin: 8px 0 0; font-size: 12px; }
-  .checks li { display: flex; gap: 6px; padding: 2px 0; }
-  .checks .ok { color: var(--green); }
-  html[data-theme="dark"] .checks .ok { color: #9fd5ae; }
-  .checks .fail { color: var(--red); }
+  .seg { border: 1px solid var(--line); border-radius: var(--r); padding: 12px; margin-bottom: 10px; background: var(--surface); }
+  .seg-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 11.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+  .seg textarea { font-size: 13px; padding: 8px 10px; margin-bottom: 6px; }
+  .mini-label { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); margin: 4px 0 4px; }
+  .result-text { font-size: 14px; line-height: 1.6; padding: 10px 12px; background: var(--surface-2); border-radius: 10px; white-space: pre-wrap; word-break: break-word; }
+  .diff-ins { background: var(--ins-bg); color: var(--ins-fg); text-decoration: none; border-radius: 3px; }
+  .diff-del { background: var(--del-bg); color: var(--del-fg); text-decoration: line-through; border-radius: 3px; }
+  .checks { list-style: none; padding: 0; margin: 8px 0 0; font-size: 12.5px; }
+  .checks li { padding: 2px 0; }
+  .checks .ok { color: var(--ok); }
+  .checks .ok::before { content: "OK  "; font-weight: 800; }
+  .checks .fail { color: var(--bad); }
+  .checks .fail::before { content: "Prüfen  "; font-weight: 800; }
   .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .compare h5 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; }
-  pre.prompt-view { white-space: pre-wrap; word-break: break-word; font-family: "SFMono-Regular", Menlo, Consolas, monospace; font-size: 12px; line-height: 1.55; background: var(--surface-2); border: 1px solid var(--border-light); padding: 12px; max-height: 70vh; overflow: auto; margin: 0; }
+  @media (max-width: 600px) { .compare { grid-template-columns: 1fr; } }
+  .compare h5 { margin: 0 0 6px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+  pre.prompt-view { white-space: pre-wrap; word-break: break-word; font-family: var(--ff-mono); font-size: 12px; line-height: 1.6; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; max-height: 70vh; overflow: auto; margin: 0; }
   .line-ins { background: var(--ins-bg); color: var(--ins-fg); display: block; }
   .line-del { background: var(--del-bg); color: var(--del-fg); display: block; text-decoration: line-through; }
-  .wrapper-part { color: var(--text-sub); }
-  .seg-toggle { display: inline-flex; border: 1px solid var(--border-light); }
-  .seg-toggle button { background: var(--surface); border: none; padding: 6px 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-sub); cursor: pointer; }
-  .seg-toggle button.active { background: #000; color: var(--primary-yellow); }
+  .wrapper-part { color: var(--ink-3); }
+  .test-layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 18px; align-items: start; }
+  @media (max-width: 1100px) { .test-layout { grid-template-columns: 1fr; } }
 
-  .faq-item { background: var(--surface); border: 1px solid var(--border-light); border-left: 4px solid var(--primary-yellow); margin-bottom: 10px; }
-  .faq-item summary { list-style: none; cursor: pointer; padding: 14px 18px; font-weight: 700; font-size: 14px; }
+  .faq-item { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 8px; }
+  .faq-item summary { list-style: none; cursor: pointer; padding: 14px 18px; font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; gap: 10px; }
   .faq-item summary::-webkit-details-marker { display: none; }
-  .faq-item .faq-answer { padding: 0 18px 16px; font-size: 13px; line-height: 1.6; color: var(--text-sub); }
+  .faq-item summary::after { content: "+"; color: var(--ink-3); font-weight: 300; font-size: 18px; }
+  .faq-item[open] summary::after { content: "–"; }
+  .faq-item .faq-answer { padding: 0 18px 16px; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); }
+  .version-line { text-align: center; font-family: var(--ff-mono); font-size: 11px; color: var(--ink-3); margin-top: 18px; }
 
-  .admin-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 22px; align-items: start; }
+  .admin-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 18px; align-items: start; }
   .admin-grid > .card { grid-column: span 3; min-width: 0; margin: 0; }
   .admin-grid > .card.wide { grid-column: 1 / -1; }
   @media (max-width: 1300px) { .admin-grid > .card { grid-column: 1 / -1; } }
 
-  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 5000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); padding: 16px; }
+  .overlay { position: fixed; inset: 0; background: rgba(20,20,10,.42); z-index: 5000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 16px; }
   .overlay.show { display: flex; }
-  .dialog { background: var(--surface); width: 640px; max-width: 100%; max-height: 88vh; overflow-y: auto; border-top: 8px solid var(--primary-yellow); box-shadow: 0 20px 50px rgba(0,0,0,.2); padding: 24px 28px; }
-  .dialog h3 { margin: 0 0 14px; font-size: 18px; font-weight: 800; text-transform: uppercase; }
-  .denied { max-width: 760px; margin: 30px auto; text-align: center; }
-  .denied .material-icons-outlined.big { font-size: 70px; color: var(--red); }
-  .loader { border: 5px solid #f3f3f3; border-top: 5px solid var(--primary-yellow); border-radius: 50%; width: 46px; height: 46px; animation: spin 1s linear infinite; margin: 40px auto; }
-  html[data-theme="dark"] .loader { border-color: #383838; border-top-color: var(--primary-yellow); }
-  .spin-sm { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,.2); border-top-color: #000; border-radius: 50%; animation: spin .8s linear infinite; }
+  .dialog { background: var(--surface); width: 680px; max-width: 100%; max-height: 88vh; overflow-y: auto; border-radius: 20px; box-shadow: var(--elev-hi); padding: 24px 26px; border-top: 4px solid var(--yellow); }
+  .dialog.wide { width: 920px; }
+  .dialog h3 { margin: 0 0 14px; font-size: 19px; font-weight: 800; }
+  .denied { max-width: 760px; margin: 24px auto 10px; text-align: left; }
+  .denied h1 { font-size: 28px; margin: 0 0 10px; }
+  .loader { border: 4px solid var(--surface-3); border-top-color: var(--yellow); border-radius: 50%; width: 42px; height: 42px; animation: spin 1s linear infinite; margin: 40px auto; }
+  .spin-sm { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,.15); border-top-color: currentColor; border-radius: 50%; animation: spin .8s linear infinite; vertical-align: -2px; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: #000; color: #fff; padding: 12px 18px; font-size: 14px; z-index: 6000; display: none; max-width: 90vw; border-left: 5px solid var(--primary-yellow); }
-  .toast.err { border-left-color: var(--red); }
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 12px 18px; font-size: 14px; z-index: 6000; display: none; max-width: 90vw; border-radius: 12px; box-shadow: var(--elev-hi); border-left: 5px solid var(--yellow); }
+  .toast.err { border-left-color: #ff8a80; }
   .toast.show { display: block; animation: fadeIn .2s; }
-  .empty { text-align: center; color: var(--text-sub); padding: 30px 10px; font-size: 14px; }
+  .empty { text-align: center; color: var(--ink-2); padding: 28px 10px; font-size: 14px; }
   .hidden { display: none !important; }
 
-
-  /* AutoFix-spezifisch */
-  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; margin-bottom: 22px; }
-  .kpi { background: var(--surface); border: 1px solid var(--border-light); border-top: 5px solid var(--primary-yellow); padding: 16px 18px; }
-  .kpi.red { border-top-color: var(--red); } .kpi.green { border-top-color: #34a853; } .kpi.gray { border-top-color: var(--text-sub); }
-  .kpi-val { font-size: 26px; font-weight: 900; line-height: 1.1; }
-  .kpi-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-sub); margin-top: 6px; letter-spacing: .4px; }
-  .kpi-sub { font-size: 12px; color: var(--text-sub); margin-top: 4px; }
-  .progress { height: 6px; background: var(--bg-gray); margin-top: 8px; }
-  .progress > span { display: block; height: 100%; background: var(--primary-yellow); transition: width .3s; }
-  .console { background: #111; color: #ddd; font-family: "SFMono-Regular", Menlo, Consolas, monospace; font-size: 12px; line-height: 1.6; padding: 12px 14px; max-height: 55vh; min-height: 220px; overflow: auto; }
+  /* AutoFix Hub: Ergaenzungen zum gemeinsamen Design (ui/base.css) */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 18px; }
+  .kpi { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--elev); padding: 18px 20px 16px; overflow: hidden; }
+  .kpi::before { content: ""; position: absolute; left: 20px; top: 0; width: 34px; height: 4px; border-radius: 0 0 3px 3px; background: var(--yellow); }
+  .kpi.red::before { background: var(--bad); } .kpi.green::before { background: var(--ok); } .kpi.gray::before { background: var(--line-h); }
+  .kpi-val { font-size: 26px; font-weight: 800; line-height: 1.1; letter-spacing: -.01em; }
+  .kpi.red .kpi-val { color: var(--bad); }
+  .kpi-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--ink-2); margin-top: 6px; letter-spacing: .08em; }
+  .kpi-sub { font-size: 12px; color: var(--ink-2); margin-top: 4px; }
+  .progress { height: 6px; background: var(--surface-3); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+  .progress > span { display: block; height: 100%; background: var(--fill); border-radius: 3px; transition: width .3s; }
+  .console { background: #141414; color: #ddd; font-family: var(--ff-mono); font-size: 12px; line-height: 1.6; padding: 14px 16px; max-height: 55vh; min-height: 220px; overflow: auto; border-radius: var(--r); }
   .console .t { color: #888; margin-right: 8px; }
   .console .l { display: inline-block; min-width: 44px; font-weight: 700; margin-right: 8px; }
   .console .INFO { color: #8ab4f8; } .console .OK { color: #81c995; } .console .WARN { color: #fdd663; } .console .ERR { color: #f28b82; }
   .console .sub { color: #aaa; }
-  .run-state { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; text-transform: uppercase; font-size: 13px; }
-  .run-dot { width: 10px; height: 10px; border-radius: 50%; background: #bbb; }
-  .run-dot.active { background: var(--primary-yellow); animation: pulse 1s infinite; } .run-dot.done { background: #34a853; } .run-dot.error { background: var(--red); }
+  .run-state { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; font-size: 12.5px; }
+  .run-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line-h); }
+  .run-dot.active { background: var(--yellow); animation: pulse 1s infinite; } .run-dot.done { background: var(--ok); } .run-dot.error { background: var(--bad); }
   @keyframes pulse { 50% { opacity: .35; } }
-  .sub-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
-  .sub-nav button { background: var(--surface); border: 1px solid var(--border-light); padding: 9px 16px; font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-sub); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
-  .sub-nav button .material-icons-outlined { font-size: 17px; }
-  .sub-nav button.active { background: #000; color: var(--primary-yellow); border-color: #000; }
+  .sub-nav { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; background: var(--surface-3); border-radius: 14px; margin-bottom: 16px; }
+  .sub-nav button { border: none; background: none; padding: 9px 16px; border-radius: 10px; font: 700 13px var(--ff); color: var(--ink-2); cursor: pointer; }
+  .sub-nav button:hover { color: var(--ink); }
+  .sub-nav button.active { background: var(--surface); color: var(--ink); box-shadow: var(--elev); }
   .filter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0 16px; align-items: end; }
-  .sev-critical { color: #c62828; font-weight: 800; } .sev-major { color: #b06000; font-weight: 800; } .sev-minor { color: #33691e; font-weight: 800; }
-  html[data-theme="dark"] .sev-critical { color: #f28b82; } html[data-theme="dark"] .sev-major { color: #fdd663; } html[data-theme="dark"] .sev-minor { color: #81c995; }
-  .bar { display: inline-block; height: 8px; background: var(--primary-yellow); vertical-align: middle; }
-  .diff-grid { display: grid; grid-template-columns: 70px 1fr 1fr; gap: 0; font-size: 12px; border: 1px solid var(--border-light); margin-top: 8px; }
-  .diff-grid > div { padding: 6px 8px; border-bottom: 1px solid var(--border-light); word-break: break-word; }
-  .diff-grid .hd { font-weight: 800; text-transform: uppercase; font-size: 10px; background: var(--bg-gray); color: var(--text-sub); }
-  .row-toggle { background: none; border: none; cursor: pointer; color: var(--text-sub); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 2px; padding: 0; }
-  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .sev-critical { color: var(--bad); font-weight: 800; } .sev-major { color: var(--orange); font-weight: 800; } .sev-minor { color: var(--ok); font-weight: 800; }
+  .bar { display: inline-block; height: 8px; border-radius: 4px; background: var(--fill); vertical-align: middle; }
+  .diff-grid { display: grid; grid-template-columns: 70px 1fr 1fr; font-size: 12px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-top: 8px; }
+  .diff-grid > div { padding: 6px 8px; border-bottom: 1px solid var(--line); word-break: break-word; }
+  .diff-grid .hd { font-weight: 800; letter-spacing: .06em; text-transform: uppercase; font-size: 10px; background: var(--surface-2); color: var(--ink-2); }
+  .row-toggle { background: none; border: none; cursor: pointer; color: var(--ink-2); font: 700 12px var(--ff); padding: 0; }
+  .row-toggle:hover { color: var(--ink); }
   .toolbar .grow { flex: 1; }
-  .mono-sm { font-family: "SFMono-Regular", Menlo, Consolas, monospace; font-size: 11px; color: var(--text-sub); }
+  .mono-sm { font-family: var(--ff-mono); font-size: 11px; color: var(--ink-2); }
   .admin-grid > .card.span4 { grid-column: span 4; }
   .admin-grid > .card.span2 { grid-column: span 2; }
   @media (max-width: 1300px) { .admin-grid > .card.span4, .admin-grid > .card.span2 { grid-column: 1 / -1; } }
   @media (max-width: 600px) { .kpi-grid { grid-template-columns: 1fr 1fr; gap: 12px; } .kpi-val { font-size: 22px; } }
-  @media (max-width: 600px) { .btn-row .btn { white-space: normal; height: auto; min-height: 42px; padding-top: 8px; padding-bottom: 8px; text-align: center; } }
+  .action-list { display: flex; flex-direction: column; gap: 10px; }
+  .action-list .btn { width: 100%; }
+  #openModeBanner { max-width: 1480px; }
 
   </style>
   <script>
@@ -323,26 +367,25 @@
   </script>
 </head>
 <body>
-  <!-- Keine eigene Kopfzeile mit Logo/Titel: die App ist in Google Sites eingebettet -->
-  <header class="top-bar">
+  <!-- Keine Kopfzeile mit Logo oder Titel: die App ist in Google Sites eingebettet -->
+  <header class="app-bar">
+    <nav class="tab-nav hidden" id="tabNav">
+      <button class="tab-btn active" data-tab="dashboard" id="tabbtn-dashboard" onclick="App.showTab('dashboard')" data-i18n="tab_dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="liverun" id="tabbtn-liverun" onclick="App.showTab('liverun')" data-i18n="tab_liverun">Live-Run</button>
+      <button class="tab-btn" data-tab="queue" id="tabbtn-queue" onclick="App.showTab('queue')" data-i18n="tab_queue">Warteschlange</button>
+      <button class="tab-btn" data-tab="runlog" id="tabbtn-runlog" onclick="App.showTab('runlog')" data-i18n="tab_runlog">Run Log</button>
+      <button class="tab-btn" data-tab="analysis" id="tabbtn-analysis" onclick="App.showTab('analysis')" data-i18n="tab_analysis">Analysen</button>
+      <button class="tab-btn" data-tab="prompts" id="tabbtn-prompts" onclick="App.showTab('prompts')" data-i18n="tab_prompts">Prompts</button>
+      <button class="tab-btn hidden" data-tab="admin" id="tabbtn-admin" onclick="App.showTab('admin')"><span data-i18n="tab_admin">Admin</span><span class="tab-count hidden" id="adminCount"></span></button>
+      <button class="tab-btn" data-tab="help" id="tabbtn-help" onclick="App.showTab('help')" data-i18n="tab_help">Hilfe</button>
+    </nav>
     <div class="top-actions">
       <span class="user-chip" id="userChip"></span>
       <button class="lang-btn" data-lang="de" onclick="App.setLang('de')">DE</button>
       <button class="lang-btn" data-lang="en" onclick="App.setLang('en')">EN</button>
-      <button class="icon-btn" id="themeBtn" onclick="App.toggleTheme()" title="Hell / Dunkel"><span class="material-icons-outlined">dark_mode</span></button>
+      <button class="theme-btn" id="themeBtn" onclick="App.toggleTheme()"></button>
     </div>
   </header>
-
-  <nav class="tab-nav hidden" id="tabNav">
-    <button class="tab-btn active" data-tab="dashboard" id="tabbtn-dashboard" onclick="App.showTab('dashboard')" data-i18n="tab_dashboard">Dashboard</button>
-    <button class="tab-btn" data-tab="liverun" id="tabbtn-liverun" onclick="App.showTab('liverun')" data-i18n="tab_liverun">Live-Run</button>
-    <button class="tab-btn" data-tab="queue" id="tabbtn-queue" onclick="App.showTab('queue')" data-i18n="tab_queue">Warteschlange</button>
-    <button class="tab-btn" data-tab="runlog" id="tabbtn-runlog" onclick="App.showTab('runlog')" data-i18n="tab_runlog">Run Log</button>
-    <button class="tab-btn" data-tab="analysis" id="tabbtn-analysis" onclick="App.showTab('analysis')" data-i18n="tab_analysis">Analysen</button>
-    <button class="tab-btn" data-tab="prompts" id="tabbtn-prompts" onclick="App.showTab('prompts')" data-i18n="tab_prompts">Prompts</button>
-    <button class="tab-btn hidden" data-tab="admin" id="tabbtn-admin" onclick="App.showTab('admin')"><span data-i18n="tab_admin">Admin</span><span class="tab-count hidden" id="adminCount"></span></button>
-    <button class="tab-btn" data-tab="help" id="tabbtn-help" onclick="App.showTab('help')" data-i18n="tab_help">Hilfe</button>
-  </nav>
 
   <main class="container">
     <div id="boot"><div class="loader"></div></div>
@@ -367,7 +410,7 @@ var I18N = {
   tab_dashboard: ['Dashboard', 'Dashboard'], tab_liverun: ['Live-Run', 'Live run'], tab_queue: ['Warteschlange', 'Queue'],
   tab_runlog: ['Run Log', 'Run log'], tab_analysis: ['Analysen', 'Analytics'], tab_prompts: ['Prompts', 'Prompts'],
   tab_admin: ['Admin', 'Admin'], tab_help: ['Hilfe', 'Help'],
-  role_admin: ['Admin', 'Admin'], role_operator: ['Ausführen', 'Operator'], role_viewer: ['Ansehen', 'Viewer'],
+  role_admin: ['Admin', 'Admin'], theme_dark: ['Dunkel', 'Dark'], theme_light: ['Hell', 'Light'],
   poller: ['Hintergrund-Poller', 'Background poller'], active: ['Aktiv', 'Active'], inactive: ['Inaktiv', 'Inactive'],
   run_state: ['Laufstatus', 'Run state'], running: ['Läuft', 'Running'], ready: ['Bereit', 'Ready'],
   jobs_7d: ['Jobs (7 Tage)', 'Jobs (7 days)'], changed_7d: ['Segmente geändert (7 Tage)', 'Segments changed (7 days)'], errors_7d: ['Fehler (7 Tage)', 'Errors (7 days)'],
@@ -383,11 +426,11 @@ var I18N = {
   date_from: ['Von', 'From'], date_to: ['Bis', 'To'], generate: ['Erzeugen', 'Generate'], export_sheet: ['Erzeugen & ins Sheet exportieren', 'Generate & export to sheet'],
   prompt_readonly: ['Prompts werden im Prompt Hub gepflegt: strukturiert, geprüft, versioniert und live getestet. Hier siehst du, was AutoFix gerade verwendet.', 'Prompts are maintained in Prompt Hub. This shows what AutoFix currently uses.'],
   edit_in_hub: ['Im Prompt Hub bearbeiten', 'Edit in Prompt Hub'],
-  cancel: ['Abbrechen', 'Cancel'], confirm: ['Bestätigen', 'Confirm'], close: ['Schließen', 'Close'], save: ['Speichern', 'Save'], send: ['Absenden', 'Submit'],
+  remove: ['Entfernen', 'Remove'], cancel: ['Abbrechen', 'Cancel'], confirm: ['Bestätigen', 'Confirm'], close: ['Schließen', 'Close'], save: ['Speichern', 'Save'], send: ['Absenden', 'Submit'],
   approve: ['Freigeben', 'Approve'], reject: ['Ablehnen', 'Reject'], pending: ['Offen', 'Pending'], approved: ['Freigegeben', 'Approved'], rejected: ['Abgelehnt', 'Rejected'],
   denied_title: ['Kein Zugriff', 'Access denied'],
-  denied_text: ['Du bist für AutoFix Hub noch nicht freigeschaltet. Beantrage hier den Zugriff, ein Admin gibt ihn frei.', 'You are not yet authorized for AutoFix Hub. Request access below; an admin will approve it.'],
-  reason: ['Begründung', 'Reason'], my_requests: ['Meine Anträge', 'My requests'], request_access: ['Zugriff beantragen', 'Request access']
+  denied_text: ['AutoFix Hub ist den Admins vorbehalten. Prompts, Styleguides und Kontext-Dateien pflegst du im Prompt Hub.', 'AutoFix Hub is for admins only. Maintain prompts, style guides and context files in Prompt Hub.'],
+  reason: ['Begründung', 'Reason'], my_requests: ['Meine Anträge', 'My requests'], request_access: ['Admin-Zugang beantragen', 'Request admin access']
 };
 var LANG = 'de';
 function t(key) {
@@ -433,7 +476,6 @@ var App = (function () {
     });
   }
   function $(id) { return document.getElementById(id); }
-  function icon(n) { return '<span class="material-icons-outlined">' + n + '</span>'; }
   function badge(cls, text) { return '<span class="status-badge ' + cls + '">' + h(text) + '</span>'; }
   function can(role) { return !!S.boot && RANK[S.boot.role] >= RANK[role]; }
   function toast(msg, isErr) {
@@ -452,8 +494,8 @@ var App = (function () {
   }
   function ts() { return new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
   function loader() { return '<div class="loader"></div>'; }
-  function errBox(msg) { return '<div class="notice err">' + icon('error') + '<div>' + h(msg) + '</div></div>'; }
-  function empty(msg, ic) { return '<div class="empty">' + (ic ? '<div>' + icon(ic) + '</div>' : '') + h(msg) + '</div>'; }
+  function errBox(msg) { return '<div class="notice err">' + h(msg) + '</div>'; }
+  function empty(msg) { return '<div class="empty">' + h(msg) + '</div>'; }
   function typeBadge(type) { return type ? badge('b-blue', type) : badge('b-gray', '–'); }
 
   function dialog(html) { $('dialogBody').innerHTML = html; $('dialog').classList.add('show'); }
@@ -492,19 +534,19 @@ var App = (function () {
   // Start
   // ------------------------------------------------------------------
   function init() {
-    updateThemeIcon();
+    updateThemeLabel();
     call('apiHubBootstrap').then(function (res) {
       $('boot').classList.add('hidden');
       if (!res.success) { $('boot').classList.remove('hidden'); $('boot').innerHTML = errBox(res.error); return; }
       S.boot = res;
       LANG = res.lang || 'de';
-      markLang(); applyI18n();
-      $('userChip').textContent = (res.email || '') + (res.role ? ' · ' + t('role_' + res.role) : '');
+      markLang(); applyI18n(); updateThemeLabel();
+      $('userChip').textContent = res.email || '';
       if (!res.authorized) { renderDenied(); return; }
       $('tabNav').classList.remove('hidden');
       if (res.openMode) {
         var b = $('openModeBanner');
-        b.innerHTML = icon('lock_open') + '<div><b>Zugriffsschutz ist noch nicht eingerichtet.</b> Aktuell darf jeder in der Domain alles. Lege unter Admin → Nutzer &amp; Rechte den ersten Admin fest.</div>';
+        b.innerHTML = '<b>Zugriffsschutz ist noch nicht eingerichtet.</b> Aktuell darf jeder in der Domain alles. Lege unter Admin → Admins den ersten Admin fest – danach ist AutoFix Hub nur noch für Admins.';
         b.classList.remove('hidden');
       }
       if (can('admin')) {
@@ -515,7 +557,7 @@ var App = (function () {
       showTab(['dashboard', 'liverun', 'queue', 'runlog', 'analysis', 'prompts', 'admin', 'help'].indexOf(hash) !== -1 ? hash : 'dashboard');
     });
   }
-  function setLang(l) { LANG = l; markLang(); applyI18n(); rerender(); call('apiHubSetLang', l); }
+  function setLang(l) { LANG = l; markLang(); applyI18n(); updateThemeLabel(); rerender(); call('apiHubSetLang', l); }
   function markLang() {
     document.querySelectorAll('.lang-btn').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-lang') === LANG); });
     document.documentElement.lang = LANG;
@@ -524,11 +566,11 @@ var App = (function () {
     var dark = document.documentElement.getAttribute('data-theme') === 'dark';
     if (dark) document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', 'dark');
     try { localStorage.setItem('afh_theme', dark ? 'light' : 'dark'); } catch (e) {}
-    updateThemeIcon();
+    updateThemeLabel();
   }
-  function updateThemeIcon() {
+  function updateThemeLabel() {
     var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    var b = $('themeBtn'); if (b) b.innerHTML = icon(dark ? 'light_mode' : 'dark_mode');
+    var b = $('themeBtn'); if (b) b.textContent = t(dark ? 'theme_light' : 'theme_dark');
   }
   function showTab(tab) {
     if (tab === 'admin' && !can('admin')) tab = 'dashboard';
@@ -568,16 +610,16 @@ var App = (function () {
       '<div class="kpi"><div class="kpi-val">' + w.changed.toLocaleString() + '</div><div class="kpi-label">' + t('changed_7d') + '</div><div class="kpi-sub">' + w.changeRate + ' % von ' + w.segments.toLocaleString() + '</div></div>' +
       '<div class="kpi ' + (w.failed ? 'red' : 'green') + '"><div class="kpi-val">' + w.failed + '</div><div class="kpi-label">' + t('errors_7d') + '</div></div>' +
       '</div>';
-    html += '<div class="admin-grid"><div class="card black span4"><div class="section-title"><span>' + icon('history') + ' ' + t('recent_runs') + '</span><button class="btn btn-sm btn-secondary" onclick="App.showTab(\'runlog\')">' + t('tab_runlog') + '</button></div>' +
+    html += '<div class="admin-grid"><div class="card black span4"><div class="section-title"><span>' + t('recent_runs') + '</span><button class="btn btn-sm btn-secondary" onclick="App.showTab(\'runlog\')">' + t('tab_runlog') + '</button></div>' +
       (d.logError ? errBox(d.logError) : '') +
       (d.recent.length ? '<div class="table-wrap"><table class="history-table"><thead><tr><th>' + t('date') + '</th><th>' + t('project') + '</th><th>' + t('type') + '</th><th>' + t('language') + '</th><th>' + t('status') + '</th><th>' + t('segs_changed') + '</th></tr></thead><tbody>' +
         d.recent.map(function (l) {
           return '<tr><td style="white-space:nowrap">' + h(fmtDate(l.timestamp)) + '</td><td>' + h(l.projectName) + '</td><td>' + typeBadge(l.autoFixType) + '</td><td>' + badge('b-gray', l.targetLang) + '</td><td>' + (l.success ? badge('b-green', 'OK') : badge('b-red', 'Fehler')) + '</td><td><b>' + l.segmentsChanged + '</b> / ' + l.segmentsTotal + '</td></tr>';
-        }).join('') + '</tbody></table></div>' : empty('Noch keine Läufe.', 'hourglass_empty')) + '</div>';
-    html += '<div class="card yellow span2"><div class="section-title"><span>' + icon('bolt') + ' ' + t('quick_actions') + '</span></div><div style="display:flex;flex-direction:column;gap:10px">' +
-      (can('operator') ? '<button class="btn btn-primary" onclick="App.runManual()">' + icon('bolt') + t('run_now') + '</button><button class="btn btn-secondary" onclick="App.testConnection()">' + icon('network_check') + t('test_connection') + '</button>' : '') +
-      '<button class="btn btn-secondary" onclick="App.openSheet()">' + icon('table_view') + t('open_sheet') + '</button>' +
-      (S.boot.promptHubUrl ? '<a class="btn btn-secondary" href="' + h(S.boot.promptHubUrl) + '" target="_blank" rel="noopener">' + icon('edit_note') + t('open_prompt_hub') + '</a>' : '') +
+        }).join('') + '</tbody></table></div>' : empty('Noch keine Läufe.')) + '</div>';
+    html += '<div class="card yellow span2"><div class="section-title"><span>' + t('quick_actions') + '</span></div><div class="action-list">' +
+      (can('operator') ? '<button class="btn btn-primary" onclick="App.runManual()">' + t('run_now') + '</button><button class="btn btn-secondary" onclick="App.testConnection()">' + t('test_connection') + '</button>' : '') +
+      '<button class="btn btn-secondary" onclick="App.openSheet()">' + t('open_sheet') + '</button>' +
+      (S.boot.promptHubUrl ? '<a class="btn btn-secondary" href="' + h(S.boot.promptHubUrl) + '" target="_blank" rel="noopener">' + t('open_prompt_hub') + '</a>' : '') +
       '<div id="connResult"></div></div></div></div>';
     $('tab-dashboard').innerHTML = html;
   }
@@ -592,7 +634,7 @@ var App = (function () {
   function testConnection() {
     var el = $('connResult'); if (el) el.innerHTML = '<span class="spin-sm"></span>';
     call('apiHubTestConnection').then(function (r) {
-      var html = r.success ? '<div class="issue ok">' + icon('check') + '<div>Phrase: <b>' + h(r.user) + '</b><br>Gemini: <b>' + h(r.model) + '</b></div></div>' : '<div class="issue error">' + icon('error') + '<div>' + h(r.error) + '</div></div>';
+      var html = r.success ? '<div class="issue ok">' + '<div>Phrase: <b>' + h(r.user) + '</b><br>Gemini: <b>' + h(r.model) + '</b></div></div>' : '<div class="issue error">' + '<div>' + h(r.error) + '</div></div>';
       if ($('connResult')) $('connResult').innerHTML = html; else toast(r.success ? 'Verbindung OK' : r.error, !r.success);
     });
   }
@@ -612,11 +654,11 @@ var App = (function () {
       '<div class="kpi"><div class="kpi-val">' + (st.segs || '–') + '</div><div class="kpi-label">' + t('segs_changed') + '</div></div>' +
       '<div class="kpi ' + (st.errors ? 'red' : 'gray') + '"><div class="kpi-val">' + (st.errors || '–') + '</div><div class="kpi-label">' + t('errors') + '</div></div></div>';
     html += '<div class="card black"><div class="section-title"><span class="run-state"><span class="run-dot ' + L.state + '"></span>' + h(L.text || t('ready')) + '</span><div class="btn-row">' +
-      (can('operator') ? '<button class="btn btn-primary" id="lrRunBtn" onclick="App.runManual()"' + (L.running ? ' disabled' : '') + '>' + (L.running ? '<span class="spin-sm"></span>' : icon('bolt')) + t('run_now') + '</button>' : '') +
-      '<button class="btn btn-secondary" onclick="App.lrClear()"' + (L.running ? ' disabled' : '') + '>' + icon('delete_sweep') + t('clear') + '</button></div></div>' +
+      (can('operator') ? '<button class="btn btn-primary" id="lrRunBtn" onclick="App.runManual()"' + (L.running ? ' disabled' : '') + '>' + (L.running ? '<span class="spin-sm"></span>' : '') + t('run_now') + '</button>' : '') +
+      '<button class="btn btn-secondary" onclick="App.lrClear()"' + (L.running ? ' disabled' : '') + '>' + t('clear') + '</button></div></div>' +
       '<div class="console" id="lrConsole">' + consoleHtml() + '</div>' +
-      (L.error ? '<div class="notice err" style="margin-top:14px">' + icon('error') + '<pre style="margin:0;white-space:pre-wrap">' + h(L.error) + '</pre></div>' : '') +
-      (!can('operator') ? '<p class="hint" style="margin-top:12px">Zum Starten brauchst du die Rolle „Ausführen“. Du siehst hier den Fortschritt laufender Runs.</p>' : '') + '</div>';
+      (L.error ? '<div class="notice err" style="margin-top:14px">' + '<pre style="margin:0;white-space:pre-wrap">' + h(L.error) + '</pre></div>' : '') +
+      '</div>';
     $('tab-liverun').innerHTML = html;
     var c = $('lrConsole'); c.scrollTop = c.scrollHeight;
   }
@@ -688,12 +730,12 @@ var App = (function () {
       if (!S.queue) return;
     }
     var r = S.queue;
-    var html = '<div class="card yellow"><div class="section-title"><span>' + icon('list_alt') + ' ' + t('tab_queue') + '</span><div class="btn-row">' +
-      (can('operator') ? '<button class="btn btn-sm btn-primary" onclick="App.runManual()">' + icon('bolt') + t('run_now') + '</button>' : '') +
-      '<button class="btn btn-sm btn-secondary" onclick="App.reloadQueue()">' + icon('refresh') + t('refresh') + '</button></div></div>' +
+    var html = '<div class="card yellow"><div class="section-title"><span>' + t('tab_queue') + '</span><div class="btn-row">' +
+      (can('operator') ? '<button class="btn btn-sm btn-primary" onclick="App.runManual()">' + t('run_now') + '</button>' : '') +
+      '<button class="btn btn-sm btn-secondary" onclick="App.reloadQueue()">' + t('refresh') + '</button></div></div>' +
       '<p class="hint">Projekte in Phrase mit gesetztem AutoFix-Custom-Field und Jobs im Workflow-Schritt „PE Gemini“.</p>';
     if (!r.success) html += errBox(r.error);
-    else if (!r.projects.length) html += empty('Die Warteschlange ist leer.', 'inbox');
+    else if (!r.projects.length) html += empty('Die Warteschlange ist leer.');
     else {
       html += '<div class="table-wrap"><table class="history-table"><thead><tr><th>' + t('project') + '</th><th>UID</th><th>' + t('type') + '</th><th>Zielsprachen</th><th>Jobs</th></tr></thead><tbody>' +
         r.projects.map(function (p) {
@@ -715,9 +757,9 @@ var App = (function () {
       if (!S.logs) return;
     }
     var r = S.logs, F = S.logFilter;
-    var html = '<div class="card black"><div class="section-title"><span>' + icon('history') + ' ' + t('tab_runlog') + '</span><div class="btn-row">' +
-      '<button class="btn btn-sm btn-secondary" onclick="App.openSheet()">' + icon('table_view') + t('open_sheet') + '</button>' +
-      '<button class="btn btn-sm btn-secondary" onclick="App.reloadLogs()">' + icon('refresh') + t('refresh') + '</button></div></div>';
+    var html = '<div class="card black"><div class="section-title"><span>' + t('tab_runlog') + '</span><div class="btn-row">' +
+      '<button class="btn btn-sm btn-secondary" onclick="App.openSheet()">' + t('open_sheet') + '</button>' +
+      '<button class="btn btn-sm btn-secondary" onclick="App.reloadLogs()">' + t('refresh') + '</button></div></div>';
     if (!r.success) { $('tab-runlog').innerHTML = html + errBox(r.error) + '</div>'; return; }
     var types = {}; r.logs.forEach(function (l) { types[l.autoFixType] = true; });
     html += '<div class="toolbar"><input class="grow" id="logQ" placeholder="' + t('search') + '" value="' + h(F.q) + '" oninput="App.setLogFilter(\'q\', this.value)" style="max-width:360px">' +
@@ -741,15 +783,15 @@ var App = (function () {
   }
   function logTableHtml() {
     var list = filteredLogs();
-    if (!list.length) return empty('Keine passenden Einträge.', 'search_off');
+    if (!list.length) return empty('Keine passenden Einträge.');
     return '<div class="table-wrap"><table class="history-table"><thead><tr><th>' + t('date') + '</th><th>' + t('project') + '</th><th>' + t('type') + '</th><th>' + t('language') + '</th><th>' + t('status') + '</th><th>Segmente</th><th>' + t('changes') + '</th><th></th></tr></thead><tbody>' +
       list.map(function (l) {
         var i = l._idx, isReplay = l.projectName === 'Replay', n = (l.changes || []).length;
         var row = '<tr><td style="white-space:nowrap">' + h(fmtDate(l.timestamp)) + '</td><td><b>' + h(l.projectName) + '</b><div class="mono-sm">' + h(l.jobUid) + '</div></td><td>' + typeBadge(l.autoFixType) + '</td><td>' + badge('b-gray', l.targetLang) + '</td>' +
           '<td>' + (l.success ? badge('b-green', 'OK') : badge('b-red', 'Fehler')) + (isReplay ? ' ' + badge('b-yellow', 'Replay') : '') + '</td><td><b>' + l.segmentsChanged + '</b> / ' + l.segmentsTotal + '</td>' +
-          '<td>' + (n ? '<button class="row-toggle" onclick="App.toggleDiff(' + i + ')">' + icon(S.openDiffs[i] ? 'expand_less' : 'expand_more') + n + ' ' + t('changes') + '</button>' : '<span class="muted">–</span>') + '</td>' +
-          '<td style="white-space:nowrap">' + (n && !isReplay && can('operator') ? '<button class="btn btn-sm btn-secondary" onclick="App.openReplay(' + i + ')">' + icon('upload') + t('repush') + '</button>' : '') + '</td></tr>';
-        if (l.message && !l.success) row += '<tr><td colspan="8"><div class="notice err" style="margin:0">' + icon('error') + h(l.message) + '</div></td></tr>';
+          '<td>' + (n ? '<button class="row-toggle" onclick="App.toggleDiff(' + i + ')">' + (S.openDiffs[i] ? '– ' : '+ ') + n + ' ' + t('changes') + '</button>' : '<span class="muted">–</span>') + '</td>' +
+          '<td style="white-space:nowrap">' + (n && !isReplay && can('operator') ? '<button class="btn btn-sm btn-secondary" onclick="App.openReplay(' + i + ')">' + t('repush') + '</button>' : '') + '</td></tr>';
+        if (l.message && !l.success) row += '<tr><td colspan="8"><div class="notice err" style="margin:0">' + h(l.message) + '</div></td></tr>';
         if (S.openDiffs[i] && n) {
           row += '<tr><td colspan="8"><div class="diff-grid"><div class="hd">Seg</div><div class="hd">Source</div><div class="hd">Original → Korrigiert</div>' +
             l.changes.map(function (c) {
@@ -766,17 +808,17 @@ var App = (function () {
   function openReplay(i) {
     var l = S.logs.logs[i];
     dialog('<h3>' + t('repush') + ' nach Phrase</h3>' +
-      '<div class="notice info">' + icon('info') + '<div>Die gespeicherten Änderungen werden per <b>Source-Text-Abgleich</b> auf den Job angewendet – ohne neuen Gemini-Aufruf.</div></div>' +
-      '<div class="notice warn">' + icon('warning') + '<div>Der Job muss im Schritt „PE Gemini“ den Status <b>NEW oder ACCEPTED</b> haben.</div></div>' +
+      '<div class="notice info">' + '<div>Die gespeicherten Änderungen werden per <b>Source-Text-Abgleich</b> auf den Job angewendet – ohne neuen Gemini-Aufruf.</div></div>' +
+      '<div class="notice warn">' + '<div>Der Job muss im Schritt „PE Gemini“ den Status <b>NEW oder ACCEPTED</b> haben.</div></div>' +
       '<div class="form-grid"><div class="form-row"><label>Project UID</label><input id="rpProject" value="' + h(l.projectUid) + '"></div><div class="form-row"><label>Job UID</label><input id="rpJob" value="' + h(l.jobUid) + '"></div></div>' +
       '<div class="form-row"><label>Changes JSON</label><textarea id="rpChanges" class="mono" rows="8">' + h(JSON.stringify(l.changes, null, 2)) + '</textarea></div><div id="rpResult"></div>' +
-      '<div class="btn-row" style="justify-content:flex-end"><button class="btn btn-secondary" onclick="App.closeDialog()">' + t('cancel') + '</button><button class="btn btn-primary" id="rpGo">' + icon('upload') + t('repush') + '</button></div>');
+      '<div class="btn-row" style="justify-content:flex-end"><button class="btn btn-secondary" onclick="App.closeDialog()">' + t('cancel') + '</button><button class="btn btn-primary" id="rpGo">' + t('repush') + '</button></div>');
     $('rpGo').onclick = function () {
       $('rpGo').disabled = true; $('rpResult').innerHTML = '<span class="spin-sm"></span>';
       call('apiHubReplay', $('rpProject').value.trim(), $('rpJob').value.trim(), $('rpChanges').value.trim()).then(function (r) {
         $('rpGo').disabled = false;
         if (!r.success) { $('rpResult').innerHTML = errBox(r.error); return; }
-        $('rpResult').innerHTML = '<div class="notice ok">' + icon('check_circle') + '<div><b>Re-Push erfolgreich.</b> Gematcht: ' + r.matched + ' / ' + r.totalChanges + ' · nicht gefunden: ' + r.notMatched + ' · Patches: ' + r.patchCount + '</div></div>';
+        $('rpResult').innerHTML = '<div class="notice ok">' + '<div><b>Re-Push erfolgreich.</b> Gematcht: ' + r.matched + ' / ' + r.totalChanges + ' · nicht gefunden: ' + r.notMatched + ' · Patches: ' + r.patchCount + '</div></div>';
         toast('Re-Push abgeschlossen: ' + r.matched + ' Segmente.'); S.logs = null;
       });
     };
@@ -786,10 +828,10 @@ var App = (function () {
   // ANALYSEN
   // ------------------------------------------------------------------
   var SUBS = [
-    { key: 'mqm', icon: 'analytics', fields: ['dateFrom', 'dateTo', 'projectName', 'autoFixType', 'targetLang'], days: 30, hint: 'Gemini ordnet jede Korrektur einer MQM-Kategorie und einem Schweregrad zu.' },
-    { key: 'benchmark', icon: 'compare_arrows', fields: ['dateFrom', 'dateTo', 'autoFixType'], days: 90, hint: 'Fehlerquote je Zielsprache auf Basis der MQM-Klassifizierung.' },
-    { key: 'drift', icon: 'trending_up', fields: ['dateFrom', 'dateTo', 'targetLang'], days: 90, hint: 'Begriffe, die AutoFix immer wieder gleich korrigiert – Kandidaten für Termbase oder Prompt.' },
-    { key: 'glossary', icon: 'menu_book', fields: ['dateFrom', 'dateTo', 'targetLang'], days: 90, hint: 'Gemini schlägt neue Termbase-Einträge vor. Nur zur manuellen Übernahme in Phrase.' }
+    { key: 'mqm', fields: ['dateFrom', 'dateTo', 'projectName', 'autoFixType', 'targetLang'], days: 30, hint: 'Gemini ordnet jede Korrektur einer MQM-Kategorie und einem Schweregrad zu.' },
+    { key: 'benchmark', fields: ['dateFrom', 'dateTo', 'autoFixType'], days: 90, hint: 'Fehlerquote je Zielsprache auf Basis der MQM-Klassifizierung.' },
+    { key: 'drift', fields: ['dateFrom', 'dateTo', 'targetLang'], days: 90, hint: 'Begriffe, die AutoFix immer wieder gleich korrigiert – Kandidaten für Termbase oder Prompt.' },
+    { key: 'glossary', fields: ['dateFrom', 'dateTo', 'targetLang'], days: 90, hint: 'Gemini schlägt neue Termbase-Einträge vor. Nur zur manuellen Übernahme in Phrase.' }
   ];
   function renderAnalysis() {
     var A = S.analysis;
@@ -810,12 +852,12 @@ var App = (function () {
       autoFixType: sel('autoFixType', t('type'), o.autoFixTypes, f.autoFixType, 'all'),
       targetLang: sel('targetLang', t('language'), o.targetLangs, f.targetLang, 'all')
     };
-    var html = '<div class="sub-nav">' + SUBS.map(function (x) { return '<button class="' + (x.key === A.sub ? 'active' : '') + '" onclick="App.setSub(\'' + x.key + '\')">' + icon(x.icon) + t(x.key) + '</button>'; }).join('') + '</div>' +
-      '<div class="card yellow"><div class="section-title"><span>' + icon(sub.icon) + ' ' + t(sub.key) + '</span></div><p class="hint">' + h(sub.hint) + '</p>' +
+    var html = '<div class="sub-nav">' + SUBS.map(function (x) { return '<button class="' + (x.key === A.sub ? 'active' : '') + '" onclick="App.setSub(\'' + x.key + '\')">' + t(x.key) + '</button>'; }).join('') + '</div>' +
+      '<div class="card yellow"><div class="section-title"><span>' + t(sub.key) + '</span></div><p class="hint">' + h(sub.hint) + '</p>' +
       '<div class="filter-grid">' + sub.fields.map(function (k) { return fields[k]; }).join('') + '</div><div class="btn-row">' +
-      (can('operator') ? '<button class="btn btn-primary" onclick="App.runAnalysis(false)"' + (A.busy ? ' disabled' : '') + '>' + (A.busy ? '<span class="spin-sm"></span>' : icon(sub.icon)) + t('generate') + '</button>' +
-        (sub.key === 'mqm' ? '<button class="btn btn-black" onclick="App.runAnalysis(true)"' + (A.busy ? ' disabled' : '') + '>' + icon('table_chart') + t('export_sheet') + '</button>' : '')
-        : '<span class="muted">Analysen rufen Gemini auf und brauchen die Rolle „Ausführen“.</span>') +
+      (can('operator') ? '<button class="btn btn-primary" onclick="App.runAnalysis(false)"' + (A.busy ? ' disabled' : '') + '>' + (A.busy ? '<span class="spin-sm"></span>' : '') + t('generate') + '</button>' +
+        (sub.key === 'mqm' ? '<button class="btn btn-black" onclick="App.runAnalysis(true)"' + (A.busy ? ' disabled' : '') + '>' + t('export_sheet') + '</button>' : '')
+        : '') +
       '</div></div><div id="anResult">' + analysisResultHtml(sub.key) + '</div>';
     $('tab-analysis').innerHTML = html;
   }
@@ -842,21 +884,21 @@ var App = (function () {
     if (!r) return '';
     if (r.loading) return '<div class="card">' + loader() + '<p class="hint" style="text-align:center">Gemini analysiert die Korrekturen …</p></div>';
     if (!r.success) return errBox(r.error);
-    if (r.empty) return '<div class="card">' + empty(r.message || 'Keine Daten im gewählten Zeitraum.', 'search_off') + '</div>';
+    if (r.empty) return '<div class="card">' + empty(r.message || 'Keine Daten im gewählten Zeitraum.') + '</div>';
     if (key === 'mqm') {
       var total = r.totalSegments || 0, agg = r.aggregate || [], max = agg.length ? agg[0].total : 1;
       var html = '<div class="kpi-grid">' +
         [[r.totalLogs, 'Logs'], [total, 'Fehler gesamt'], [r.critical || 0, 'Critical', 'red'], [r.major || 0, 'Major'], [r.minor || 0, 'Minor', 'green']].map(function (k) {
           return '<div class="kpi ' + (k[2] || '') + '"><div class="kpi-val">' + k[0] + '</div><div class="kpi-label">' + k[1] + '</div></div>';
         }).join('') + '</div>';
-      if (r._export && r.exportResult) html += r.exportResult.success ? '<div class="notice ok">' + icon('check_circle') + '<div>Sheet erstellt: <b>' + h(r.exportResult.sheetName) + '</b> – <a href="' + h(r.exportResult.url) + '" target="_blank" rel="noopener">öffnen</a></div></div>' : errBox('Export-Fehler: ' + r.exportResult.error);
+      if (r._export && r.exportResult) html += r.exportResult.success ? '<div class="notice ok">' + '<div>Sheet erstellt: <b>' + h(r.exportResult.sheetName) + '</b> – <a href="' + h(r.exportResult.url) + '" target="_blank" rel="noopener">öffnen</a></div></div>' : errBox('Export-Fehler: ' + r.exportResult.error);
       html += '<div class="card black"><div class="section-title"><span>Fehlerverteilung</span></div><div class="table-wrap"><table class="history-table"><thead><tr><th>Kategorie</th><th>Unterkategorie</th><th>Critical</th><th>Major</th><th>Minor</th><th>Gesamt</th><th>%</th><th></th></tr></thead><tbody>' +
         agg.map(function (row) {
           return '<tr><td>' + badge('b-blue', row.category) + '</td><td>' + h(row.subcategory || '–') + '</td><td>' + sevCell(row.critical, 'sev-critical') + '</td><td>' + sevCell(row.major, 'sev-major') + '</td><td>' + sevCell(row.minor, 'sev-minor') + '</td><td><b>' + row.total + '</b></td><td>' + (total ? (row.total / total * 100).toFixed(1) : 0) + ' %</td><td><span class="bar" style="width:' + Math.round(row.total / max * 110) + 'px"></span></td></tr>';
         }).join('') + '</tbody></table></div></div>';
       var det = r.details || [];
       html += '<div class="card black"><div class="section-title"><span>Segmente (' + (r.detailsTotal || det.length) + ')</span></div>' +
-        (r.detailsTruncated ? '<div class="notice info">' + icon('info') + '<div>Zeige 300 von ' + r.detailsTotal + '. Vollständige Liste im exportierten Sheet.</div></div>' : '') +
+        (r.detailsTruncated ? '<div class="notice info">' + '<div>Zeige 300 von ' + r.detailsTotal + '. Vollständige Liste im exportierten Sheet.</div></div>' : '') +
         '<div class="table-wrap" style="max-height:520px;overflow:auto"><table class="history-table"><thead><tr><th>' + t('date') + '</th><th>' + t('project') + '</th><th>' + t('language') + '</th><th>Source</th><th>Original → Korrigiert</th><th>Kategorie</th><th>Schwere</th></tr></thead><tbody>' +
         det.map(function (d) {
           return '<tr><td style="white-space:nowrap">' + h(fmtDate(d.timestamp, true)) + '</td><td>' + h(d.projectName) + '</td><td>' + badge('b-gray', d.targetLang) + '</td><td>' + h(d.source) + '</td><td>' + diffHtml(d.original, d.corrected) + '</td><td>' + badge('b-blue', d.mqmCategory) + '<div class="muted">' + h(d.mqmSubcategory || '') + '</div></td><td><span class="sev-' + h(d.mqmSeverity) + '">' + h(d.mqmSeverity) + '</span></td></tr>';
@@ -873,7 +915,7 @@ var App = (function () {
     }
     if (key === 'drift') {
       var terms = r.terms || [];
-      if (!terms.length) return '<div class="card">' + empty('Kein signifikanter Terminologie-Drift gefunden.', 'check_circle') + '</div>';
+      if (!terms.length) return '<div class="card">' + empty('Kein signifikanter Terminologie-Drift gefunden.') + '</div>';
       return '<div class="card black"><p class="hint">' + terms.length + ' Begriffe mit wiederholten Korrekturen (aus ' + r.totalLogs + ' Logs). Kandidaten für die Termbase oder die Nomenklatur im Prompt Hub.</p><div class="table-wrap"><table class="history-table"><thead><tr><th>Source-Begriff</th><th>' + t('language') + '</th><th>MT (häufigste Form) → Empfehlung</th><th>Korrekturen</th><th>' + t('projects') + '</th><th>Zuletzt</th></tr></thead><tbody>' +
         terms.map(function (x) {
           var cls = x.driftScore >= 10 ? 'sev-critical' : x.driftScore >= 5 ? 'sev-major' : 'sev-minor';
@@ -881,7 +923,7 @@ var App = (function () {
         }).join('') + '</tbody></table></div></div>';
     }
     var sug = r.suggestions || [];
-    if (!sug.length) return '<div class="card">' + empty(r.message || 'Keine Vorschläge gefunden.', 'menu_book') + '</div>';
+    if (!sug.length) return '<div class="card">' + empty(r.message || 'Keine Vorschläge gefunden.') + '</div>';
     return '<div class="card black"><p class="hint">' + sug.length + ' Vorschläge für neue Termbase-Einträge. <b>Nur zur manuellen Übernahme in Phrase.</b></p><div class="table-wrap"><table class="history-table"><thead><tr><th>Source</th><th>' + t('language') + '</th><th>Empfohlener Begriff</th><th>Konfidenz</th><th>Begründung</th></tr></thead><tbody>' +
       sug.map(function (s) {
         var cls = s.confidence >= 80 ? 'b-green' : s.confidence >= 60 ? 'b-yellow' : 'b-gray';
@@ -901,17 +943,17 @@ var App = (function () {
     var r = S.prompts;
     if (!r.success) { $('tab-prompts').innerHTML = errBox(r.error); return; }
     var e = r.effective, hub = r.promptHubUrl;
-    var html = '<div class="notice info">' + icon('edit_note') + '<div>' + t('prompt_readonly') +
+    var html = '<div class="notice info">' + '<div>' + t('prompt_readonly') +
       (hub ? ' <a href="' + h(hub) + '" target="_blank" rel="noopener"><b>' + t('open_prompt_hub') + '</b></a>' : (can('admin') ? ' Den Link zum Prompt Hub trägst du unter Admin → Konfiguration ein.' : '')) + '</div></div>' +
-      '<div class="card black"><div class="section-title"><span>' + icon('tune') + ' Gemini in einem echten Lauf</span></div><div class="kv"><b>Modell</b><span>' + h(e.model) + '</span><b>Temperature</b><span>' + h(e.temperature) + '</span><b>Max Tokens</b><span>' + h(e.maxTokens) + '</span><b>Batches</b><span>bis ' + e.singleBatchMax + ' Segmente in einem Batch, darüber je ' + e.batchSize + '</span></div>' +
-      (e.ignoredOverrides.length ? '<div class="notice warn" style="margin-top:12px">' + icon('warning') + '<div>Werte pro Space im Sheet (' + h(e.ignoredOverrides.join(', ')) + ') liest ein Lauf nicht – sie stammen aus dem alten Prompt Editor.</div></div>' : '') + '</div>' +
+      '<div class="card black"><div class="section-title"><span>' + ' Gemini in einem echten Lauf</span></div><div class="kv"><b>Modell</b><span>' + h(e.model) + '</span><b>Temperature</b><span>' + h(e.temperature) + '</span><b>Max Tokens</b><span>' + h(e.maxTokens) + '</span><b>Batches</b><span>bis ' + e.singleBatchMax + ' Segmente in einem Batch, darüber je ' + e.batchSize + '</span></div>' +
+      (e.ignoredOverrides.length ? '<div class="notice warn" style="margin-top:12px">' + '<div>Werte pro Space im Sheet (' + h(e.ignoredOverrides.join(', ')) + ') liest ein Lauf nicht – sie stammen aus dem alten Prompt Editor.</div></div>' : '') + '</div>' +
       '<div class="space-grid">';
     r.prompts.forEach(function (p) {
       html += '<div class="space-tile" style="cursor:default"><h3>' + h(p.label) + '</h3><div class="mono-sm">peInstructions_' + h(p.type) + '</div><div class="badges">' +
         (p.managedByPromptHub ? badge('b-green', 'Prompt Hub') : badge('b-yellow', 'Nicht im Prompt Hub')) + (p.builtIn ? badge('b-gray', 'eingebaut') : '') +
         (p.usesFallback ? badge('b-red', 'nutzt Fallback') : '') + badge('b-gray', p.chars.toLocaleString() + ' Zeichen') + '</div>' +
         '<details><summary class="muted" style="cursor:pointer">Prompt anzeigen</summary><pre class="prompt-view" style="max-height:360px">' + h(p.text) + '</pre></details>' +
-        (hub ? '<a class="btn btn-sm btn-secondary" href="' + h(hub + '#' + p.type) + '" target="_blank" rel="noopener">' + icon('open_in_new') + t('edit_in_hub') + '</a>' : '') + '</div>';
+        (hub ? '<a class="btn btn-sm btn-secondary" href="' + h(hub + '#' + p.type) + '" target="_blank" rel="noopener">' + t('edit_in_hub') + '</a>' : '') + '</div>';
     });
     $('tab-prompts').innerHTML = html + '</div>';
   }
@@ -927,7 +969,7 @@ var App = (function () {
       return;
     }
     var A = S.admin;
-    $('tab-admin').innerHTML = '<div class="admin-grid">' + adminRequests(A) + adminUsers(A) + adminSettings(A) + adminConfig(A) + adminMaintenance(A) + adminAudit(A) + '</div>';
+    $('tab-admin').innerHTML = '<div class="admin-grid">' + adminRequests(A) + adminAdmins(A) + adminSettings(A) + adminConfig(A) + adminMaintenance(A) + adminAudit(A) + '</div>';
   }
   function reloadAdmin(msg) {
     S.admin = null; if (msg) toast(msg);
@@ -938,49 +980,37 @@ var App = (function () {
   }
   function adminRequests(A) {
     var open = A.requests.filter(function (r) { return r.status === 'pending'; });
-    var html = '<div class="card red wide"><div class="section-title"><span>' + icon('how_to_reg') + ' Offene Anträge (' + open.length + ')</span></div>';
+    var html = '<div class="card wide"><div class="section-title"><span>Offene Anträge auf Admin-Zugang (' + open.length + ')</span></div>';
     if (!open.length) return html + empty('Keine offenen Anträge.') + '</div>';
-    return html + '<div class="table-wrap"><table class="history-table"><thead><tr><th>' + t('date') + '</th><th>Wer</th><th>Rolle</th><th>' + t('reason') + '</th><th>Kommentar</th><th></th></tr></thead><tbody>' +
+    return html + '<div class="table-wrap"><table class="history-table"><thead><tr><th>' + t('date') + '</th><th>Wer</th><th>' + t('reason') + '</th><th>Kommentar</th><th></th></tr></thead><tbody>' +
       open.map(function (r) {
-        return '<tr><td>' + h(fmtDate(r.createdAt)) + '</td><td>' + h(r.email) + '</td><td><select id="rq-role-' + h(r.id) + '" style="width:140px">' + ['viewer', 'operator'].map(function (x) { return '<option value="' + x + '"' + (x === r.role ? ' selected' : '') + '>' + t('role_' + x) + '</option>'; }).join('') + '</select></td>' +
-          '<td>' + h(r.reason) + '</td><td><textarea id="rq-cm-' + h(r.id) + '" rows="2"></textarea></td><td style="white-space:nowrap"><button class="btn btn-sm btn-primary" onclick="App.decide(\'' + h(r.id) + '\',true)">' + t('approve') + '</button> <button class="btn btn-sm btn-red" onclick="App.decide(\'' + h(r.id) + '\',false)">' + t('reject') + '</button></td></tr>';
+        return '<tr><td>' + h(fmtDate(r.createdAt)) + '</td><td>' + h(r.email) + '</td><td>' + h(r.reason) + '</td><td><textarea id="rq-cm-' + h(r.id) + '" rows="2"></textarea></td>' +
+          '<td style="white-space:nowrap"><button class="btn btn-sm btn-primary" onclick="App.decide(\'' + h(r.id) + '\',true)">' + t('approve') + '</button> <button class="btn btn-sm btn-red" onclick="App.decide(\'' + h(r.id) + '\',false)">' + t('reject') + '</button></td></tr>';
       }).join('') + '</tbody></table></div></div>';
   }
   function decide(id, approve) {
-    call('apiHubAdminDecide', id, approve, $('rq-role-' + id).value, $('rq-cm-' + id).value).then(function (r) { if (!r.success) return toast(r.error, true); reloadAdmin(approve ? 'Freigegeben' : 'Abgelehnt'); });
+    call('apiHubAdminDecide', id, approve, $('rq-cm-' + id).value).then(function (r) { if (!r.success) return toast(r.error, true); reloadAdmin(approve ? 'Freigegeben – ist jetzt Admin' : 'Abgelehnt'); });
   }
-  function adminUsers(A) {
-    var html = '<div class="card yellow wide"><div class="section-title"><span>' + icon('group') + ' Nutzer &amp; Rechte</span></div>' +
-      (A.openMode ? '<div class="notice warn">' + icon('lock_open') + '<div>Noch kein Admin: Solange darf jeder alles. Trage unten den ersten Admin ein, damit die Rollen greifen.</div></div>' : '') +
-      '<div class="table-wrap"><table class="history-table"><thead><tr><th>E-Mail</th><th>Rolle</th><th>Aktiv</th><th>Hinzugefügt</th><th></th></tr></thead><tbody>' +
-      A.users.map(function (u, i) {
-        return '<tr data-user="' + i + '"><td><b>' + h(u.email) + '</b></td><td><select class="u-role" style="width:150px">' + ['viewer', 'operator'].map(function (x) { return '<option value="' + x + '"' + (x === u.role ? ' selected' : '') + '>' + t('role_' + x) + '</option>'; }).join('') + '</select></td>' +
-          '<td><input type="checkbox" class="u-active"' + (u.active !== false ? ' checked' : '') + '></td><td class="muted">' + h(fmtDate(u.addedAt, true)) + ' · ' + h(u.addedBy || '') + '</td>' +
-          '<td style="white-space:nowrap"><button class="btn btn-sm btn-primary" onclick="App.saveUser(' + i + ')">' + icon('save') + '</button> <button class="btn btn-sm btn-red" onclick="App.removeUser(\'' + h(u.email) + '\')">' + icon('person_remove') + '</button></td></tr>';
-      }).join('') +
-      '<tr><td><input id="nuEmail" placeholder="name@karcher.com"></td><td><select id="nuRole" style="width:150px"><option value="viewer">' + t('role_viewer') + '</option><option value="operator">' + t('role_operator') + '</option></select></td><td></td><td></td><td><button class="btn btn-sm btn-primary" onclick="App.addUser()">' + icon('person_add') + '</button></td></tr>' +
-      '</tbody></table></div><div class="section-title" style="margin-top:20px;font-size:13px"><span>Admins</span></div><div class="badges">' +
-      A.admins.map(function (a) { return '<span class="status-badge b-red">' + h(a) + ' <button class="row-del" onclick="App.setAdmin(\'' + h(a) + '\',false)">×</button></span>'; }).join('') +
-      '</div><div class="btn-row" style="margin-top:10px"><input id="newAdmin" placeholder="admin@karcher.com" style="width:260px;height:34px;padding:4px 8px;font-size:13px"><button class="btn btn-sm btn-secondary" onclick="App.setAdmin(document.getElementById(\'newAdmin\').value,true)">' + icon('add_moderator') + 'Admin hinzufügen</button></div></div>';
-    return html;
+  function adminAdmins(A) {
+    return '<div class="card wide"><div class="section-title"><span>Admins</span><span class="sub">AutoFix Hub ist nur für Admins. Alle anderen arbeiten im Prompt Hub.</span></div>' +
+      (A.openMode ? '<div class="notice warn">Noch kein Admin: Solange darf jeder alles. Trage den ersten Admin ein, danach ist AutoFix Hub geschützt.</div>' : '') +
+      '<div class="table-wrap"><table class="history-table"><tbody>' +
+      A.admins.map(function (a) { return '<tr><td><b>' + h(a) + '</b></td><td style="text-align:right"><button class="btn btn-sm btn-ghost" onclick="App.setAdmin(\'' + h(a) + '\',false)">' + t('remove') + '</button></td></tr>'; }).join('') +
+      (A.admins.length ? '' : '<tr><td class="muted">Noch keine Admins.</td><td></td></tr>') +
+      '</tbody></table></div><div class="add-row"><input id="newAdmin" placeholder="name@karcher.com" style="max-width:320px"><button class="btn btn-sm btn-secondary" onclick="App.setAdmin(document.getElementById(\'newAdmin\').value,true)">Admin hinzufügen</button></div></div>';
   }
-  function saveUser(i) {
-    var row = document.querySelector('tr[data-user="' + i + '"]');
-    call('apiHubAdminSaveUser', { email: S.admin.users[i].email, role: row.querySelector('.u-role').value, active: row.querySelector('.u-active').checked }).then(function (r) { if (!r.success) return toast(r.error, true); reloadAdmin('Gespeichert'); });
+  function setAdmin(email, make) {
+    if (!make) {
+      return confirmDialog('Admin entfernen', h(email) + ' verliert den Zugriff auf AutoFix Hub.', t('remove')).then(function (ok) {
+        if (ok) call('apiHubAdminSetAdmin', email, false).then(function (r) { if (!r.success) return toast(r.error, true); reloadAdmin('Admins aktualisiert'); });
+      });
+    }
+    call('apiHubAdminSetAdmin', email, true).then(function (r) { if (!r.success) return toast(r.error, true); reloadAdmin('Admins aktualisiert'); });
   }
-  function addUser() {
-    call('apiHubAdminSaveUser', { email: $('nuEmail').value, role: $('nuRole').value, active: true }).then(function (r) { if (!r.success) return toast(r.error, true); reloadAdmin('Nutzer hinzugefügt'); });
-  }
-  function removeUser(email) {
-    confirmDialog('Nutzer entfernen', h(email) + ' verliert den Zugriff auf AutoFix Hub.').then(function (ok) {
-      if (ok) call('apiHubAdminRemoveUser', email).then(function (r) { if (!r.success) return toast(r.error, true); reloadAdmin('Entfernt'); });
-    });
-  }
-  function setAdmin(email, make) { call('apiHubAdminSetAdmin', email, make).then(function (r) { if (!r.success) return toast(r.error, true); reloadAdmin('Admins aktualisiert'); }); }
 
   function adminSettings(A) {
     var s = A.settings, e = A.effective;
-    return '<div class="card black"><div class="section-title"><span>' + icon('settings') + ' AutoFix-Einstellungen</span></div>' +
+    return '<div class="card black"><div class="section-title"><span>' + ' AutoFix-Einstellungen</span></div>' +
       (A.settingsError ? errBox(A.settingsError) : '') +
       '<p class="hint">Gespeichert werden nur die geänderten Zeilen im Tab „Settings“. Prompts und andere Werte bleiben unberührt.</p>' +
       '<div class="mini-label muted" style="font-weight:800;text-transform:uppercase;margin-bottom:8px">Phrase &amp; Workflow</div>' +
@@ -995,7 +1025,7 @@ var App = (function () {
       '<div class="form-grid"><div class="form-row"><label>TM Threshold</label><input id="st-tmThreshold" type="number" step="0.05" min="0" max="1" value="' + h(s.tmThreshold) + '"></div>' +
       '<div class="form-row"><label>Poller-Intervall (Min.)</label><input id="st-pollerIntervalMinutes" type="number" min="1" max="60" value="' + h(s.pollerIntervalMinutes) + '"></div></div>' +
       '<p class="hint">Diese beiden Werte liest der aktuelle Code nicht. Den Poller-Takt legst du beim Starten im Dashboard fest.</p>' +
-      '<button class="btn btn-primary" onclick="App.saveSettings()">' + icon('save') + t('save') + '</button></div>';
+      '<button class="btn btn-primary" onclick="App.saveSettings()">' + t('save') + '</button></div>';
   }
   function saveSettings() {
     var patch = {};
@@ -1009,25 +1039,25 @@ var App = (function () {
   }
   function adminConfig(A) {
     var c = A.config;
-    return '<div class="card black"><div class="section-title"><span>' + icon('hub') + ' Konfiguration</span></div>' +
+    return '<div class="card black"><div class="section-title"><span>' + ' Konfiguration</span></div>' +
       '<div class="form-row"><label>Link zum Prompt Hub</label><input id="cf-promptHubUrl" value="' + h(c.promptHubUrl) + '" placeholder="https://script.google.com/a/macros/karcher.com/s/…/exec"></div>' +
       '<div class="form-row"><label>Freigegebene Gemini-Modelle (je Zeile)</label><textarea id="cf-allowedModels" rows="4" class="mono">' + h(c.allowedModels.join('\n')) + '</textarea></div>' +
       '<div class="form-row"><label>E-Mails für neue Anträge (leer = alle Admins)</label><input id="cf-notifyEmails" value="' + h(c.notifyEmails.join(', ')) + '"></div>' +
       '<div class="form-row"><label>Google-Chat-Webhook für neue Anträge</label><input id="cf-chatWebhookUrl" value="' + h(c.chatWebhookUrl) + '" placeholder="https://chat.googleapis.com/v1/spaces/…"></div>' +
-      '<button class="btn btn-primary" onclick="App.saveConfig()">' + icon('save') + t('save') + '</button></div>';
+      '<button class="btn btn-primary" onclick="App.saveConfig()">' + t('save') + '</button></div>';
   }
   function saveConfig() {
     call('apiHubAdminSaveConfig', { promptHubUrl: $('cf-promptHubUrl').value, allowedModels: $('cf-allowedModels').value.split('\n'), notifyEmails: $('cf-notifyEmails').value, chatWebhookUrl: $('cf-chatWebhookUrl').value })
       .then(function (r) { if (!r.success) return toast(r.error, true); S.boot.promptHubUrl = r.config.promptHubUrl; S.prompts = null; reloadAdmin('Konfiguration gespeichert'); });
   }
   function adminMaintenance(A) {
-    return '<div class="card red"><div class="section-title"><span>' + icon('build') + ' Wartung</span></div>' +
+    return '<div class="card red"><div class="section-title"><span>' + ' Wartung</span></div>' +
       '<div class="kv" style="margin-bottom:14px"><b>Run-Sperre</b><span>' + (A.running ? badge('b-yellow', 'gesetzt') : badge('b-green', 'frei')) + '</span></div>' +
-      '<div class="btn-row"><button class="btn btn-sm btn-secondary" onclick="App.forceUnlock()">' + icon('lock_open') + 'Run-Sperre lösen</button>' +
-      '<button class="btn btn-sm btn-secondary" onclick="App.clearCache()">' + icon('cached') + 'Projekt-Cache leeren</button>' +
-      '<button class="btn btn-sm btn-secondary" onclick="App.debugProjects()">' + icon('bug_report') + 'Projektsuche testen</button>' +
-      '<button class="btn btn-sm btn-secondary" onclick="App.openSheet()">' + icon('table_view') + t('open_sheet') + '</button>' +
-      '<button class="btn btn-sm btn-secondary" onclick="App.exportToPromptHub()">' + icon('move_up') + 'An Prompt Hub übergeben</button></div>' +
+      '<div class="btn-row"><button class="btn btn-sm btn-secondary" onclick="App.forceUnlock()">' + 'Run-Sperre lösen</button>' +
+      '<button class="btn btn-sm btn-secondary" onclick="App.clearCache()">' + 'Projekt-Cache leeren</button>' +
+      '<button class="btn btn-sm btn-secondary" onclick="App.debugProjects()">' + 'Projektsuche testen</button>' +
+      '<button class="btn btn-sm btn-secondary" onclick="App.openSheet()">' + t('open_sheet') + '</button>' +
+      '<button class="btn btn-sm btn-secondary" onclick="App.exportToPromptHub()">' + 'An Prompt Hub übergeben</button></div>' +
       '<p class="hint" style="margin-top:10px">„An Prompt Hub übergeben“ schreibt Spaces, Nutzer und Admins des alten Prompt Editors in den Tab „Prompt Hub Import“. Der Prompt Hub übernimmt sie daraus.</p><div id="mtResult" style="margin-top:12px"></div></div>';
   }
   function forceUnlock() {
@@ -1047,7 +1077,7 @@ var App = (function () {
     call('apiHubDebugProjects').then(function (r) { $('mtResult').innerHTML = r.success ? '<pre class="prompt-view">' + h(r.resultText) + '</pre>' : errBox(r.error); });
   }
   function adminAudit(A) {
-    return '<div class="card black wide"><div class="section-title"><span>' + icon('history') + ' Audit-Log</span></div><div class="table-wrap" style="max-height:420px;overflow:auto"><table class="history-table"><thead><tr><th>Zeit</th><th>Aktion</th><th>Details</th></tr></thead><tbody>' +
+    return '<div class="card black wide"><div class="section-title"><span>' + ' Audit-Log</span></div><div class="table-wrap" style="max-height:420px;overflow:auto"><table class="history-table"><thead><tr><th>Zeit</th><th>Aktion</th><th>Details</th></tr></thead><tbody>' +
       A.audit.map(function (a) { return '<tr><td style="white-space:nowrap">' + h(fmtDate(a.timestamp)) + '</td><td>' + h(a.action) + '</td><td>' + h(a.details) + '</td></tr>'; }).join('') + '</tbody></table></div></div>';
   }
 
@@ -1057,18 +1087,19 @@ var App = (function () {
   function renderDenied() {
     var b = S.boot;
     $('tab-denied').classList.add('active');
-    $('tab-denied').innerHTML = '<div class="denied"><span class="material-icons-outlined big">block</span><h1 style="text-transform:uppercase">' + t('denied_title') + '</h1><p style="font-size:16px;line-height:1.6;color:var(--text-sub)">' + t('denied_text') + '</p></div>' +
-      '<div class="admin-grid"><div class="card yellow"><div class="section-title"><span>' + icon('key') + ' ' + t('request_access') + '</span></div>' +
-      '<div class="form-row"><label>Rolle</label><select id="rqRole"><option value="viewer">' + t('role_viewer') + ' – Dashboard, Run Log, Prompts</option><option value="operator">' + t('role_operator') + ' – zusätzlich Läufe, Poller, Re-Push, Analysen</option></select></div>' +
+    $('tab-denied').innerHTML = '<div class="denied"><div class="eyebrow">AutoFix Hub</div><h1>' + t('denied_title') + '</h1><p class="page-sub" style="font-size:15px">' + t('denied_text') + '</p>' +
+      (b.promptHubUrl ? '<div class="btn-row" style="margin-top:16px"><a class="btn btn-primary" href="' + h(b.promptHubUrl) + '" target="_blank" rel="noopener">' + t('open_prompt_hub') + '</a></div>' : '') + '</div>' +
+      '<div class="admin-grid" style="max-width:1100px;margin:24px auto 0"><div class="card"><div class="section-title"><span>' + t('request_access') + '</span></div>' +
+      '<p class="hint">Nur nötig, wenn du AutoFix selbst betreust: Läufe, Poller, Run Log, Einstellungen.</p>' +
       '<div class="form-row"><label>' + t('reason') + ' <span style="color:var(--red)">*</span></label><textarea id="rqReason" rows="3"></textarea></div>' +
-      '<button class="btn btn-primary" onclick="App.requestAccess()">' + icon('send') + t('send') + '</button></div>' +
-      '<div class="card black"><div class="section-title"><span>' + t('my_requests') + '</span></div>' +
-      ((b.myRequests || []).length ? '<table class="history-table"><tbody>' + b.myRequests.map(function (r) {
-        return '<tr><td>' + h(fmtDate(r.createdAt)) + '</td><td>' + t('role_' + r.role) + '</td><td>' + badge(r.status === 'approved' ? 'b-green' : r.status === 'rejected' ? 'b-red' : 'b-yellow', t(r.status)) + '</td><td>' + h(r.comment || '') + '</td></tr>';
-      }).join('') + '</tbody></table>' : empty('Noch keine Anträge.')) + '</div></div>';
+      '<button class="btn btn-secondary" onclick="App.requestAccess()">' + t('send') + '</button></div>' +
+      '<div class="card"><div class="section-title"><span>' + t('my_requests') + '</span></div>' +
+      ((b.myRequests || []).length ? '<div class="table-wrap"><table class="history-table"><tbody>' + b.myRequests.map(function (r) {
+        return '<tr><td>' + h(fmtDate(r.createdAt)) + '</td><td>' + badge(r.status === 'approved' ? 'b-green' : r.status === 'rejected' ? 'b-red' : 'b-yellow', t(r.status)) + '</td><td>' + h(r.comment || '') + '</td></tr>';
+      }).join('') + '</tbody></table></div>' : empty('Noch keine Anträge.')) + '</div></div>';
   }
   function requestAccess() {
-    call('apiHubRequestAccess', $('rqRole').value, $('rqReason').value).then(function (r) {
+    call('apiHubRequestAccess', $('rqReason').value).then(function (r) {
       if (!r.success) return toast(r.error, true);
       toast('Antrag gesendet. Du bekommst eine E-Mail, sobald er entschieden ist.');
       S.boot.myRequests = r.myRequests; renderDenied();
@@ -1080,11 +1111,13 @@ var App = (function () {
       ['Wo ändere ich die Prompts?', 'Im Prompt Hub. Dort sind die Prompts strukturiert, werden vor dem Veröffentlichen geprüft, lassen sich live testen und sind versioniert. Der Reiter „Prompts“ hier zeigt, was AutoFix gerade verwendet.'],
       ['Was ist der Unterschied zwischen Poller und „AutoFix jetzt starten“?', 'Der Poller läuft im Hintergrund alle 5, 10 oder 30 Minuten. „Jetzt starten“ löst sofort einen Lauf aus und zeigt den Fortschritt im Live-Run. Beide nutzen dieselbe Logik und dieselbe Run-Sperre, es läuft nie mehr als ein Lauf gleichzeitig.'],
       ['Was bedeutet Re-Push?', 'Die gespeicherten Änderungen eines Laufs werden erneut in einen Job geschrieben, zum Beispiel nach einem erneuten Import. Der Abgleich läuft über den Source-Text, Gemini wird nicht erneut aufgerufen.'],
-      ['Welche Rolle brauche ich?', '„Ansehen“: Dashboard, Warteschlange, Run Log, Prompts. „Ausführen“: zusätzlich Läufe, Poller, Re-Push und Analysen (die Gemini aufrufen). „Admin“: Einstellungen, Nutzer, Freigaben, Wartung.'],
+      ['Wer hat Zugriff auf AutoFix Hub?', 'Nur Admins. AutoFix Hub ist das Werkzeug zum Betreuen von AutoFix: Läufe, Poller, Run Log, Analysen, Einstellungen und Wartung. Prompts, Styleguides und Kontext-Dateien pflegen alle im Prompt Hub. Wer Admin werden möchte, stellt den Antrag direkt in der App.'],
       ['Warum sind TM Threshold und Poller-Intervall „ohne Wirkung“?', 'Der aktuelle AutoFix-Code liest diese beiden Werte nicht. Den Poller-Takt bestimmst du beim Starten; TM-Treffer werden derzeit nicht an Gemini übergeben.']
     ];
-    $('tab-help').innerHTML = '<div class="card black"><div class="section-title"><span>' + icon('help_outline') + ' ' + t('tab_help') + '</span></div>' +
-      faq.map(function (f) { return '<details class="faq-item"><summary>' + f[0] + '</summary><div class="faq-answer">' + f[1] + '</div></details>'; }).join('') + '</div>';
+    var v = S.boot.version || {};
+    $('tab-help').innerHTML = '<div class="page-head"><div><div class="eyebrow">' + t('tab_help') + '</div><h1 class="page-title">Fragen und Antworten</h1></div></div>' +
+      faq.map(function (f) { return '<details class="faq-item"><summary>' + f[0] + '</summary><div class="faq-answer">' + f[1] + '</div></details>'; }).join('') +
+      '<div class="version-line">AutoFix Hub ' + h(v.version || 'dev') + (v.commit ? ' · ' + h(String(v.commit).substring(0, 7)) : '') + (v.builtAt ? ' · ' + h(fmtDate(v.builtAt)) : '') + '</div>';
   }
 
   document.addEventListener('DOMContentLoaded', init);
@@ -1095,7 +1128,7 @@ var App = (function () {
     runManual: runManual, lrClear: lrClear, reloadQueue: reloadQueue,
     reloadLogs: reloadLogs, setLogFilter: setLogFilter, toggleDiff: toggleDiff, openReplay: openReplay,
     setSub: setSub, runAnalysis: runAnalysis,
-    decide: decide, saveUser: saveUser, addUser: addUser, removeUser: removeUser, setAdmin: setAdmin,
+    decide: decide, setAdmin: setAdmin,
     saveSettings: saveSettings, saveConfig: saveConfig, forceUnlock: forceUnlock, clearCache: clearCache, exportToPromptHub: exportToPromptHub, debugProjects: debugProjects,
     requestAccess: requestAccess, _state: S
   };
