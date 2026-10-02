@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 // Design-Waechter: Die Hubs sind in Google Sites eingebettet und sehen aus
-// wie Terminologie-Hub und Translation Services.
+// wie Kaercher Translation Services (und der Prompt Editor).
 //   - keine Icon-Schriften (Material Icons), keine Logos/Bilder, keine Emojis
 //   - keine externen Stylesheets oder Skripte
 //   - gemeinsame Design-Tokens vorhanden
@@ -23,7 +23,7 @@ const FORBIDDEN = [
   { re: /\bbrand-mark\b|\bclass="brand\b/i, msg: 'Logo-/Titelleiste' },
   { re: /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B50}\u{2705}\u{274C}]/u, msg: 'Emoji/Piktogramm' }
 ];
-const TOKENS = ['--wash: #f4f4f0', '--yellow: #FFED00', '--fill: linear-gradient(135deg, #FFED00 0%, #FFD500 100%)', '--r-lg: 18px', '"Helvetica Neue", Helvetica, Arial, sans-serif'];
+const TOKENS = ['--yellow: #FFED00', '--wash: #fff', 'border-top: 5px solid var(--yellow)', '--r: 0; --r-lg: 0', '"Helvetica Neue", Helvetica, Arial, sans-serif'];
 
 function read(rel) { return fs.readFileSync(path.join(ROOT, rel), 'utf8'); }
 function baseOf(text) { return text.includes('<style>') ? text.split('<style>')[1].split('</style>')[0].trim() : text.trim(); }
