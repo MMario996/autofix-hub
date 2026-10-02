@@ -21,28 +21,27 @@ async function open(scenario, opts) {
   const ctx = await browser.newContext({ viewport: (opts && opts.viewport) || { width: 1400, height: 900 } });
   const page = await ctx.newPage();
   page.errors = [];
+  page.requests = [];
   page.on('pageerror', (e) => page.errors.push(e.message));
-  await page.route('https://fonts.googleapis.com/**', (r) => r.fulfill({ status: 200, contentType: 'text/css', body: '' }));
+  page.on('request', (r) => { if (!r.url().startsWith('file:')) page.requests.push(r.url()); });
   await page.goto('file://' + file);
   await page.waitForSelector('#tabNav:not(.hidden), #tab-denied .denied');
   return page;
 }
 const visibleTabs = (p) => p.$$eval('.tab-btn:not(.hidden)', (b) => b.map((x) => x.getAttribute('data-tab')));
 
-test('Ansehen: Dashboard ohne Start-Knoepfe, kein Admin-Tab', async () => {
-  const p = await open('viewer');
+test('Admin: alle Reiter, keine Icons, keine externen Anfragen', async () => {
+  const p = await open('admin');
   await p.waitForSelector('.kpi-grid');
-  assert.deepEqual(await visibleTabs(p), ['dashboard', 'liverun', 'queue', 'runlog', 'analysis', 'prompts', 'help']);
-  assert.equal(await p.$('button:has-text("AutoFix jetzt starten")'), null);
-  assert.equal(await p.$('button:has-text("10 Min")'), null);
-  await p.click('#tabbtn-runlog');
-  await p.waitForSelector('#logTable table');
-  assert.equal(await p.$('#logTable button:has-text("Re-Push")'), null);
+  assert.deepEqual(await visibleTabs(p), ['dashboard', 'liverun', 'queue', 'runlog', 'analysis', 'prompts', 'admin', 'help']);
+  assert.equal(await p.$('.material-icons-outlined, img'), null, 'keine Icons, keine Bilder');
+  assert.deepEqual(p.requests, [], 'keine Anfragen an fremde Server (Icon-Schriften, Logos)');
+  assert.equal(await p.textContent('#userChip'), 'mario.magliano@karcher.com');
   assert.deepEqual(p.errors, []);
 });
 
 test('Ausfuehren: Lauf starten, Fortschritt im Live-Run', async () => {
-  const p = await open('operator');
+  const p = await open('admin');
   await p.waitForSelector('.kpi-grid');
   await p.click('button:has-text("AutoFix jetzt starten")');
   await p.waitForSelector('.run-dot.done');
@@ -54,7 +53,7 @@ test('Ausfuehren: Lauf starten, Fortschritt im Live-Run', async () => {
 });
 
 test('Run Log: Filter, Diff und Re-Push', async () => {
-  const p = await open('operator');
+  const p = await open('admin');
   await p.click('#tabbtn-runlog');
   await p.waitForSelector('#logTable table');
   await p.selectOption('#tab-runlog select >> nth=0', 'fail');
@@ -73,7 +72,7 @@ test('Run Log: Filter, Diff und Re-Push', async () => {
 });
 
 test('Analysen: MQM-Report und Unterbereiche', async () => {
-  const p = await open('operator');
+  const p = await open('admin');
   await p.click('#tabbtn-analysis');
   await p.click('#tab-analysis button:has-text("Erzeugen") >> nth=0');
   await p.waitForSelector('#anResult .kpi-grid');
@@ -87,7 +86,7 @@ test('Analysen: MQM-Report und Unterbereiche', async () => {
 });
 
 test('Prompts: nur lesen, Link in den Prompt Hub', async () => {
-  const p = await open('viewer');
+  const p = await open('admin');
   await p.click('#tabbtn-prompts');
   await p.waitForSelector('.space-grid');
   assert.equal(await p.$$eval('.space-tile', (t) => t.length), 4);
@@ -96,11 +95,12 @@ test('Prompts: nur lesen, Link in den Prompt Hub', async () => {
   assert.equal(await p.$('#tab-prompts textarea'), null, 'nicht editierbar');
 });
 
-test('Admin: Antrag freigeben und Einstellung speichern', async () => {
+test('Admin: Antrag auf Admin-Zugang freigeben und Einstellung speichern', async () => {
   const p = await open('admin');
   assert.equal(await p.textContent('#adminCount'), '1');
   await p.click('#tabbtn-admin');
   await p.waitForSelector('#tab-admin .admin-grid');
+  assert.equal(await p.$('#tab-admin select[id^="rq-role"]'), null, 'keine Rollenauswahl mehr');
   await p.click('button:has-text("Freigeben")');
   await p.waitForSelector('#tab-admin td b:has-text("anna.nowak@karcher.com")');
   await p.fill('#st-maxTokens', '16384');
@@ -109,8 +109,11 @@ test('Admin: Antrag freigeben und Einstellung speichern', async () => {
   assert.deepEqual(p.errors, []);
 });
 
-test('Kein Zugriff: Antrag in der App', async () => {
+test('Kein Zugriff: Hinweis auf den Prompt Hub, Antrag auf Admin-Zugang', async () => {
   const p = await open('denied');
+  assert.match(await p.textContent('#tab-denied'), /den Admins vorbehalten/);
+  assert.match(await p.getAttribute('#tab-denied a.btn', 'href'), /PROMPT-HUB\/exec$/);
+  assert.match(await p.textContent('#tab-denied'), /Abgelehnt/);
   await p.click('button:has-text("Absenden")');
   await p.waitForSelector('#toast.show');
   assert.match(await p.textContent('#toast'), /begründen/);
@@ -124,8 +127,10 @@ test('Offener Modus zeigt Hinweis; Sprache und Dark Mode', async () => {
   assert.equal(await p.isVisible('#openModeBanner'), true);
   await p.click('.lang-btn[data-lang="en"]');
   assert.equal(await p.textContent('#tabbtn-queue'), 'Queue');
+  assert.equal(await p.textContent('#themeBtn'), 'Dark');
   await p.click('#themeBtn');
   assert.equal(await p.getAttribute('html', 'data-theme'), 'dark');
+  assert.equal(await p.textContent('#themeBtn'), 'Light');
   assert.deepEqual(p.errors, []);
 });
 

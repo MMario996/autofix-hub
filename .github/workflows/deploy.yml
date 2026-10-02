@@ -5,7 +5,11 @@ name: CD
 #   Produktion - nur Release-Tags (v1.2.3) und nur nach Freigabe in der
 #                GitHub-Umgebung "production" (Settings -> Environments ->
 #                production -> Required reviewers)
-# Vor jedem Deploy laeuft die komplette CI (workflow_call).
+# Vor jedem Deploy laeuft die komplette CI (workflow_call). Danach:
+#   Version stempeln (sichtbar unter "Hilfe") -> clasp push -> Bereitstellung
+#   aktualisieren -> Gegenprobe -> bei Tags GitHub-Release mit Notizen.
+# Zurueckrollen: Actions -> CD -> "Run workflow" -> Ziel production, als Ref
+# den vorigen Tag waehlen. Siehe docs/CI-CD.md.
 # Laeuft nur, wenn die Secrets gesetzt sind (sonst Hinweis, kein Fehler):
 #   CLASPRC_JSON                      ~/.clasprc.json des Deploy-Kontos
 #   STAGING_SCRIPT_ID, STAGING_DEPLOYMENT_ID
@@ -40,22 +44,32 @@ jobs:
     needs: [ci]
     if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.target == 'staging')
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment:
       name: staging
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/clasp-deploy
+      - id: deploy
+        uses: ./.github/actions/clasp-deploy
         with:
           clasprc: ${{ secrets.CLASPRC_JSON }}
           script-id: ${{ secrets.STAGING_SCRIPT_ID }}
           deployment-id: ${{ secrets.STAGING_DEPLOYMENT_ID }}
           description: Staging ${{ github.sha }}
+          version: staging
+      - name: Zusammenfassung
+        env:
+          DEPLOYED: ${{ steps.deploy.outputs.deployed }}
+        run: |
+          echo "## Staging" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$DEPLOYED" = "true" ]; then echo "Deployt: \`$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"; else echo "Übersprungen (Secrets für staging fehlen)." >> "$GITHUB_STEP_SUMMARY"; fi
 
   production:
     name: Deploy Produktion
     needs: [ci]
     if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.target == 'production')
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment:
       name: production
     permissions:
@@ -67,14 +81,29 @@ jobs:
         run: |
           git fetch origin main --depth=200
           git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "::error::Tag liegt nicht auf main."; exit 1; }
-      - uses: ./.github/actions/clasp-deploy
+      - name: Tag passt zur Version in package.json?
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          pkg="v$(node -p "require('./package.json').version")"
+          if [ "$pkg" != "$GITHUB_REF_NAME" ]; then
+            echo "::warning::Tag $GITHUB_REF_NAME, package.json sagt $pkg. Bitte package.json mitziehen (npm version)."
+          fi
+      - id: deploy
+        uses: ./.github/actions/clasp-deploy
         with:
           clasprc: ${{ secrets.CLASPRC_JSON }}
           script-id: ${{ secrets.PROD_SCRIPT_ID }}
           deployment-id: ${{ secrets.PROD_DEPLOYMENT_ID }}
           description: ${{ github.ref_name }}
+          version: ${{ github.ref_name }}
       - name: GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && steps.deploy.outputs.deployed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag || echo "::notice::Release existiert bereits."
+      - name: Zusammenfassung
+        env:
+          DEPLOYED: ${{ steps.deploy.outputs.deployed }}
+        run: |
+          echo "## Produktion" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$DEPLOYED" = "true" ]; then echo "Deployt: \`$GITHUB_REF_NAME\` (\`$GITHUB_SHA\`)" >> "$GITHUB_STEP_SUMMARY"; else echo "Übersprungen (Secrets für production fehlen)." >> "$GITHUB_STEP_SUMMARY"; fi

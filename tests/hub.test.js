@@ -49,34 +49,44 @@ test('Admins werden aus dem alten Prompt Editor uebernommen', () => {
   assert.equal(G.apiHubDashboard().success, false);
 });
 
-test('Rollen: Ansehen darf lesen, aber nicht starten; Ausfuehren darf starten, aber nicht administrieren', () => {
+test('Nur Admins: alle anderen haben keinen Zugriff, auch nicht ueber direkte Aufrufe', () => {
   const { G, as, state } = setup({ legacyAdmins: [ADMIN] });
-  ok(G.apiHubAdminSaveUser({ email: 'view@karcher.com', role: 'viewer' }));
-  ok(G.apiHubAdminSaveUser({ email: 'op@karcher.com', role: 'operator' }));
+  // Fruehere Rollen (viewer/operator) aus AUTOFIX_HUB_ACCESS gelten nicht mehr
+  ok(G.apiHubBootstrap()); // uebernimmt die Admins des alten Prompt Editors
+  const st = JSON.parse(state.scriptProps.AUTOFIX_HUB_ACCESS);
+  st.users = [{ email: 'op@karcher.com', role: 'operator', active: true }, { email: 'view@karcher.com', role: 'viewer', active: true }];
+  state.scriptProps.AUTOFIX_HUB_ACCESS = JSON.stringify(st);
 
-  as('view@karcher.com');
-  ok(G.apiHubDashboard());
-  ok(G.apiHubRunLogs());
-  ok(G.apiHubPrompts());
-  assert.match(G.apiHubRunNow().error, /Berechtigung/);
-  assert.match(G.apiHubPollerStart(10).error, /Berechtigung/);
-  assert.match(G.apiHubMqm({}).error, /Berechtigung/);
-  // auch der direkte Aufruf der bestehenden Funktionen ist geschuetzt
-  assert.match(G.runNow().error, /Berechtigung/);
-  assert.match(G.replayChangesForJob('a', 'b', '[]').error, /Berechtigung/);
-  assert.match(G.setupAutoFixTrigger(5).error, /Berechtigung/);
+  ['op@karcher.com', 'view@karcher.com', 'fremd@karcher.com'].forEach((who) => {
+    as(who);
+    const b = ok(G.apiHubBootstrap());
+    assert.equal(b.authorized, false, who);
+    assert.equal(b.role, '', who);
+    assert.match(G.apiHubDashboard().error, /Berechtigung/);
+    assert.match(G.apiHubRunLogs().error, /Berechtigung/);
+    assert.match(G.apiHubPrompts().error, /Berechtigung/);
+    assert.match(G.apiHubRunNow().error, /Berechtigung/);
+    assert.match(G.apiHubPollerStart(10).error, /Berechtigung/);
+    assert.match(G.apiHubAdminState().error, /Berechtigung/);
+    // auch der direkte Aufruf der bestehenden Funktionen ist geschuetzt
+    assert.match(G.runNow().error, /Berechtigung/);
+    assert.match(G.replayChangesForJob('a', 'b', '[]').error, /Berechtigung/);
+    assert.match(G.setupAutoFixTrigger(5).error, /Berechtigung/);
+    assert.match(G.forceUnlock().error, /Berechtigung/);
+    assert.match(G.recreateDatabase().error, /Berechtigung/);
+  });
   assert.equal(state.triggers.length, 0);
 
-  as('op@karcher.com');
+  as(ADMIN);
+  ok(G.apiHubDashboard());
   ok(G.apiHubPollerStart(10));
   assert.deepEqual(plain(state.triggers), ['autoFixPoller']);
   assert.equal(state.triggerMinutes, 10);
   assert.equal(G.apiHubPollerStart(7).success, false, 'nur erlaubte Intervalle');
   ok(G.apiHubPollerStop());
   assert.equal(state.triggers.length, 0);
-  assert.match(G.apiHubAdminState().error, /Berechtigung/);
-  assert.match(G.forceUnlock().error, /Berechtigung/, 'Run-Sperre nur fuer Admins');
-  assert.match(G.recreateDatabase().error, /Berechtigung/);
+  assert.equal(typeof G.apiHubAdminSaveUser, 'undefined', 'keine Nutzerverwaltung mehr');
+  assert.equal(ok(G.apiHubAdminState()).users, undefined);
 });
 
 test('Trigger laufen weiter: autoFixPoller ist nicht an eine Rolle gebunden', () => {
@@ -85,22 +95,36 @@ test('Trigger laufen weiter: autoFixPoller ist nicht an eine Rolle gebunden', ()
   assert.doesNotMatch(src, /hubDenied_/);
 });
 
-test('Antrag -> Freigabe mit angepasster Rolle -> Zugriff', () => {
+test('Antrag auf Admin-Zugang -> Freigabe -> Admin', () => {
   const { G, as, state } = setup({ legacyAdmins: [ADMIN] });
   as('neu@karcher.com');
-  assert.equal(G.apiHubRequestAccess('operator', '').success, false, 'Begruendung ist Pflicht');
-  assert.equal(G.apiHubRequestAccess('admin', 'x').success, false, 'Admin kann man nicht beantragen');
-  ok(G.apiHubRequestAccess('operator', 'Betreue PL'));
-  assert.equal(G.apiHubRequestAccess('viewer', 'nochmal').success, false, 'nur ein offener Antrag');
-  assert.ok(state.mails.some((m) => /Zugriffsantrag/.test(m.subject)));
+  assert.equal(G.apiHubRequestAccess('').success, false, 'Begruendung ist Pflicht');
+  ok(G.apiHubRequestAccess('Betreue die PL-Laeufe'));
+  assert.equal(G.apiHubRequestAccess('nochmal').success, false, 'nur ein offener Antrag');
+  assert.ok(state.mails.some((m) => /Admin-Zugang/.test(m.subject)));
   as(ADMIN);
   const st = ok(G.apiHubAdminState());
   const req = st.requests.find((r) => r.email === 'neu@karcher.com');
-  ok(G.apiHubAdminDecide(req.id, true, 'viewer', 'erstmal lesen'));
-  assert.equal(G.apiHubAdminDecide(req.id, true, 'viewer', '').success, false);
+  assert.equal(req.role, 'admin');
+  const d = ok(G.apiHubAdminDecide(req.id, true, 'willkommen'));
+  assert.ok(d.admins.includes('neu@karcher.com'));
+  assert.equal(G.apiHubAdminDecide(req.id, true, '').success, false, 'nicht doppelt entscheiden');
   assert.ok(state.mails.some((m) => m.to === 'neu@karcher.com' && /freigegeben/.test(m.subject)));
   as('neu@karcher.com');
-  assert.equal(ok(G.apiHubBootstrap()).role, 'viewer');
+  const b = ok(G.apiHubBootstrap());
+  assert.equal(b.role, 'admin');
+  assert.equal(G.apiHubRequestAccess('noch einmal').success, false, 'Admins beantragen nichts');
+});
+
+test('Abgelehnter Antrag gibt keinen Zugriff', () => {
+  const { G, as } = setup({ legacyAdmins: [ADMIN] });
+  as('neu@karcher.com');
+  ok(G.apiHubRequestAccess('bitte'));
+  as(ADMIN);
+  const req = ok(G.apiHubAdminState()).requests[0];
+  ok(G.apiHubAdminDecide(req.id, false, 'Bitte den Prompt Hub nutzen'));
+  as('neu@karcher.com');
+  assert.equal(ok(G.apiHubBootstrap()).authorized, false);
 });
 
 test('Settings: nur geaenderte Zeilen, Prompts bleiben erhalten (alter Fehler der UI)', () => {

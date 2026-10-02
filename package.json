@@ -8,9 +8,12 @@
     "test": "node tests/run-all.js",
     "test:ui": "node --test --test-concurrency=1 tests-ui/render.test.js",
     "lint": "eslint .",
-    "check": "node tools/build-index.js --check",
+    "check": "node tools/build-index.js --check && node tools/check-encoding.js && node tools/check-design.js",
     "preview": "node tools/build-preview.js --scenario=admin --out=preview/admin.html",
-    "mockups": "node tools/screenshots.js"
+    "mockups": "node tools/screenshots.js",
+    "check:encoding": "node tools/check-encoding.js",
+    "check:design": "node tools/check-design.js",
+    "ci": "npm run lint && npm run check && npm test"
   },
   "engines": {
     "node": ">=20"

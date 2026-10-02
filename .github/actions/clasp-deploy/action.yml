@@ -1,5 +1,5 @@
 name: clasp deploy
-description: Schiebt die App-Dateien per clasp in ein Apps-Script-Projekt und aktualisiert die Web-App-Bereitstellung.
+description: Stempelt die Version, schiebt die App-Dateien per clasp in ein Apps-Script-Projekt, aktualisiert die Web-App-Bereitstellung und prueft das Ergebnis.
 inputs:
   clasprc:
     description: Inhalt von ~/.clasprc.json
@@ -13,6 +13,13 @@ inputs:
   description:
     description: Beschreibung der Version
     required: true
+  version:
+    description: Versionsname fuer die Anzeige in der App (Tag oder main-<sha>)
+    required: true
+outputs:
+  deployed:
+    description: true, wenn wirklich deployt wurde
+    value: ${{ steps.gate.outputs.run }}
 runs:
   using: composite
   steps:
@@ -33,6 +40,12 @@ runs:
       if: steps.gate.outputs.run == 'true'
       with:
         node-version: 22
+    - name: Version stempeln
+      if: steps.gate.outputs.run == 'true'
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+      run: node tools/stamp-version.js --version="$VERSION" --commit="$GITHUB_SHA"
     - name: clasp einrichten
       if: steps.gate.outputs.run == 'true'
       shell: bash
@@ -40,7 +53,7 @@ runs:
         CLASPRC: ${{ inputs.clasprc }}
         SCRIPT_ID: ${{ inputs.script-id }}
       run: |
-        npm install -g @google/clasp@2
+        npm install -g @google/clasp@2.4.2
         printf '%s' "$CLASPRC" > ~/.clasprc.json
         printf '{"scriptId":"%s","rootDir":"."}' "$SCRIPT_ID" > .clasp.json
     - name: Code hochladen
@@ -54,6 +67,21 @@ runs:
         DEPLOYMENT_ID: ${{ inputs.deployment-id }}
         DESCRIPTION: ${{ inputs.description }}
       run: clasp deploy --deploymentId "$DEPLOYMENT_ID" --description "${DESCRIPTION:0:90}"
+    - name: Gegenprobe - zeigt die Bereitstellung auf die neue Version?
+      if: steps.gate.outputs.run == 'true' && inputs.deployment-id != ''
+      shell: bash
+      env:
+        DEPLOYMENT_ID: ${{ inputs.deployment-id }}
+        DESCRIPTION: ${{ inputs.description }}
+      run: |
+        clasp deployments | tee deployments.txt
+        line=$(grep -F "$DEPLOYMENT_ID" deployments.txt || true)
+        if [ -z "$line" ]; then echo "::error::Bereitstellung $DEPLOYMENT_ID nicht gefunden."; exit 1; fi
+        if ! printf '%s' "$line" | grep -qF "${DESCRIPTION:0:40}"; then
+          echo "::error::Bereitstellung zeigt nicht auf die neue Version: $line"; exit 1
+        fi
+        echo "Bereitstellung aktuell: $line"
+        rm -f deployments.txt
     - name: Zugangsdaten entfernen
       if: always()
       shell: bash

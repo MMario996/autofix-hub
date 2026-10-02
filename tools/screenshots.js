@@ -25,8 +25,6 @@ async function open(browser, scenario, opts) {
 async function shot(p, name, full) {
   fs.mkdirSync(OUT, { recursive: true });
   await p.evaluate(() => document.fonts.ready);
-  await p.waitForFunction(() => { const s = document.querySelector('.material-icons-outlined'); return !s || getComputedStyle(s).fontFamily.indexOf('Material') === -1 || document.fonts.check('24px "Material Icons Outlined"'); }, null, { timeout: 15000 }).catch(() => console.warn('  (Icon-Schrift nicht geladen)'));
-  await p.evaluate(() => document.fonts.load('24px "Material Icons Outlined"')).catch(() => {});
   await p.waitForTimeout(300);
   await p.screenshot({ path: path.join(OUT, name + '.png'), fullPage: !!full });
   console.log('  ' + name + '.png');
@@ -36,7 +34,7 @@ async function main() {
   const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
   const errors = [];
   try {
-    let p = await open(browser, 'operator');
+    let p = await open(browser, 'admin');
     await p.waitForSelector('.kpi-grid');
     await shot(p, '01-dashboard');
     await p.click('#tabbtn-liverun');
@@ -76,12 +74,12 @@ async function main() {
     await shot(p, '10-kein-zugriff');
     errors.push(...p.errors);
 
-    p = await open(browser, 'viewer', { dark: true });
+    p = await open(browser, 'admin', { dark: true });
     await p.waitForSelector('.kpi-grid');
-    await shot(p, '11-dark-mode-ansehen');
+    await shot(p, '11-dark-mode');
     errors.push(...p.errors);
 
-    p = await open(browser, 'operator', { viewport: { width: 390, height: 844 } });
+    p = await open(browser, 'admin', { viewport: { width: 390, height: 844 } });
     await p.waitForSelector('.kpi-grid');
     await shot(p, '12-mobil');
     errors.push(...p.errors);

@@ -3,8 +3,9 @@
 (function () {
   'use strict';
   var SC = window.SCENARIO || 'admin';
-  var EMAIL = { admin: 'mario.magliano@karcher.com', operator: 'lena.fischer@karcher.com', viewer: 'sofia.rossi@karcher.com', denied: 'max.muster@karcher.com', open: 'mario.magliano@karcher.com' }[SC];
-  var ROLE = { admin: 'admin', operator: 'operator', viewer: 'viewer', denied: '', open: 'admin' }[SC];
+  // AutoFix Hub kennt nur noch Admins (und den offenen Modus ohne Admins)
+  var EMAIL = { admin: 'mario.magliano@karcher.com', denied: 'lena.fischer@karcher.com', open: 'mario.magliano@karcher.com' }[SC];
+  var ROLE = { admin: 'admin', denied: '', open: 'admin' }[SC];
   var DAY = 24 * 3600 * 1000, NOW = Date.UTC(2026, 8, 30, 8, 0);
   function iso(daysAgo, h) { return new Date(NOW - daysAgo * DAY + (h || 0) * 3600000).toISOString(); }
 
@@ -24,27 +25,24 @@
   var db = {
     poller: { active: true, triggerId: 't1' }, running: false,
     access: {
-      admins: ['mario.magliano@karcher.com'],
-      users: [
-        { email: 'lena.fischer@karcher.com', role: 'operator', active: true, addedBy: 'mario.magliano@karcher.com', addedAt: iso(20) },
-        { email: 'sofia.rossi@karcher.com', role: 'viewer', active: true, addedBy: 'mario.magliano@karcher.com', addedAt: iso(12) }
-      ],
+      admins: ['mario.magliano@karcher.com', 'jonas.weber@karcher.com'],
       requests: [
-        { id: 'r1', email: 'anna.nowak@karcher.com', role: 'operator', reason: 'Betreue die PL/CZ-Jobs und muss Re-Push auslösen', status: 'pending', createdAt: iso(0, -3) },
-        { id: 'r0', email: 'max.muster@karcher.com', role: 'viewer', reason: 'Qualitätsberichte ansehen', status: 'approved', createdAt: iso(8), comment: 'ok' }
+        { id: 'r1', email: 'anna.nowak@karcher.com', role: 'admin', reason: 'Übernehme die Betreuung der PL/CZ-Läufe und brauche Re-Push', status: 'pending', createdAt: iso(0, -3) },
+        { id: 'r0', email: 'lena.fischer@karcher.com', role: 'admin', reason: 'Qualitätsberichte ansehen', status: 'rejected', createdAt: iso(8), comment: 'Berichte bekommst du über den Prompt Hub bzw. per Export – Admin-Zugang ist für den Betrieb.' }
       ]
     },
     settings: { cfFieldUid: '1uw8kvE6WNhT6Gw0XeX4Z4', wfStepName: 'PE Gemini', markDoneAfterFix: true, primaryModel: 'gemini-3.6-flash', peTemperature: 0.1, maxTokens: 32768, tmThreshold: 0.7, pollerIntervalMinutes: 10 },
     config: { promptHubUrl: 'https://script.google.com/a/macros/karcher.com/s/PROMPT-HUB/exec', notifyEmails: [], chatWebhookUrl: '', allowedModels: ['gemini-3.6-flash', 'gemini-3.6-flash-lite', 'gemini-3.5-flash'] },
     runStatus: []
   };
-  if (SC === 'open') db.access = { admins: [], users: [], requests: [] };
+  if (SC === 'open') db.access = { admins: [], requests: [] };
   function eff() { return { model: db.settings.primaryModel, temperature: db.settings.peTemperature, maxTokens: db.settings.maxTokens, batchSize: 25, singleBatchMax: 60, ignoredOverrides: ['geminiModel_marketing', 'geminiTemp_marketing'] }; }
   function ok(o) { o.success = true; return o; }
 
   var H = {
     apiHubBootstrap: function () {
       return ok({ email: EMAIL, role: ROLE, authorized: !!ROLE, openMode: !db.access.admins.length, lang: 'de', promptHubUrl: db.config.promptHubUrl,
+        version: { version: 'v2.3.0', commit: 'f00dbabe12', builtAt: '2026-10-01T08:00:00Z' },
         myRequests: ROLE ? undefined : db.access.requests.filter(function (r) { return r.email === EMAIL; }),
         pendingRequests: ROLE === 'admin' ? db.access.requests.filter(function (r) { return r.status === 'pending'; }).length : undefined });
     },
@@ -120,30 +118,27 @@
         { type: 'campus', label: 'Campus', builtIn: false, managedByPromptHub: false, usesFallback: true, chars: 1653, text: '(Fallback: technischer Prompt)' }] });
     },
     apiHubDatabaseUrl: function () { return ok({ url: 'https://docs.google.com/spreadsheets/d/1LFoBCuz7h1xdi58djRPedAXgtj4RZ_T5EnvJbTKtkp8/edit' }); },
-    apiHubRequestAccess: function (role, reason) {
-      if (!reason) return { success: false, error: 'Bitte kurz begründen, wofür du den Zugriff brauchst.' };
-      db.access.requests.push({ id: 'r' + Date.now(), email: EMAIL, role: role, reason: reason, status: 'pending', createdAt: new Date().toISOString() });
+    apiHubRequestAccess: function (reason) {
+      if (!reason) return { success: false, error: 'Bitte kurz begründen, wofür du den Admin-Zugang brauchst.' };
+      db.access.requests.push({ id: 'r' + Date.now(), email: EMAIL, role: 'admin', reason: reason, status: 'pending', createdAt: new Date().toISOString() });
       return ok({ myRequests: db.access.requests.filter(function (r) { return r.email === EMAIL; }).reverse() });
     },
     apiHubAdminState: function () {
-      return ok({ settings: db.settings, effective: eff(), config: db.config, admins: db.access.admins, users: db.access.users, requests: db.access.requests.slice().reverse(), openMode: !db.access.admins.length, running: db.running, settingsError: '',
-        audit: [{ timestamp: iso(0, -1), action: 'Run gestartet (UI)', details: 'lena.fischer@karcher.com: ' }, { timestamp: iso(0, -3), action: 'Zugriff beantragt', details: 'anna.nowak@karcher.com: operator' }, { timestamp: iso(1), action: 'Prompt Updated', details: 'Prompt für Typ "p_d_dialogue" aktualisiert.' }] });
+      return ok({ settings: db.settings, effective: eff(), config: db.config, admins: db.access.admins, requests: db.access.requests.slice().reverse(), openMode: !db.access.admins.length, running: db.running, settingsError: '',
+        audit: [{ timestamp: iso(0, -1), action: 'Run gestartet (UI)', details: 'lena.fischer@karcher.com: ' }, { timestamp: iso(0, -3), action: 'Zugriff beantragt', details: 'anna.nowak@karcher.com: Übernehme die Betreuung der PL/CZ-Läufe' }, { timestamp: iso(1), action: 'Prompt Updated', details: 'Prompt für Typ "p_d_dialogue" aktualisiert.' }] });
     },
     apiHubAdminSaveSettings: function (p) { Object.keys(p).forEach(function (k) { db.settings[k] = k === 'markDoneAfterFix' ? p[k] === 'true' : p[k]; }); return ok({ saved: Object.keys(p) }); },
     apiHubAdminSaveConfig: function (p) { Object.keys(p).forEach(function (k) { db.config[k] = p[k]; }); return ok({ config: db.config }); },
-    apiHubAdminSaveUser: function (u) { db.access.users = db.access.users.filter(function (x) { return x.email !== u.email; }); u.addedAt = new Date().toISOString(); db.access.users.push(u); return ok({ users: db.access.users }); },
-    apiHubAdminRemoveUser: function (e) { db.access.users = db.access.users.filter(function (x) { return x.email !== e; }); return ok({}); },
     apiHubAdminSetAdmin: function (e, make) { if (make) db.access.admins.push(e); else db.access.admins = db.access.admins.filter(function (x) { return x !== e; }); return ok({ admins: db.access.admins }); },
-    apiHubAdminDecide: function (id, approve, role) {
+    apiHubAdminDecide: function (id, approve, comment) {
       var r = db.access.requests.filter(function (x) { return x.id === id; })[0];
-      r.status = approve ? 'approved' : 'rejected';
-      if (approve) db.access.users.push({ email: r.email, role: role, active: true, addedAt: new Date().toISOString() });
-      return ok({});
+      r.status = approve ? 'approved' : 'rejected'; r.comment = comment || '';
+      if (approve && db.access.admins.indexOf(r.email) === -1) db.access.admins.push(r.email);
+      return ok({ admins: db.access.admins });
     },
     apiHubAdminForceUnlock: function () { db.running = false; return ok({}); },
     apiHubAdminClearCache: function () { return ok({}); },
-    apiHubAdminExportToPromptHub: function () { return ok({ types: 5, users: 9, admins: 1 }); },
-    apiHubAdminPreviewAs: function (e) { return ok({ email: e, role: 'viewer' }); }
+    apiHubAdminExportToPromptHub: function () { return ok({ types: 5, users: 9, admins: 1 }); }
   };
 
   function runner(okFn, failFn) {
