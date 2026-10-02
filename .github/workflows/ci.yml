@@ -84,7 +84,7 @@ jobs:
       - run: npm run test:ui
       - name: Vorschau bei Fehlern sichern
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ui-preview-fehler
           path: preview/
@@ -108,12 +108,12 @@ jobs:
         run: |
           mkdir -p preview
           for s in admin denied open; do node tools/build-preview.js --scenario=$s --out=preview/vorschau-$s.html; done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: mockups
           path: docs/mockups/
           retention-days: 14
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: vorschau
           path: preview/vorschau-*.html
