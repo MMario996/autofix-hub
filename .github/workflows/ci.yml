@@ -48,6 +48,8 @@ jobs:
         run: npm run lint
       - name: Index.html aus ui/ aktuell
         run: node tools/build-index.js --check
+      - name: Struktur (Standard aller Repos)
+        run: npm run check:structure
       - name: Zeichenkodierung
         run: npm run check:encoding
       - name: Design (keine Icons/Logos, gemeinsame Tokens)

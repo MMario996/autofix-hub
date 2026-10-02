@@ -55,7 +55,7 @@ runs:
       run: |
         npm install -g @google/clasp@2.4.2
         printf '%s' "$CLASPRC" > ~/.clasprc.json
-        printf '{"scriptId":"%s","rootDir":"."}' "$SCRIPT_ID" > .clasp.json
+        printf '{"scriptId":"%s","rootDir":"src"}' "$SCRIPT_ID" > .clasp.json
     - name: Code hochladen
       if: steps.gate.outputs.run == 'true'
       shell: bash

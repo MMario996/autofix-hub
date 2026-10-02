@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const DIRS = ['.', 'ui', 'tools', 'tests', 'tests-ui', 'docs'];
+const DIRS = ['.', 'src', 'ui', 'tools', 'tests', 'tests-ui', 'docs'];
 const EXT = /\.(gs|html|js|json|md|css)$/;
 const SKIP = /(^|\/)(node_modules|preview|dist|\.git)(\/|$)|package-lock\.json$|encoding-baseline\.json$|check-encoding\.js$/;
 const BASELINE_FILE = path.join(__dirname, 'encoding-baseline.json');

@@ -19,7 +19,7 @@ function build() {
 }
 
 if (require.main === module) {
-  const target = path.join(ROOT, 'Index.html');
+  const target = path.join(ROOT, 'src', 'Index.html');
   if (process.argv.includes('--check')) {
     if (fs.readFileSync(target, 'utf8') !== build()) {
       console.error('Index.html ist veraltet. Bitte "node tools/build-index.js" ausfuehren.');

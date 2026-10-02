@@ -6,7 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const TARGET = path.join(__dirname, '..', 'HubVersion.gs');
+const TARGET = path.join(__dirname, '..', 'src', 'HubVersion.gs');
 const VAR = 'HUB_VERSION_INFO_';
 
 function arg(name) {

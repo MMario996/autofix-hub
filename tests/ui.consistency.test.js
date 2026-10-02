@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
-const { loadGas, ROOT } = require('./lib/gas');
+const { loadGas, ROOT, SRC } = require('./lib/gas');
 const { build } = require('../tools/build-index');
 
 const app = fs.readFileSync(path.join(ROOT, 'ui', 'app.js'), 'utf8');
@@ -14,7 +14,7 @@ const G = loadGas();
 const called = [...new Set([...app.matchAll(/call\('(\w+)'/g)].map((m) => m[1]))];
 
 test('Index.html ist aus ui/ generiert und aktuell', () => {
-  assert.equal(fs.readFileSync(path.join(ROOT, 'Index.html'), 'utf8'), build());
+  assert.equal(fs.readFileSync(path.join(SRC, 'Index.html'), 'utf8'), build());
 });
 
 test('die Oberflaeche ruft nur api*-Funktionen auf, und alle existieren', () => {
@@ -26,7 +26,7 @@ test('die Oberflaeche ruft nur api*-Funktionen auf, und alle existieren', () => 
 });
 
 test('jede api*-Funktion prueft eine Rolle (ausser Start, Sprache, Antrag)', () => {
-  const src = fs.readFileSync(path.join(ROOT, 'HubApi.gs'), 'utf8');
+  const src = fs.readFileSync(path.join(SRC, 'HubApi.gs'), 'utf8');
   const open = ['apiHubBootstrap', 'apiHubSetLang', 'apiHubRequestAccess'];
   [...src.matchAll(/^function (apiHub\w+)\(/gm)].map((m) => m[1]).forEach((fn) => {
     if (open.includes(fn)) return;
@@ -59,7 +59,7 @@ test('Vorschau-Backend kennt jede aufgerufene API', () => {
 });
 
 test('doGet laedt weiterhin Index als eine Datei (keine Includes noetig)', () => {
-  const code = fs.readFileSync(path.join(ROOT, 'Code.gs'), 'utf8');
+  const code = fs.readFileSync(path.join(SRC, 'Code.gs'), 'utf8');
   assert.match(code, /createHtmlOutputFromFile\('Index'\)/);
-  assert.doesNotMatch(fs.readFileSync(path.join(ROOT, 'Index.html'), 'utf8'), /<\?/);
+  assert.doesNotMatch(fs.readFileSync(path.join(SRC, 'Index.html'), 'utf8'), /<\?/);
 });

@@ -8,7 +8,7 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 
 function build(scenario) {
-  const html = fs.readFileSync(path.join(ROOT, 'Index.html'), 'utf8');
+  const html = fs.readFileSync(path.join(ROOT, 'src', 'Index.html'), 'utf8');
   const mock = '<script>window.SCENARIO = ' + JSON.stringify(scenario) + ';</script>\n<script>' + fs.readFileSync(path.join(__dirname, 'mock-backend.js'), 'utf8') + '</script>\n';
   const at = html.indexOf('<script>\n// Oberflaechentexte');
   if (at === -1) throw new Error('Einfuegepunkt fuer das Mock-Backend nicht gefunden.');

@@ -6,7 +6,7 @@ const globals = require('globals');
 // Die bestehenden AutoFix-Dateien (Code.gs, Settings.gs, ...) bleiben bewusst
 // aussen vor, damit an ihrer Logik nichts angefasst werden muss.
 module.exports = [
-  { ignores: ['node_modules/**', 'preview/**', 'docs/**', 'Index.html', 'Code.gs', 'Database.gs', 'Settings.gs', 'PromptEditorAccess.gs', 'Doget patch.gs'] },
+  { ignores: ['node_modules/**', 'preview/**', 'docs/**', 'dist/**', 'src/Index.html', 'src/Code.gs', 'src/Database.gs', 'src/Settings.gs', 'src/PromptEditorAccess.gs'] },
   js.configs.recommended,
   { rules: { 'no-empty': ['error', { allowEmptyCatch: true }], eqeqeq: ['error', 'always', { null: 'ignore' }] } },
   {

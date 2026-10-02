@@ -6,15 +6,16 @@ const path = require('path');
 const vm = require('vm');
 
 const ROOT = path.join(__dirname, '..', '..');
+const SRC = path.join(ROOT, 'src');
 const SKIP = ['Doget patch.gs'];
 
 function loadGas(globals) {
   const context = Object.assign({ console }, globals || {});
   vm.createContext(context);
-  fs.readdirSync(ROOT).filter((f) => f.endsWith('.gs') && !SKIP.includes(f)).sort().forEach((f) => {
-    vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), context, { filename: f });
+  fs.readdirSync(SRC).filter((f) => f.endsWith('.gs') && !SKIP.includes(f)).sort().forEach((f) => {
+    vm.runInContext(fs.readFileSync(path.join(SRC, f), 'utf8'), context, { filename: f });
   });
   return context;
 }
 
-module.exports = { loadGas, ROOT };
+module.exports = { loadGas, ROOT, SRC };

@@ -1,7 +1,6 @@
-# Nur App-Dateien hochladen. "Doget patch.gs" ist eine Kopiervorlage mit einem
-# zweiten doGet() und darf nicht ins Projekt.
+# clasp laeuft mit rootDir "src": nur App-Dateien hochladen.
+# Die Kopiervorlage "Doget patch.gs" liegt in dist/ und wird nicht hochgeladen.
 **/**
 !*.gs
 !*.html
 !appsscript.json
-Doget patch.gs
