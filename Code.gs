@@ -507,7 +507,7 @@ function buildPePrompt_(settings, sourceLang, targetLang, segments, batchInfo, a
     : '';
   var allIds = segments.map(function(s) { return '"' + s.id + '"'; }).join(', ');
 
-  var peInstructions = getPeInstructions_(settings, autoFixType);
+  var peInstructions = appendStyleguides_(getPeInstructions_(settings, autoFixType), autoFixType); // Styleguides.gs
   var consistencyBlock = buildConsistencyBlock_(consistency);
 
   return 'Du bist ein professioneller Post-Editor f?r Alfred K?rcher SE & Co. KG.\n' +
