@@ -127,6 +127,33 @@
       .test-output-text { background: #fff; border: 1px solid #e0e0e0; padding: 10px; font-size: 12.5px; line-height: 1.55; white-space: pre-wrap; }
       .test-output-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: #666; margin-top: 8px; }
       .test-output-meta b { color: #333; }
+      /* Styleguides */
+      .sg-box { margin-top: 14px; border: 1px solid var(--border-light); border-left: 4px solid var(--primary-yellow); padding: 10px 12px; background: #fff; }
+      .sg-box-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+      .sg-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+      .sg-chip { padding: 3px 10px; border-radius: 12px; font-size: 10.5px; font-weight: 700; background: #f2f2f2; color: #333; border: 1px solid #e0e0e0; }
+      .sg-chip.all { background: #fffbe0; border-color: #f0e08a; }
+      .sg-empty { font-size: 11.5px; color: #999; }
+      .sg-note { font-size: 10.5px; color: #999; margin-top: 6px; }
+      .sg-panel { display: none; margin-top: 10px; border-top: 1px dashed #e0e0e0; padding-top: 10px; }
+      .sg-panel.open { display: block; }
+      .sg-check { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; padding: 4px 0; cursor: pointer; }
+      .sg-check input { margin-top: 2px; }
+      .sg-check small { color: #888; }
+      .sg-form label { display: block; font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #555; margin: 10px 0 5px; letter-spacing: 0.3px; }
+      .sg-form input[type=text], .sg-form textarea { width: 100%; padding: 8px 10px; font-size: 12.5px; border: 1px solid #ccc; font-family: inherit; }
+      .sg-form textarea { min-height: 220px; font-family: var(--ff-mono); font-size: 12px; line-height: 1.5; resize: vertical; }
+      .sg-types { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+      .sg-form .sg-check { display: flex; margin: 0; font-size: 12px; font-weight: 400; text-transform: none; letter-spacing: 0; color: #333; }
+      .sg-form-actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+      .sg-item { border: 1px solid var(--border-light); padding: 14px 16px; margin-bottom: 10px; }
+      .sg-item-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      .sg-item-name { font-weight: 800; font-size: 13px; }
+      .sg-item-desc { font-size: 11.5px; color: var(--text-sub); margin-top: 4px; }
+      .sg-item-meta { font-size: 10.5px; color: #999; margin-top: 6px; }
+      .sg-item-actions { margin-left: auto; display: flex; gap: 8px; }
+      .sg-item pre { white-space: pre-wrap; font-family: var(--ff-mono); font-size: 11.5px; background: #fafafa; border: 1px solid #eee; padding: 10px; max-height: 320px; overflow: auto; margin: 8px 0 0; }
+      .sg-item summary { cursor: pointer; font-size: 11px; color: #666; margin-top: 8px; }
       /* Sliders (shared) */
       .slider-block { margin-bottom: 4px; }
       .slider-block label { display: block; font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #555; margin-bottom: 6px; letter-spacing: 0.3px; }
@@ -248,6 +275,10 @@
           <span class="material-icons-outlined" style="font-size:14px;vertical-align:middle;margin-right:4px;">edit_note</span>
           <span data-i18n="tabPrompts">Prompts</span>
         </button>
+        <button class="tab-btn" id="styleguidesTabBtn" onclick="switchTab('styleguides', this)">
+          <span class="material-icons-outlined" style="font-size:14px;vertical-align:middle;margin-right:4px;">style</span>
+          <span data-i18n="tabStyleguides">Styleguides</span>
+        </button>
         <button class="tab-btn" id="settingsTabBtn" style="display:none;" onclick="switchTab('settings', this)">
           <span class="material-icons-outlined" style="font-size:14px;vertical-align:middle;margin-right:4px;">tune</span>
           <span data-i18n="tabSettings">Gemini Einstellungen</span>
@@ -285,6 +316,30 @@
         </div>
         <div id="promptCards"></div>
         <div id="noPromptsMsg" class="empty-row" style="display:none;" data-i18n="noPrompts"></div>
+      </div>
+      <!-- STYLEGUIDES TAB -->
+      <div id="view-styleguides" class="tab-view">
+        <div class="intro-box" data-i18n="sgIntro"></div>
+        <div class="admin-card sg-form" id="sgFormCard">
+          <h3 id="sgFormTitle" data-i18n="sgNewTitle">Neuer Styleguide</h3>
+          <div class="hint" data-i18n="sgFormHint"></div>
+          <input type="hidden" id="sgId">
+          <label data-i18n="sgName">Name</label>
+          <input type="text" id="sgName" maxlength="60" data-i18n-placeholder="sgNamePh">
+          <label data-i18n="sgDesc">Beschreibung</label>
+          <input type="text" id="sgDesc" maxlength="300" data-i18n-placeholder="sgDescPh">
+          <label><span data-i18n="sgContent">Inhalt (Markdown)</span> <span id="sgCount" style="font-weight:400;text-transform:none;color:#999;"></span></label>
+          <textarea id="sgText" oninput="updateSgCount()" data-i18n-placeholder="sgContentPh"></textarea>
+          <label data-i18n="sgLoadFile">Aus .md-Datei laden</label>
+          <input type="file" id="sgFile" accept=".md,.markdown,.txt,text/markdown,text/plain" onchange="loadSgFile(this.files)">
+          <label data-i18n="sgAppliesTo">Gilt für Prompt Spaces</label>
+          <div class="sg-types" id="sgTypes"></div>
+          <div class="sg-form-actions">
+            <button class="btn btn-primary" onclick="saveStyleguide()"><span class="material-icons-outlined">save</span><span data-i18n="save">Speichern</span></button>
+            <button class="btn btn-secondary" id="sgCancelBtn" style="display:none;" onclick="resetSgForm()"><span class="material-icons-outlined">close</span><span data-i18n="sgCancel">Abbrechen</span></button>
+          </div>
+        </div>
+        <div id="sgList"><div class="empty-row">...</div></div>
       </div>
       <!-- GEMINI SETTINGS TAB -->
       <div id="view-settings" class="tab-view">
@@ -452,6 +507,7 @@
     <div id="toast"></div>
     <script>
       var currentConfig = null;
+      var styleguides = null; // Bibliothek, geladen nach der Konfiguration
       var knownTypesCache = [];
       var uiLang = 'de';
 
@@ -483,6 +539,20 @@
 
       var I18N = {
         de: {
+          tabStyleguides: 'Styleguides',
+          sgIntro: 'Ein Prompt sagt, WAS Gemini tun soll: Aufgabe, Regeln, Nomenklatur des Dokumenttyps. Ein Styleguide sagt, WIE das Ergebnis klingen und aussehen soll: Anrede, Tonalität, Schreibweisen. Einmal anlegen und beliebig vielen Prompt Spaces zuordnen. AutoFix hängt die zugeordneten Styleguides bei jedem Lauf und beim Testen hinter den Prompt.',
+          sgNewTitle: 'Neuer Styleguide', sgEditTitle: 'Styleguide bearbeiten',
+          sgFormHint: 'Text direkt eingeben oder eine Markdown-Datei (.md) laden. Änderungen wirken sofort in allen zugeordneten Prompt Spaces.',
+          sgName: 'Name', sgNamePh: 'z. B. Kärcher Tonalität DE', sgDesc: 'Beschreibung', sgDescPh: 'Wofür gilt er? (optional)',
+          sgContent: 'Inhalt (Markdown)', sgContentPh: '# Anrede\n- Wir siezen.\n\n# Ton\n- Kurze, aktive Sätze.',
+          sgLoadFile: 'Aus .md-Datei laden', sgAppliesTo: 'Gilt für Prompt Spaces', sgCancel: 'Abbrechen',
+          sgAllTypes: 'Alle Prompt Spaces', sgNone: 'Noch keine Styleguides angelegt.', sgSaved: 'Styleguide gespeichert',
+          sgDeleted: 'Styleguide gelöscht', sgDeleteConfirm: ' wirklich löschen? Er wird aus allen Prompt Spaces entfernt.',
+          sgEdit: 'Bearbeiten', sgDelete: 'Löschen', sgShow: 'Inhalt ansehen', sgUnassigned: 'Noch keinem Prompt Space zugeordnet',
+          sgBoxTitle: 'Styleguides', sgBoxEmpty: 'Keine Styleguides zugeordnet.', sgBoxChoose: 'Styleguides wählen',
+          sgBoxNote: 'Werden bei jedem AutoFix-Lauf und beim Testen hinter diesen Prompt gehängt.',
+          sgBoxSave: 'Zuordnung speichern', sgBoxManage: 'Styleguides verwalten', sgBoxAllNote: 'gilt für alle Prompt Spaces',
+          sgAssigned: 'Zuordnung gespeichert', sgChars: 'Zeichen', sgBy: 'geändert von', sgTooLong: 'Zu lang, höchstens 15.000 Zeichen.',
           tabPrompts: 'Prompts', tabSettings: 'Gemini Einstellungen', tabAdmin: 'Nutzer und Rechte',
           lockTitle: 'Kein Zugriff',
           lockText: 'Du bist f?r den Prompt Editor nicht freigeschaltet. Bitte wende dich an einen Administrator, um freigeschaltet zu werden, oder stelle ein Ticket f?r einen neuen Prompt Space.',
@@ -564,6 +634,20 @@
           tmDesc: ['Nimmt fast alles, auch sehr lose Treffer.', 'Sehr lose Treffer z?hlen mit.', 'Lose Treffer z?hlen mit, entsprechend mehr Rauschen.', 'Recht locker, mehr Kontext, aber weniger Pr?zision.', 'Etwas locker, ein guter Anteil an Kontext.', 'Ausgewogen, solider Standardwert f?r die meisten Inhalte.', 'Recht streng, nur ordentliche Treffer z?hlen.', 'Streng, nur nahe Treffer z?hlen.', 'Sehr streng, nur nahezu identische Treffer z?hlen.', 'Extrem streng, fast nur exakte Treffer.', 'Nur perfekte Treffer z?hlen.']
         },
         en: {
+          tabStyleguides: 'Style guides',
+          sgIntro: 'A prompt says WHAT Gemini should do: the task, rules and nomenclature of a document type. A style guide says HOW the result should sound and look: form of address, tone, spellings. Create it once and assign it to any number of prompt spaces. AutoFix appends the assigned style guides to the prompt on every run and when testing.',
+          sgNewTitle: 'New style guide', sgEditTitle: 'Edit style guide',
+          sgFormHint: 'Type the text or load a Markdown file (.md). Changes apply immediately to all assigned prompt spaces.',
+          sgName: 'Name', sgNamePh: 'e.g. Kärcher tone of voice EN', sgDesc: 'Description', sgDescPh: 'What is it for? (optional)',
+          sgContent: 'Content (Markdown)', sgContentPh: '# Address\n- Use formal address.\n\n# Tone\n- Short, active sentences.',
+          sgLoadFile: 'Load from .md file', sgAppliesTo: 'Applies to prompt spaces', sgCancel: 'Cancel',
+          sgAllTypes: 'All prompt spaces', sgNone: 'No style guides yet.', sgSaved: 'Style guide saved',
+          sgDeleted: 'Style guide deleted', sgDeleteConfirm: ' really delete? It will be removed from all prompt spaces.',
+          sgEdit: 'Edit', sgDelete: 'Delete', sgShow: 'Show content', sgUnassigned: 'Not assigned to any prompt space yet',
+          sgBoxTitle: 'Style guides', sgBoxEmpty: 'No style guides assigned.', sgBoxChoose: 'Choose style guides',
+          sgBoxNote: 'Appended to this prompt on every AutoFix run and when testing.',
+          sgBoxSave: 'Save assignment', sgBoxManage: 'Manage style guides', sgBoxAllNote: 'applies to all prompt spaces',
+          sgAssigned: 'Assignment saved', sgChars: 'characters', sgBy: 'changed by', sgTooLong: 'Too long, at most 15,000 characters.',
           tabPrompts: 'Prompts', tabSettings: 'Gemini Settings', tabAdmin: 'Users and Access',
           lockTitle: 'No Access',
           lockText: 'You are not enabled for the Prompt Editor. Please contact an administrator to get access, or open a ticket for a new prompt space.',
@@ -699,6 +783,7 @@
             renderExampleBar();
             renderPromptCards(res.prompts || []);
             populateCopyFromSelect();
+            loadStyleguides();
           })
           .withFailureHandler(function(err) {
             document.getElementById('loadingScreen').style.display = 'none';
@@ -718,6 +803,7 @@
           renderExampleBar();
           renderPromptCards(currentConfig.prompts || []);
           populateCopyFromSelect();
+          renderStyleguideTab();
         }
       }
       function applyStaticI18n() {
@@ -746,6 +832,7 @@
         document.getElementById('view-' + id).classList.add('active');
         el.classList.add('active');
         if (id === 'access') loadAccessTab();
+        if (id === 'styleguides') renderStyleguideTab();
       }
 
       // ?? SLIDERS (Temperature / TM Threshold) ???????????????????????
@@ -834,6 +921,7 @@
                     '<span class="char-count" id="count_' + p.type + '"></span>' +
                   '</div>' +
                   '<div class="hint-line">' + esc(t('ctrlSHint')) + '</div>' +
+                  '<div class="sg-box" id="sgBox_' + p.type + '">' + buildStyleguideBoxInner_(p.type, p.canEdit && !isPreview) + '</div>' +
                   buildHmwPanel_(p.type) +
                   buildTestPanel_(p.type) +
                 '</div>' +
@@ -940,6 +1028,178 @@
       }
 
       // ?? "MIT GEMINI VERBESSERN" ???????????????????????????????????
+      // ── STYLEGUIDES ──────────────────────────────────────────────────
+      function loadStyleguides() {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (!res.success) { toast(res.error, 5000); return; }
+            setStyleguides_(res.styleguides);
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorGetStyleguides();
+      }
+      function setStyleguides_(list) {
+        styleguides = list || [];
+        (currentConfig && currentConfig.prompts || []).forEach(function(p) {
+          var box = document.getElementById('sgBox_' + p.type);
+          if (box) box.innerHTML = buildStyleguideBoxInner_(p.type, p.canEdit);
+        });
+        renderStyleguideTab();
+      }
+      function typeLabel_(type) {
+        var p = (currentConfig && currentConfig.prompts || []).find(function(x) { return x.type === type; });
+        return p ? p.label : type;
+      }
+      function sgApplies_(g, type) { return g.types.indexOf('*') !== -1 || g.types.indexOf(type) !== -1; }
+      function buildStyleguideBoxInner_(type, canEdit) {
+        var head = '<div class="sg-box-head"><span class="hmw-label" style="margin:0;">' + esc(t('sgBoxTitle')) + '</span>' +
+          (canEdit && styleguides && styleguides.length ? '<button class="btn btn-secondary btn-sm" onclick="toggleSgPanel(\'' + type + '\')"><span class="material-icons-outlined">style</span>' + esc(t('sgBoxChoose')) + '</button>' : '') + '</div>';
+        if (!styleguides) return head + '<div class="sg-empty">...</div>';
+        var active = styleguides.filter(function(g) { return sgApplies_(g, type); });
+        var chips = active.length
+          ? '<div class="sg-chips">' + active.map(function(g) { return '<span class="sg-chip' + (g.types.indexOf('*') !== -1 ? ' all' : '') + '" title="' + esc(g.description || '') + '">' + esc(g.name) + '</span>'; }).join('') + '</div>'
+          : '<div class="sg-empty">' + esc(t('sgBoxEmpty')) + '</div>';
+        var panel = '';
+        if (canEdit) {
+          panel = '<div class="sg-panel" id="sgPanel_' + type + '">' +
+            styleguides.map(function(g) {
+              var all = g.types.indexOf('*') !== -1;
+              return '<label class="sg-check"><input type="checkbox" class="sgPick_' + type + '" value="' + esc(g.id) + '"' + (sgApplies_(g, type) ? ' checked' : '') + (all ? ' disabled' : '') + '>' +
+                '<span><b>' + esc(g.name) + '</b>' + (g.description ? ' <small>' + esc(g.description) + '</small>' : '') + (all ? ' <small>(' + esc(t('sgBoxAllNote')) + ')</small>' : '') + '</span></label>';
+            }).join('') +
+            '<div class="sg-form-actions"><button class="btn btn-primary btn-sm" onclick="saveTypeStyleguides(\'' + type + '\')"><span class="material-icons-outlined">save</span>' + esc(t('sgBoxSave')) + '</button>' +
+            '<button class="btn btn-secondary btn-sm" onclick="openStyleguideTab()"><span class="material-icons-outlined">style</span>' + esc(t('sgBoxManage')) + '</button></div></div>';
+        }
+        return head + chips + (active.length ? '<div class="sg-note">' + esc(t('sgBoxNote')) + '</div>' : '') + panel;
+      }
+      function toggleSgPanel(type) {
+        var panel = document.getElementById('sgPanel_' + type);
+        if (panel) panel.classList.toggle('open');
+      }
+      function openStyleguideTab() { switchTab('styleguides', document.getElementById('styleguidesTabBtn')); }
+      function saveTypeStyleguides(type) {
+        var ids = Array.prototype.filter.call(document.querySelectorAll('.sgPick_' + type), function(c) { return c.checked && !c.disabled; })
+          .map(function(c) { return c.value; });
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (!res.success) { toast(res.error, 5000); return; }
+            setStyleguides_(res.styleguides);
+            toast(typeLabel_(type) + ': ' + t('sgAssigned'));
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorSetTypeStyleguides(type, ids);
+      }
+      function renderStyleguideTab() {
+        var list = document.getElementById('sgList');
+        if (!list || !currentConfig || !currentConfig.authorized) return;
+        renderSgTypeChecks_(document.getElementById('sgId').value);
+        updateSgCount();
+        if (!styleguides) { list.innerHTML = '<div class="empty-row">...</div>'; return; }
+        if (!styleguides.length) { list.innerHTML = '<div class="empty-row">' + esc(t('sgNone')) + '</div>'; return; }
+        list.innerHTML = styleguides.slice().sort(function(a, b) { return a.name.localeCompare(b.name); }).map(function(g) {
+          var types = g.types.indexOf('*') !== -1 ? [t('sgAllTypes')] : g.types.map(typeLabel_);
+          return '<div class="sg-item">' +
+            '<div class="sg-item-head"><span class="prompt-type-badge">' + esc(g.name) + '</span>' +
+              (types.length ? types.map(function(x) { return '<span class="sg-chip">' + esc(x) + '</span>'; }).join('') : '<span class="sg-empty">' + esc(t('sgUnassigned')) + '</span>') +
+              (g.canEdit ? '<span class="sg-item-actions">' +
+                '<button class="btn btn-secondary btn-sm" onclick="editStyleguide(\'' + esc(g.id) + '\')"><span class="material-icons-outlined">edit</span>' + esc(t('sgEdit')) + '</button>' +
+                '<button class="btn btn-secondary btn-sm" onclick="deleteStyleguide(\'' + esc(g.id) + '\')"><span class="material-icons-outlined">delete</span>' + esc(t('sgDelete')) + '</button></span>' : '') +
+            '</div>' +
+            (g.description ? '<div class="sg-item-desc">' + esc(g.description) + '</div>' : '') +
+            '<div class="sg-item-meta">' + g.content.length + ' ' + esc(t('sgChars')) + ' · ' + esc(t('sgBy')) + ' ' + esc(g.updatedBy || '') + ' · ' + esc(String(g.updatedAt || '').substring(0, 10)) + '</div>' +
+            '<details><summary>' + esc(t('sgShow')) + '</summary><pre>' + esc(g.content) + '</pre></details>' +
+          '</div>';
+        }).join('');
+      }
+      // Nur Spaces, die man bearbeiten darf, sind anklickbar; Admins koennen "alle" waehlen.
+      function renderSgTypeChecks_(id) {
+        var box = document.getElementById('sgTypes');
+        if (!box) return;
+        var g = id && styleguides ? styleguides.find(function(x) { return x.id === id; }) : null;
+        var current = g ? g.types : [];
+        var html = currentConfig.isAdmin
+          ? '<label class="sg-check"><input type="checkbox" class="sgFormType" value="*"' + (current.indexOf('*') !== -1 ? ' checked' : '') + '><span><b>' + esc(t('sgAllTypes')) + '</b></span></label>' : '';
+        html += (currentConfig.prompts || []).filter(function(p) { return p.canEdit; }).map(function(p) {
+          return '<label class="sg-check"><input type="checkbox" class="sgFormType" value="' + esc(p.type) + '"' + (current.indexOf(p.type) !== -1 ? ' checked' : '') + '><span>' + esc(p.label) + '</span></label>';
+        }).join('');
+        box.innerHTML = html;
+      }
+      function updateSgCount() {
+        var ta = document.getElementById('sgText'), el = document.getElementById('sgCount');
+        if (!ta || !el) return;
+        el.innerText = '(' + ta.value.length + ' / 15000 ' + t('sgChars') + ')';
+        el.style.color = ta.value.length > 15000 ? 'var(--red)' : '#999';
+      }
+      function loadSgFile(files) {
+        var f = files && files[0];
+        if (!f) return;
+        var r = new FileReader();
+        r.onload = function() {
+          document.getElementById('sgText').value = String(r.result || '').replace(/^\uFEFF/, '');
+          var name = document.getElementById('sgName');
+          if (!name.value.trim()) name.value = f.name.replace(/\.(md|markdown|txt)$/i, '').replace(/[_-]+/g, ' ');
+          updateSgCount();
+        };
+        r.readAsText(f, 'utf-8');
+      }
+      function resetSgForm() {
+        document.getElementById('sgId').value = '';
+        document.getElementById('sgName').value = '';
+        document.getElementById('sgDesc').value = '';
+        document.getElementById('sgText').value = '';
+        document.getElementById('sgFile').value = '';
+        document.getElementById('sgFormTitle').innerText = t('sgNewTitle');
+        document.getElementById('sgCancelBtn').style.display = 'none';
+        renderSgTypeChecks_('');
+        updateSgCount();
+      }
+      function editStyleguide(id) {
+        var g = (styleguides || []).find(function(x) { return x.id === id; });
+        if (!g) return;
+        document.getElementById('sgId').value = g.id;
+        document.getElementById('sgName').value = g.name;
+        document.getElementById('sgDesc').value = g.description || '';
+        document.getElementById('sgText').value = g.content;
+        document.getElementById('sgFormTitle').innerText = t('sgEditTitle');
+        document.getElementById('sgCancelBtn').style.display = 'inline-flex';
+        renderSgTypeChecks_(g.id);
+        updateSgCount();
+        document.getElementById('sgFormCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      function saveStyleguide() {
+        var text = document.getElementById('sgText').value;
+        if (text.length > 15000) { toast(t('sgTooLong'), 5000); return; }
+        var types = Array.prototype.filter.call(document.querySelectorAll('.sgFormType'), function(c) { return c.checked; }).map(function(c) { return c.value; });
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (!res.success) { toast(res.error, 5000); return; }
+            resetSgForm();
+            setStyleguides_(res.styleguides);
+            toast(t('sgSaved'));
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorSaveStyleguide({
+            id: document.getElementById('sgId').value,
+            name: document.getElementById('sgName').value,
+            description: document.getElementById('sgDesc').value,
+            content: text,
+            types: types
+          });
+      }
+      function deleteStyleguide(id) {
+        var g = (styleguides || []).find(function(x) { return x.id === id; });
+        if (!g || !confirm('"' + g.name + '"' + t('sgDeleteConfirm'))) return;
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (!res.success) { toast(res.error, 5000); return; }
+            if (document.getElementById('sgId').value === id) resetSgForm();
+            setStyleguides_(res.styleguides);
+            toast(t('sgDeleted'));
+          })
+          .withFailureHandler(function(err) { toast(err.message, 5000); })
+          .apiPromptEditorDeleteStyleguide(id);
+      }
+
       function buildHmwPanel_(type) {
         var likeOpts = '<option value="">+ ...</option>' +
           LIKE_PRESETS_KEYS.map(function(pair) { return '<option value="' + esc(presetLabel_(pair)) + '">' + esc(presetLabel_(pair)) + '</option>'; }).join('');

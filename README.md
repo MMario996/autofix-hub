@@ -31,7 +31,15 @@ Dazu: Deutsch/Englisch, Dark Mode, mobil nutzbar.
 - Der Schutz gilt auch, wenn jemand die bestehenden Funktionen direkt aufruft, zum Beispiel über `google.script.run`. Geschützt sind `runNow`, `runAutoFixForProject`, `replayChangesForJob`, `setupAutoFixTrigger`, `removeAutoFixTrigger`, `forceUnlock` und `recreateDatabase`.
 - Zeitgesteuerte Läufe (`autoFixPoller`) sind nicht betroffen.
 
-## Aufbau
+## Styleguides im Prompt Editor
+
+Ein **Prompt** sagt, *was* Gemini tun soll (Aufgabe, Regeln, Nomenklatur des Dokumenttyps). Ein **Styleguide** sagt, *wie* das Ergebnis klingen und aussehen soll (Anrede, Tonalität, Schreibweisen) und gilt für beliebig viele Prompt Spaces.
+
+- Reiter **Styleguides** im Prompt Editor: anlegen (Text oder `.md`-Datei), bearbeiten, löschen, Prompt Spaces zuordnen. Anlegen darf jeder freigeschaltete Nutzer, ändern und löschen nur, wer ihn angelegt hat, oder ein Admin. Zuordnen darf man nur zu Spaces, die man bearbeiten darf; Admins können „alle Prompt Spaces“ wählen.
+- In jeder Prompt-Karte zeigt der Bereich **Styleguides**, was für den Space gilt, und lässt die Zuordnung direkt ändern.
+- Gespeichert im Datenbank-Sheet, Tab „Styleguides“. Der Prompt-Text (`peInstructions_<type>`) bleibt unverändert: `buildPePrompt_` hängt die zugeordneten Styleguides beim Bauen des Prompts als `=== STYLEGUIDE: <Name> ===` hinter die PE-Anweisungen. Das gilt für jeden Lauf und für „Prompt testen“. Fehler beim Lesen des Tabs brechen keinen Lauf ab.
+
+
 
 | Pfad | Inhalt |
 |---|---|
